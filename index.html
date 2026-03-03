@@ -17,17 +17,19 @@
   </style>
 </head>
 <body>
-  <h1>AI Procurement Compliance Co-Pilot (GovCon)</h1>
-  <p class="muted">
-    Paste purchasing file notes, subcontract language, supplier quote, PO text, or T&Cs.
-    You’ll get CPSR/DCMA-focused risk flags and next actions.
-  </p>
+ <h1>AI Procurement Compliance Co-Pilot for Government Contractors</h1>
 
-  <p class="muted warn" id="fileWarn" style="display:none;">
-    You opened this page as a local file (file://). This will break API calls.
-    Open <b>http://localhost:3000</b> instead.
-  </p>
+<p class="muted">
+Built for small and mid-size defense contractors preparing for CPSR, DCMA, and DCAA scrutiny.
+</p>
 
+<p class="muted">
+<strong>What it does:</strong> Paste purchasing or subcontract text → get audit-focused risk flags and recommended next actions in seconds.
+</p>
+
+<p class="muted" style="font-size:12px;">
+For internal readiness only. Not a substitute for a full CPSR file review.
+</p>
   <div class="row">
     <label>
       Review Type:
@@ -126,6 +128,71 @@ async function analyze() {
     clearTimeout(timeout);
     btn.disabled = false;
   }
+}
+</script><hr style="margin-top:40px;"/>
+
+<h3>Want the CPSR Purchasing File Checklist?</h3>
+
+<p class="muted">
+Get the checklist auditors actually use when reviewing purchasing files.
+</p>
+
+<input id="emailCapture" placeholder="Enter your email" style="padding:8px; width:260px;" />
+<button onclick="captureEmail()">Send Me the Checklist</button>
+
+<p id="emailStatus" class="muted"></p>
+
+<script>
+function captureEmail() {
+  const email = document.getElementById("emailCapture").value.trim();
+  const status = document.getElementById("emailStatus");
+
+  if (!email || !email.includes("@")) {
+    status.textContent = "Please enter a valid email.";
+    return;
+  }
+
+  // SIMPLE VERSION FOR TONIGHT:
+  // opens email client so you collect leads immediately
+  window.location.href =
+    "mailto:michael.allen.scott43@outlook.com" +
+    "?subject=CPSR Checklist Request" +
+    "&body=Please send the CPSR checklist to: " + encodeURIComponent(email);
+
+  status.textContent = "Thanks — we’ll send it shortly.";
+}
+</script>
+<hr style="margin-top:40px;"/>
+
+<h3>Want the CPSR Purchasing File Checklist?</h3>
+
+<p class="muted">
+Get the checklist auditors actually use when reviewing purchasing files.
+</p>
+
+<input id="emailCapture" placeholder="Enter your email" style="padding:8px; width:260px;" />
+<button onclick="captureEmail()">Send Me the Checklist</button>
+
+<p id="emailStatus" class="muted"></p>
+
+<script>
+function captureEmail() {
+  const email = document.getElementById("emailCapture").value.trim();
+  const status = document.getElementById("emailStatus");
+
+  if (!email || !email.includes("@")) {
+    status.textContent = "Please enter a valid email.";
+    return;
+  }
+
+  // SIMPLE VERSION FOR TONIGHT:
+  // opens email client so you collect leads immediately
+  window.location.href =
+    "mailto:michael.allen.scott43@outlook.com" +
+    "?subject=CPSR Checklist Request" +
+    "&body=Please send the CPSR checklist to: " + encodeURIComponent(email);
+
+  status.textContent = "Thanks — we’ll send it shortly.";
 }
 </script>
 </body>
