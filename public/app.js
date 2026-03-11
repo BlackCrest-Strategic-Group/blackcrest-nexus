@@ -30,6 +30,19 @@ const printReportBtn = document.getElementById("printReportBtn");
 
 let latestAnalysis = null;
 
+function toIsoDate(value) {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+
+  const parts = value.split("/");
+  if (parts.length === 3) {
+    const [month, day, year] = parts;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+
+  return value;
+}
+
 tabButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const targetId = button.dataset.tab;
@@ -291,27 +304,16 @@ pasteForm.addEventListener("submit", (e) => {
 samSearchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-function toIsoDate(value) {
-  if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const setAsideEl = document.getElementById("setAside");
 
-  const parts = value.split("/");
-  if (parts.length === 3) {
-    const [month, day, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-  }
-
-  return value;
-}
-
-const params = new URLSearchParams({
-  postedFrom: toIsoDate(document.getElementById("postedFrom").value),
-  postedTo: toIsoDate(document.getElementById("postedTo").value),
-  keyword: document.getElementById("keyword").value.trim(),
-  naics: document.getElementById("naics").value.trim(),
-  psc: document.getElementById("psc").value.trim(),
-  setAside: document.getElementById("setAside").value.trim()
-});
+  const params = new URLSearchParams({
+    postedFrom: toIsoDate(document.getElementById("postedFrom").value),
+    postedTo: toIsoDate(document.getElementById("postedTo").value),
+    keyword: document.getElementById("keyword").value.trim(),
+    naics: document.getElementById("naics").value.trim(),
+    psc: document.getElementById("psc").value.trim(),
+    setAside: setAsideEl ? setAsideEl.value.trim() : ""
+  });
 
   if (!params.get("postedFrom") || !params.get("postedTo")) {
     alert("Posted From and Posted To are required for SAM search.");
@@ -322,18 +324,23 @@ const params = new URLSearchParams({
   samResultsEl.innerHTML = `<p class="empty-state">Searching...</p>`;
 
   try {
-  const response = await fetch(`/api/opportunities?${params.toString()}`);
-const contentType = response.headers.get("content-type") || "";
-const rawText = await response.text();
+    const response = await fetch(`/api/opportunities?${params.toString()}`);
+    const contentType = response.headers.get("content-type") || "";
+    const rawText = await response.text();
 
-if (!contentType.includes("application/json")) {
-  throw new Error(`Server returned non-JSON response: ${rawText.slice(0, 120)}`);
-}
+    if (!contentType.includes("application/json")) {
+      throw new Error(`Server returned non-JSON response: ${rawText.slice(0, 120)}`);
+    }
 
-const data = JSON.parse(rawText);
+    const data = JSON.parse(rawText);
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error || "SAM search failed.");
+      const isMissingKey = data.errorCode === "MISSING_API_KEY";
+      throw new Error(
+        isMissingKey
+          ? "SAM API key is not configured. Add your SAM_API_KEY to the .env file on the server and restart."
+          : data.error || "SAM search failed."
+      );
     }
 
     const opportunities = data.opportunities || [];
