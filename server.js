@@ -26,6 +26,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // API routes — registered early so they are matched before the wildcard fallback
 app.use("/api/opportunities", opportunitiesRouter);
+app.use("/api/sam-search", opportunitiesRouter);
 
 // Multer upload config
 const upload = multer({

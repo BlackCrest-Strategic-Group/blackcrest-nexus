@@ -324,7 +324,7 @@ samSearchForm.addEventListener("submit", async (e) => {
   samResultsEl.innerHTML = `<p class="empty-state">Searching...</p>`;
 
   try {
-    const response = await fetch(`/api/opportunities?${params.toString()}`);
+    const response = await fetch(`/api/sam-search?${params.toString()}`);
     const contentType = response.headers.get("content-type") || "";
     const rawText = await response.text();
 
