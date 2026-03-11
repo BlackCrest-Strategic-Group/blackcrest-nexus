@@ -2,6 +2,13 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Log SAM_API_KEY availability at module load time (key masked for security)
+if (process.env.SAM_API_KEY) {
+  console.log("✅ samService: SAM_API_KEY is present (length:", process.env.SAM_API_KEY.length, ")");
+} else {
+  console.warn("⚠️  samService: SAM_API_KEY is NOT set. SAM search will fail.");
+}
+
 const SAM_BASE_URL = "https://api.sam.gov/opportunities/v1/search";
 
 function cleanParams(params) {
@@ -12,17 +19,22 @@ function cleanParams(params) {
   );
 }
 
-function toIsoDate(value) {
+/**
+ * Convert a date value to MM/DD/YYYY format required by the SAM.gov v1 API.
+ * Accepts YYYY-MM-DD (ISO, from browser date inputs) or MM/DD/YYYY (already correct).
+ */
+function formatDateForSamApi(value) {
   if (!value) return value;
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  // Already in MM/DD/YYYY format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
     return value;
   }
 
-  const parts = value.split("/");
-  if (parts.length === 3) {
-    const [month, day, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  // Convert ISO YYYY-MM-DD → MM/DD/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-");
+    return `${month}/${day}/${year}`;
   }
 
   return value;
@@ -53,8 +65,8 @@ export async function searchOpportunities({
 
   const params = cleanParams({
     api_key: process.env.SAM_API_KEY,
-    postedFrom: toIsoDate(postedFrom),
-    postedTo: toIsoDate(postedTo),
+    postedFrom: formatDateForSamApi(postedFrom),
+    postedTo: formatDateForSamApi(postedTo),
     limit,
     offset,
     keyword,
@@ -90,7 +102,10 @@ export async function searchOpportunities({
 
     if (!response.ok) {
       console.error("❌ SAM API Error response body:", JSON.stringify(data));
-      throw new Error(data?.message || `SAM API request failed with status ${response.status}`);
+      const detail = data?.error?.message || data?.message || `SAM API request failed with status ${response.status}`;
+      const err = new Error(detail);
+      err.statusCode = response.status;
+      throw err;
     }
 
     return data;

@@ -303,5 +303,8 @@ app.get("*", (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`GovCon AI Scanner running on port ${PORT}`);
-  console.log("SAM_API_KEY configured:", !!process.env.SAM_API_KEY);
+  console.log("✅ .env loaded — SAM_API_KEY configured:", !!process.env.SAM_API_KEY);
+  if (!process.env.SAM_API_KEY) {
+    console.warn("⚠️  SAM_API_KEY is missing. SAM search will not work until it is set in .env and the server is restarted.");
+  }
 });
