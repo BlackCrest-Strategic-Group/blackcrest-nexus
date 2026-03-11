@@ -44,8 +44,9 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error("SAM API Error:", error?.message, error);
 
-    res.status(500).json({
+    res.status(error?.code === "MISSING_API_KEY" ? 400 : 500).json({
       success: false,
+      errorCode: error?.code || null,
       error: error?.message || "Failed to fetch opportunities"
     });
   }

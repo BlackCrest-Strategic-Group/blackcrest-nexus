@@ -40,7 +40,9 @@ export async function searchOpportunities({
   limit = 100
 }) {
   if (!process.env.SAM_API_KEY) {
-    throw new Error("Missing SAM_API_KEY in environment variables.");
+    const err = new Error("SAM_API_KEY is not configured on the server. Add it to your .env file and restart.");
+    err.code = "MISSING_API_KEY";
+    throw err;
   }
 
   if (!postedFrom || !postedTo) {

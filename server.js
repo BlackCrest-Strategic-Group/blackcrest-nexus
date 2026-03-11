@@ -21,7 +21,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
-app.use("/api/opportunities", opportunitiesRouter);
 
 // Multer upload config
 const upload = multer({
@@ -264,13 +263,11 @@ app.post("/analyze-text", async (req, res) => {
 
 // API routes
 app.use("/api/opportunities", opportunitiesRouter);
-
-// Fallback for home page
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.listen(PORT, () => {
   console.log(`GovCon AI Scanner running on port ${PORT}`);
-  console.log("SAM KEY:", process.env.SAM_API_KEY);
+  console.log("SAM_API_KEY configured:", !!process.env.SAM_API_KEY);
 });
