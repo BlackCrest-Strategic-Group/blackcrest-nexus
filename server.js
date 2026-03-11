@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import rateLimit from "express-rate-limit";
 
 import connectDB from "./backend/config/db.js";
 import authRouter from "./backend/routes/auth.js";
@@ -38,12 +39,34 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // ---------------------------------------------------------------------------
+// Rate Limiting
+// ---------------------------------------------------------------------------
+
+// Strict limit for auth endpoints — prevents brute-force attacks
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please try again later." }
+});
+
+// General API limit for all other authenticated routes
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please try again later." }
+});
+
+// ---------------------------------------------------------------------------
 // API Routes
 // ---------------------------------------------------------------------------
-app.use("/api/auth", authRouter);
-app.use("/api/opportunities", opportunitiesRouter);
-app.use("/api/email", emailRouter);
-app.use("/api/email-preferences", emailRouter);
+app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/opportunities", apiLimiter, opportunitiesRouter);
+app.use("/api/email", apiLimiter, emailRouter);
+app.use("/api/email-preferences", apiLimiter, emailRouter);
 
 // Health check (no auth required)
 app.get("/health", (req, res) => {
@@ -59,11 +82,19 @@ app.get("/health", (req, res) => {
 // ---------------------------------------------------------------------------
 // Serve React frontend (production build)
 // ---------------------------------------------------------------------------
+// General page rate limiter for the SPA fallback
+const pageLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 const frontendDist = path.join(__dirname, "frontend", "dist");
 app.use(express.static(frontendDist));
 
 // SPA fallback — serve index.html for all non-API routes
-app.get("*", (req, res) => {
+app.get("*", pageLimiter, (req, res) => {
   const indexPath = path.join(frontendDist, "index.html");
   res.sendFile(indexPath, (err) => {
     if (err) {

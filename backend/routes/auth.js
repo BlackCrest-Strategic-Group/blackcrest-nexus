@@ -8,10 +8,11 @@ const router = express.Router();
 
 function generateTokens(userId) {
   const secret = process.env.JWT_SECRET;
+  const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
   if (!secret) throw new Error("JWT_SECRET is not configured.");
 
   const accessToken = jwt.sign({ id: userId }, secret, { expiresIn: "15m" });
-  const refreshToken = jwt.sign({ id: userId }, secret, { expiresIn: "7d" });
+  const refreshToken = jwt.sign({ id: userId }, refreshSecret, { expiresIn: "7d" });
   return { accessToken, refreshToken };
 }
 
@@ -108,7 +109,8 @@ router.post("/refresh", async (req, res) => {
     }
 
     const secret = process.env.JWT_SECRET;
-    const decoded = jwt.verify(refreshToken, secret);
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+    const decoded = jwt.verify(refreshToken, refreshSecret);
 
     const user = await User.findById(decoded.id);
     if (!user || user.refreshToken !== refreshToken) {

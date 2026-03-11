@@ -31,6 +31,16 @@ function createTransport() {
   );
 }
 
+function escapeHtml(str) {
+  if (str === null || str === undefined) return "N/A";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function formatOpportunitiesHtml(opportunities) {
   if (!opportunities.length) {
     return "<p>No new opportunities matching your profile today.</p>";
@@ -41,22 +51,22 @@ function formatOpportunitiesHtml(opportunities) {
       (opp) => `
       <div style="border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:16px;">
         <h3 style="margin:0 0 8px;color:#1e293b;">
-          <a href="${opp.uiLink || "#"}" style="color:#2563eb;text-decoration:none;">
-            ${opp.title || "Untitled Opportunity"}
+          <a href="${escapeHtml(opp.uiLink || "#")}" style="color:#2563eb;text-decoration:none;">
+            ${escapeHtml(opp.title || "Untitled Opportunity")}
           </a>
         </h3>
         <p style="margin:4px 0;color:#64748b;font-size:14px;">
-          <strong>Agency:</strong> ${opp.agency || "N/A"} |
-          <strong>NAICS:</strong> ${opp.naicsCode || "N/A"} |
-          <strong>Set-Aside:</strong> ${opp.setAside || "None"}
+          <strong>Agency:</strong> ${escapeHtml(opp.agency)} |
+          <strong>NAICS:</strong> ${escapeHtml(opp.naicsCode)} |
+          <strong>Set-Aside:</strong> ${escapeHtml(opp.setAside || "None")}
         </p>
         <p style="margin:4px 0;color:#64748b;font-size:14px;">
-          <strong>Posted:</strong> ${opp.postedDate || "N/A"} |
-          <strong>Response Due:</strong> ${opp.responseDeadLine || "N/A"}
+          <strong>Posted:</strong> ${escapeHtml(opp.postedDate)} |
+          <strong>Response Due:</strong> ${escapeHtml(opp.responseDeadLine)}
         </p>
         ${
           opp.bidScore !== null
-            ? `<p style="margin:8px 0 0;"><strong>Bid Score:</strong> ${opp.bidScore}/100 — ${opp.recommendation}</p>`
+            ? `<p style="margin:8px 0 0;"><strong>Bid Score:</strong> ${escapeHtml(opp.bidScore)} / 100 — ${escapeHtml(opp.recommendation)}</p>`
             : ""
         }
       </div>`
@@ -87,7 +97,7 @@ export async function sendDailyDigest(user) {
       <div style="background:#fff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
         <h1 style="color:#1e293b;margin:0 0 8px;">GovCon AI Scanner</h1>
         <h2 style="color:#64748b;font-weight:normal;margin:0 0 24px;">Daily Opportunity Digest</h2>
-        <p>Hello ${user.name || user.email},</p>
+        <p>Hello ${escapeHtml(user.name || user.email)},</p>
         <p>Here are your latest federal contracting opportunities:</p>
         ${formatOpportunitiesHtml(opportunities)}
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />

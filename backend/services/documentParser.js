@@ -26,10 +26,13 @@ export async function parseDocument(buffer, mimetype = "", filename = "") {
       const mammoth = await import("mammoth");
       const result = await mammoth.extractRawText({ buffer });
       return result.value || "";
-    } catch {
-      throw new Error(
-        "DOCX parsing requires the 'mammoth' package. Install it with: npm install mammoth"
-      );
+    } catch (err) {
+      if (err.code === "ERR_MODULE_NOT_FOUND" || err.message?.includes("Cannot find")) {
+        throw new Error(
+          "DOCX parsing requires the 'mammoth' package. Install it with: npm install mammoth"
+        );
+      }
+      throw new Error(`Failed to parse DOCX file: ${err.message}`);
     }
   }
 

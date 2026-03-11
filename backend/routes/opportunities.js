@@ -109,9 +109,8 @@ router.post("/save", authenticateToken, async (req, res) => {
     const saved = await Opportunity.findOneAndUpdate(
       { noticeId: opportunity.noticeId },
       {
-        ...opportunity,
-        $addToSet: { savedBy: req.user.id },
-        cachedAt: new Date()
+        $set: { ...opportunity, cachedAt: new Date() },
+        $addToSet: { savedBy: req.user.id }
       },
       { upsert: true, new: true }
     );

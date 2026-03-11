@@ -13,12 +13,15 @@ function cleanParams(params) {
 function toIsoDate(value) {
   if (!value) return value;
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  // Accept MM/DD/YYYY and convert to YYYY-MM-DD
   const parts = value.split("/");
   if (parts.length === 3) {
-    const [month, day, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    const [month, day, year] = parts.map((p) => p.trim());
+    if (month && day && year && !isNaN(month) && !isNaN(day) && !isNaN(year)) {
+      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
   }
-  return value;
+  throw new Error(`Invalid date format: "${value}". Expected YYYY-MM-DD or MM/DD/YYYY.`);
 }
 
 export async function searchOpportunities({
