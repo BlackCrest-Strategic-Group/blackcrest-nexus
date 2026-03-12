@@ -1,46 +1,75 @@
-# GovCon AI Proposal Scanner
+# GovCon AI Scanner v2.0
 
-AI-assisted analysis tool for government contracting documents.
+> AI-powered federal contracting opportunity scanner for government contractors
 
-This tool helps proposal teams quickly analyze RFPs, contracts, subcontract language, and procurement text to identify:
+**Built by [BlackCrest Sourcing Group](https://blackcrestsourcing.com)**
 
-- Proposal requirements
-- FAR / DFARS indicators
-- Flowdown obligations
-- Bid and execution risks
-- Questions that should be resolved before bidding
+---
 
 ## Features
 
-- Upload **PDF, DOCX, or TXT** solicitation documents
-- AI-powered proposal intelligence analysis
-- Drag-and-drop document upload
-- Structured proposal risk report
-- Downloadable analysis report
+- 🔍 **SAM.gov Opportunity Search** — search by NAICS code, keyword, PSC, set-aside, and date range
+- 📄 **Document Analysis** — upload PDF / DOCX or paste text for instant bid/no-bid scoring
+- 🎯 **Bid Scoring Engine** — FAR/DFARS intelligence scores each opportunity 0–100
+- 📧 **Daily Email Digest** — automated opportunity delivery via Gmail or SendGrid
+- 🔐 **JWT Authentication** — secure login / registration with refresh tokens
+- 💾 **MongoDB Persistence** — users, saved opportunities, email preferences
+- ⚡ **React + Tailwind CSS** — modern responsive frontend with both logos
 
-## Use Cases
+## Quick Start
 
-GovCon AI is designed for:
+```bash
+# 1. Install backend dependencies
+npm install
 
-- Small and mid-sized government contractors
-- Proposal managers
-- Contracts teams
-- Capture managers
-- Business development teams
+# 2. Configure environment
+cp .env.example .env
+# Edit .env with your MongoDB URI, JWT secret, SAM API key, and email credentials
 
-The tool helps teams understand opportunity risk **before investing time in writing a proposal**.
+# 3. Build frontend
+npm run build:frontend
 
-## Important Notice
+# 4. Start server
+npm start
+```
 
-Designed for **Non-Classified Use Only**.
+Open [http://localhost:3000](http://localhost:3000)
 
-Do not upload:
-- Classified information
-- Controlled Unclassified Information (CUI)
-- ITAR/EAR controlled technical data
-- Export-controlled materials
+## Development
 
-This tool is intended for general proposal preparation and document analysis.
+```bash
+# Backend (with hot-reload)
+npm run dev
+
+# Frontend (Vite HMR, in a separate terminal)
+cd frontend && npm run dev
+```
+
+## Documentation
+
+See [docs/SETUP.md](docs/SETUP.md) for full setup, API reference, and deployment instructions.
+
+## API Endpoints
+
+| Endpoint | Description |
+|---|---|
+| `POST /api/auth/register` | Register new user |
+| `POST /api/auth/login` | Login and get JWT |
+| `POST /api/auth/logout` | Logout |
+| `GET /api/auth/profile` | Get current user |
+| `POST /api/opportunities/search` | Search SAM.gov by NAICS |
+| `POST /api/opportunities/analyze` | Analyze document |
+| `GET /api/opportunities` | Get saved opportunities |
+| `POST /api/email-preferences/preferences/update` | Set email preferences |
+| `POST /api/email/send-daily-digest` | Trigger daily email |
+| `GET /health` | Health check |
+
+## Tech Stack
+
+- **Backend:** Node.js, Express, MongoDB (Mongoose), JWT, bcryptjs, Nodemailer
+- **Frontend:** React 18, React Router, Tailwind CSS, Vite, Axios
+- **Services:** SAM.gov OpenGov API, Gmail / SendGrid
+- **Monitoring:** Datadog APM (optional)
 
 ## Pricing & Payments
 
@@ -56,63 +85,6 @@ Set this link in your environment:
 STRIPE_PAYMENT_LINK=https://buy.stripe.com/aFa7sK8peh2l4Up8aVf7i02
 ```
 
-## Technology Stack
+## Disclaimer
 
-- Node.js
-- Express
-- OpenAI API
-- Multer (file uploads)
-- pdf-parse
-- Mammoth (DOCX extraction)
-
-## Local Setup
-
-Clone the repository:
-
-```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
-npm install
-```
-
-Copy the example environment file and fill in your values:
-
-```bash
-cp .env.example .env
-# Then edit .env and set SAM_API_KEY=<your_key>
-```
-
-Get a free SAM.gov API key at <https://api.data.gov/signup/>, then request access to the SAM.gov Opportunities API.
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-## Deploying to Render
-
-> **Why can't Render read my `SAM_API_KEY`?**
->
-> The `.env` file is listed in `.gitignore` and is **never committed to the repository**.
-> Render deploys by cloning the repo, so it will not find a `.env` file automatically.
-> You must add every required environment variable directly in the Render dashboard.
-
-### Steps
-
-1. Push this repository to GitHub (if you haven't already).
-2. Go to [render.com](https://render.com) → **New +** → **Web Service** and connect your repo.
-3. Render will detect `render.yaml` automatically and pre-populate the service settings:
-   - **Build Command**: `npm install`
-   - **Start Command**: `node server.js`
-4. In the **Environment** tab (or during setup), add the following environment variable:
-
-   | Key | Value |
-   |-----|-------|
-   | `SAM_API_KEY` | Your SAM.gov API key |
-
-   > **Security**: Never paste your API key into `render.yaml` or any file that is committed to source control. Always use the Render dashboard's **Environment Variables** section.
-
-5. Click **Create Web Service**. Render will build and deploy the app.
-
-On startup the server logs `✅ SAM_API_KEY is configured.` if the key is found, or a `⚠️  WARNING` with instructions if it is missing. Check the Render **Logs** tab if SAM search isn't working.
+Designed for Non-Classified Use Only. GovCon AI Scanner provides preliminary analysis and does not replace professional contract review.
