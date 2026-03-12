@@ -10,6 +10,8 @@ import connectDB from "./backend/config/db.js";
 import authRouter from "./backend/routes/auth.js";
 import opportunitiesRouter from "./backend/routes/opportunities.js";
 import emailRouter from "./backend/routes/email.js";
+import adminRouter from "./backend/routes/admin.js";
+import docsRouter from "./backend/routes/docs.js";
 
 dotenv.config();
 
@@ -60,6 +62,15 @@ const apiLimiter = rateLimit({
   message: { success: false, error: "Too many requests. Please try again later." }
 });
 
+// Admin endpoints — tighter limit to protect sensitive operations
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please try again later." }
+});
+
 // ---------------------------------------------------------------------------
 // API Routes
 // ---------------------------------------------------------------------------
@@ -67,6 +78,10 @@ app.use("/api/auth", authLimiter, authRouter);
 app.use("/api/opportunities", apiLimiter, opportunitiesRouter);
 app.use("/api/email", apiLimiter, emailRouter);
 app.use("/api/email-preferences", apiLimiter, emailRouter);
+app.use("/api/admin", adminLimiter, adminRouter);
+
+// API Documentation (Swagger UI + raw spec) — no auth required
+app.use("/", docsRouter);
 
 // Health check (no auth required)
 app.get("/health", (req, res) => {
