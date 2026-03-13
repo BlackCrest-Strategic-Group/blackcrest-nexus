@@ -17,3 +17,19 @@ services:
         value: govcon-ai-scanner
       - key: DD_ENV
         value: production
+
+  - type: web
+    name: govcon-opportunity-intelligence
+    runtime: python
+    rootDir: intelligence
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: SAM_API_KEY
+        sync: false   # Same key as the Node service — set once in the Render dashboard
+      - key: SQLITE_DB_PATH
+        value: "intelligence.db"
+      - key: INTELLIGENCE_DAYS_BACK
+        value: "30"
+      - key: INTELLIGENCE_MAX_RECORDS
+        value: "500"

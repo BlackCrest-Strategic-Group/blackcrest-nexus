@@ -2,12 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import Header from "./Header.jsx";
 import SearchForm from "./SearchForm.jsx";
 import AnalysisResults from "./AnalysisResults.jsx";
+import OpportunityIntelligence from "./OpportunityIntelligence.jsx";
 import { opportunitiesApi, emailApi } from "../utils/api.js";
 import { getUser } from "../utils/auth.js";
 
 const TABS = [
   { id: "search", label: "SAM.gov Search" },
   { id: "analyze", label: "Document Analysis" },
+  { id: "intelligence", label: "Intelligence" },
   { id: "saved", label: "Saved Opportunities" },
   { id: "email", label: "Email Settings" }
 ];
@@ -288,6 +290,9 @@ export default function Dashboard() {
             {analysisResult && <AnalysisResults result={analysisResult} />}
           </div>
         )}
+
+        {/* ── Opportunity Intelligence ── */}
+        {tab === "intelligence" && <OpportunityIntelligence />}
 
         {/* ── Saved Opportunities ── */}
         {tab === "saved" && (
