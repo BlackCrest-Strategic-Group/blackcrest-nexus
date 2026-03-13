@@ -350,7 +350,7 @@ async def _fetch_sbir(naics_codes: list[str]) -> list[dict]:
 # Grants.gov
 # ---------------------------------------------------------------------------
 
-async def _fetch_grants(naics_codes: list[str]) -> list[dict]:
+async def _fetch_grants() -> list[dict]:
     """
     Fetch posted federal grants from Grants.gov.
 
@@ -430,7 +430,7 @@ async def collect_all(
         _fetch_sam(codes, days_back),
         _fetch_usaspending(codes, days_back),
         _fetch_sbir(codes),
-        _fetch_grants(codes),
+        _fetch_grants(),
     )
 
     all_records = sam + usas + sbir + grants

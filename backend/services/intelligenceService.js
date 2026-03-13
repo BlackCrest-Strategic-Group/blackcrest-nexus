@@ -432,7 +432,7 @@ function buildSummary(analysis, trendScore) {
     trendScore >= 20 ? "low" : "minimal";
 
   const parts = [
-    `The GovCon scanner analysed ${total.toLocaleString()} records across ${sources.length} federal database(s) (${sources.join(", ") || "none"}).`,
+    `The GovCon scanner analyzed ${total.toLocaleString()} records across ${sources.length} federal database(s) (${sources.join(", ") || "none"}).`,
   ];
 
   if (topAgencies.length) {

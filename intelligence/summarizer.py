@@ -48,7 +48,7 @@ def summarize(analysis: dict[str, Any], trend_score: int) -> str:
     label = _score_label(trend_score)
 
     parts: list[str] = [
-        f"The GovCon opportunity scanner analysed {total:,} records "
+        f"The GovCon opportunity scanner analyzed {total:,} records "
         f"across {len(sources)} federal database(s) "
         f"({', '.join(sources) if sources else 'none'})."
     ]
