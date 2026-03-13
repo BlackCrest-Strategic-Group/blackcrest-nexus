@@ -11,6 +11,7 @@ const TABS = [
   { id: "analyze", label: "Document Analysis" },
   { id: "intelligence", label: "Intelligence" },
   { id: "saved", label: "Saved Opportunities" },
+  { id: "intelligence", label: "Opportunity Intelligence" },
   { id: "email", label: "Email Settings" }
 ];
 
@@ -311,6 +312,9 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* ── Opportunity Intelligence ── */}
+        {tab === "intelligence" && <OpportunityIntelligence />}
 
         {/* ── Email Settings ── */}
         {tab === "email" && (
