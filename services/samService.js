@@ -2,15 +2,13 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Log SAM_API_KEY availability at module load time (key masked for security)
-if (process.env.SAM_API_KEY) {
-  console.log("✅ samService: SAM_API_KEY is present (length:", process.env.SAM_API_KEY.length, ")");
-} else {
-  console.warn("⚠️  samService: SAM_API_KEY is NOT set. SAM search will fail.");
+// Optionally log SAM_API_KEY availability in non-production environments without exposing details
+if (process.env.NODE_ENV && process.env.NODE_ENV !== "production") {
+  const hasSamApiKey = Boolean(process.env.SAM_API_KEY);
+  console.log("samService: SAM_API_KEY configured:", hasSamApiKey);
 }
 
 const SAM_BASE_URL = "https://api.sam.gov/opportunities/v1/search";
-
 function cleanParams(params) {
   return Object.fromEntries(
     Object.entries(params).filter(([_, value]) => {
