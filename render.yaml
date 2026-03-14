@@ -1,6 +1,8 @@
-# Contents of the updated render.yaml with correct characters.
-# Please replace this text with the actual content after fixing special characters and curly quotes.
+# Updated render.yaml
 
-# Example
-# "New Text with Correct Quotes"
-# Here you can define your YAML structure.
+configuration:
+  name: govcon-ai-scanner
+  description: Configuration for the govcon AI scanner
+  settings:
+    - feature-x: true
+    - feature-y: true
