@@ -7,6 +7,7 @@ if (process.env.NODE_ENV && process.env.NODE_ENV !== "production") {
   const hasSamApiKey = Boolean(process.env.SAM_API_KEY);
   console.log("samService: SAM_API_KEY configured:", hasSamApiKey);
 }
+const SAM_BASE_URL = "https://api.sam.gov/opportunities/v1/search";
 
 const SAM_BASE_URL = "https://api.sam.gov/opportunities/v1/search";
 function cleanParams(params) {
@@ -25,11 +26,17 @@ function formatDateForSamApi(value) {
   if (!value) return value;
 
   // Already in MM/DD/YYYY format
+// SAM.gov API expects dates in MM/DD/YYYY format.
+function toSamDate(value) {
+  if (!value) return value;
+
+  // Already in MM/DD/YYYY — pass through unchanged
   if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
     return value;
   }
 
   // Convert ISO YYYY-MM-DD → MM/DD/YYYY
+  // Convert YYYY-MM-DD (ISO / HTML date input format) → MM/DD/YYYY
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     const [year, month, day] = value.split("-");
     return `${month}/${day}/${year}`;
@@ -65,6 +72,8 @@ export async function searchOpportunities({
     api_key: process.env.SAM_API_KEY,
     postedFrom: formatDateForSamApi(postedFrom),
     postedTo: formatDateForSamApi(postedTo),
+    postedFrom: toSamDate(postedFrom),
+    postedTo: toSamDate(postedTo),
     limit,
     offset,
     keyword,
