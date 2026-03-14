@@ -1,3 +1,14 @@
+import React, { useState, useEffect, useRef } from "react";
+import Header from "./Header.jsx";
+import SearchForm from "./SearchForm.jsx";
+import AnalysisResults from "./AnalysisResults.jsx";
+import { opportunitiesApi, emailApi } from "../utils/api.js";
+import { getUser } from "../utils/auth.js";
+
+const TABS = [
+  { id: "search", label: "SAM.gov Search" },
+  { id: "analyze", label: "Document Analysis" },
+  { id: "saved", label: "Saved Opportunities" },
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Header from "./Header.jsx";
 import SearchForm from "./SearchForm.jsx";
@@ -92,6 +103,8 @@ const TABS = [
 ];
 
 function OpportunityCard({ opp, onSave, saved }) {
+  return (
+    <div className="card hover:shadow-md transition-shadow">
   const daysUntilDue = opp.responseDeadLine
     ? Math.ceil((new Date(opp.responseDeadLine) - Date.now()) / 86400000)
     : null;
@@ -108,6 +121,17 @@ function OpportunityCard({ opp, onSave, saved }) {
             href={opp.uiLink || "#"}
             target="_blank"
             rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 font-medium text-sm block truncate"
+          >
+            {opp.title || "Untitled Opportunity"}
+          </a>
+          <p className="text-xs text-slate-500 mt-1">
+            {opp.agency || "N/A"} &bull; NAICS: {opp.naicsCode || "N/A"} &bull; {opp.setAside || "No set-aside"}
+          </p>
+          <p className="text-xs text-slate-400 mt-0.5">
+            Posted: {opp.postedDate || "N/A"} &bull; Due: {opp.responseDeadLine || "N/A"}
+          </p>
+        </div>
             className="text-navy-700 hover:text-navy-900 font-semibold text-sm block leading-snug group-hover:underline"
             className="font-medium text-sm block truncate"
             style={{ color: "#14243a" }}
@@ -346,6 +370,8 @@ function NonClassifiedTab() {
           className={`shrink-0 text-xs px-3 py-1.5 rounded-md font-medium border transition-colors ${
             saved
               ? "bg-green-50 text-green-700 border-green-200 cursor-default"
+              : "bg-white text-slate-600 border-slate-300 hover:border-blue-400 hover:text-blue-600"
+          }`}
               : "bg-white border-slate-300 hover:border-[#14243a]"
           }`}
           style={!saved ? { color: "#5d6b7c" } : {}}
@@ -357,6 +383,9 @@ function NonClassifiedTab() {
   );
 }
 
+export default function Dashboard() {
+  const user = getUser();
+  const [tab, setTab] = useState("search");
 /* ─── Main Dashboard ─────────────────────────────────────────── */
 const TABS = [
   { id: "search",    label: "SAM.gov Search",    icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" },
@@ -378,6 +407,10 @@ export default function Dashboard() {
 
   // Analysis state
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [analyzeMode, setAnalyzeMode] = useState("file"); // "file" | "text"
+  const [analyzeLoading, setAnalyzeLoading] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState("");
+  const [pastedText, setPastedText] = useState("");
   const [analyzeMode, setAnalyzeMode] = useState("file");
   const [analyzeLoading, setAnalyzeLoading] = useState(false);
   const [analyzeError, setAnalyzeError] = useState("");
@@ -394,6 +427,7 @@ export default function Dashboard() {
   const [emailLoading, setEmailLoading] = useState(false);
   const [emailStatus, setEmailStatus] = useState("");
 
+  // Load saved opportunities when that tab is active
   const showToast = useCallback((message, type = "success") => {
     setToast({ message, type });
   }, []);
@@ -408,6 +442,8 @@ export default function Dashboard() {
         .finally(() => setSavedLoading(false));
     }
     if (tab === "email") {
+      emailApi
+        .getPreferences()
       emailApi.getPreferences()
         .then((res) => setEmailPrefs(res.data.preferences))
         .catch(() => {});
@@ -418,6 +454,24 @@ export default function Dashboard() {
     try {
       await opportunitiesApi.save(opp);
       setSavedIds((s) => new Set([...s, opp.noticeId]));
+    } catch {
+      // silent
+    }
+  }
+
+  async function handleAnalyzeFile(e) {
+    e.preventDefault();
+    const file = fileRef.current?.files?.[0];
+    if (!file) { setAnalyzeError("Please choose a file."); return; }
+    setAnalyzeError("");
+    setAnalyzeLoading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await opportunitiesApi.analyze(form);
+      setAnalysisResult(res.data);
+    } catch (err) {
+      setAnalyzeError(err.response?.data?.error || "Analysis failed.");
       showToast("Opportunity saved!");
     } catch {
       showToast("Failed to save opportunity.", "error");
@@ -443,6 +497,18 @@ export default function Dashboard() {
     }
   }
 
+  async function handleAnalyzeText(e) {
+    e.preventDefault();
+    if (!pastedText.trim()) { setAnalyzeError("Please paste some text."); return; }
+    setAnalyzeError("");
+    setAnalyzeLoading(true);
+    try {
+      const res = await opportunitiesApi.analyzeText(pastedText);
+      setAnalysisResult(res.data);
+    } catch (err) {
+      setAnalyzeError(err.response?.data?.error || "Analysis failed.");
+    } finally {
+      setAnalyzeLoading(false);
   async function handleAnalyzeFile(e) {
     e.preventDefault();
     const file = fileRef.current?.files?.[0];
@@ -485,6 +551,39 @@ export default function Dashboard() {
     try {
       const res = await emailApi.updatePreferences(emailPrefs);
       setEmailPrefs(res.data.preferences);
+      setEmailStatus("✓ Preferences saved.");
+    } catch {
+      setEmailStatus("✗ Failed to save preferences.");
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Header />
+
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-6">
+        {/* Welcome bar */}
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-slate-800">
+            Welcome back{user?.name ? `, ${user.name}` : ""}!
+          </h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            Your GovCon AI Scanner dashboard
+          </p>
+        </div>
+
+        {/* Tab navigation */}
+        <div className="flex gap-1 mb-6 border-b border-slate-200 overflow-x-auto">
+          {TABS.map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => setTab(id)}
+              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                tab === id
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-slate-500 hover:text-slate-700"
+              }`}
+            >
       showToast("Alert preferences saved!");
     } catch {
       showToast("Failed to save preferences.", "error");
@@ -574,11 +673,22 @@ export default function Dashboard() {
 
         {/* ── SAM.gov Search ── */}
         {tab === "search" && (
+          <div className="space-y-4">
           <div className="space-y-4 animate-fade-in">
             <SearchForm onResults={setSearchResults} />
 
             {searchResults && (
               <div className="card">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-slate-800">
+                    Results
+                    <span className="ml-2 text-sm font-normal text-slate-500">
+                      {searchResults.totalRecords ?? searchResults.opportunities?.length ?? 0} total
+                    </span>
+                  </h3>
+                </div>
+                {searchResults.opportunities?.length === 0 ? (
+                  <p className="text-slate-400 text-sm">No opportunities found. Try broadening your search.</p>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
                   <div>
                     <h3 className="section-title">
@@ -614,9 +724,9 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {(searchResults.opportunities || []).map((opp) => (
+                    {(searchResults.opportunities || []).map((opp, index) => (
                       <OpportunityCard
-                        key={opp.noticeId || Math.random()}
+                        key={opp.noticeId ?? `opp-${index}`}
                         opp={opp}
                         onSave={handleSave}
                         saved={savedIds.has(opp.noticeId)}
@@ -629,6 +739,34 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Document Analysis ── */}
+        {tab === "analyze" && (
+          <div className="space-y-4">
+            <div className="card">
+              <h2 className="text-lg font-semibold text-slate-800 mb-4">Document Analysis</h2>
+
+              {/* Mode toggle */}
+              <div className="flex rounded-lg bg-slate-100 p-1 w-fit mb-5">
+                <button
+                  onClick={() => { setAnalyzeMode("file"); setAnalyzeError(""); setAnalysisResult(null); }}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    analyzeMode === "file" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  Upload File
+                </button>
+                <button
+                  onClick={() => { setAnalyzeMode("text"); setAnalyzeError(""); setAnalysisResult(null); }}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                    analyzeMode === "text" ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  }`}
+                >
+                  Paste Text
+                </button>
+              </div>
+
+              {analyzeError && (
+                <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
         {/* ── Bid / No-Bid Analysis ── */}
         {tab === "analyze" && (
           <div className="space-y-4 animate-fade-in">
@@ -668,6 +806,8 @@ export default function Dashboard() {
 
               {analyzeMode === "file" ? (
                 <form onSubmit={handleAnalyzeFile} className="space-y-4">
+                  <div>
+                    <label className="label">Choose Document (PDF, DOCX, or TXT)</label>
                   <div
                     className={`upload-zone ${dragOver ? "upload-zone-active" : ""}`}
                     onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -693,6 +833,12 @@ export default function Dashboard() {
                       ref={fileRef}
                       type="file"
                       accept=".pdf,.docx,.txt"
+                      className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                    />
+                  </div>
+                  <button type="submit" disabled={analyzeLoading} className="btn-primary">
+                    {analyzeLoading ? "Analyzing…" : "Analyze Document"}
+                  </button>
                       className="hidden"
                       className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-[#edf3fb] file:text-[#14243a] hover:file:bg-[#dce8f7] cursor-pointer"
                     />
@@ -711,6 +857,8 @@ export default function Dashboard() {
                   <div>
                     <label className="label">Paste Solicitation Text</label>
                     <textarea
+                      className="input h-48 resize-y"
+                      placeholder="Paste solicitation text, clauses, or statement of work…"
                       className="input h-52 resize-y font-mono text-xs leading-relaxed"
                       placeholder="Paste solicitation text, statement of work, or relevant clauses here…"
                       value={pastedText}
@@ -718,6 +866,7 @@ export default function Dashboard() {
                     />
                   </div>
                   <button type="submit" disabled={analyzeLoading} className="btn-primary">
+                    {analyzeLoading ? "Analyzing…" : "Analyze Text"}
                     {analyzeLoading
                       ? <><span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Analyzing…</>
                       : "Analyze Text"}
@@ -736,6 +885,20 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── Saved Opportunities ── */}
+        {tab === "saved" && (
+          <div className="space-y-3">
+            {savedLoading ? (
+              <div className="card text-center text-slate-400">Loading…</div>
+            ) : savedOpps.length === 0 ? (
+              <div className="card text-center text-slate-400">
+                <p>No saved opportunities yet.</p>
+                <p className="text-sm mt-1">Search SAM.gov and save opportunities to review them here.</p>
+              </div>
+            ) : (
+              savedOpps.map((opp) => (
+                <OpportunityCard key={opp.noticeId} opp={opp} onSave={() => {}} saved />
+              ))
         {/* ── FAR / DFARS ── */}
         {tab === "far" && <FARDFARSTab />}
 
@@ -832,6 +995,7 @@ export default function Dashboard() {
                     id="emailEnabled"
                     checked={emailPrefs.enabled}
                     onChange={(e) => setEmailPrefs((p) => ({ ...p, enabled: e.target.checked }))}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                     className="rounded border-slate-300"
                     style={{ accentColor: "#14243a" }}
                   />
@@ -853,6 +1017,50 @@ export default function Dashboard() {
                   </select>
                 </div>
 
+                <div>
+                  <label className="label">Delivery Hour (0–23, local time)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    max={23}
+                    value={emailPrefs.deliveryTime}
+                    onChange={(e) => setEmailPrefs((p) => ({ ...p, deliveryTime: Number(e.target.value) }))}
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Minimum Bid Score (0–100)</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={emailPrefs.minBidScore}
+                    onChange={(e) => setEmailPrefs((p) => ({ ...p, minBidScore: Number(e.target.value) }))}
+                  />
+                </div>
+
+                {emailStatus && (
+                  <p className={`text-sm ${emailStatus.startsWith("✓") ? "text-green-700" : "text-red-700"}`}>
+                    {emailStatus}
+                  </p>
+                )}
+
+                <div className="flex gap-3 pt-2">
+                  <button type="submit" className="btn-primary">Save Preferences</button>
+                  <button
+                    type="button"
+                    onClick={handleSendDigest}
+                    className="btn-secondary"
+                  >
+                    Send Test Digest
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <p className="text-slate-400 text-sm">Loading preferences…</p>
+            )}
                   <div>
                     <label className="label">Frequency</label>
                     <div className="relative">
@@ -923,6 +1131,9 @@ export default function Dashboard() {
         )}
       </main>
 
+      <footer className="border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        Designed for Non-Classified Use Only &bull; GovCon AI Scanner v2.0
+      </footer>
       {/* ── Footer ── */}
       <footer className="border-t border-slate-200 bg-white py-5 px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">

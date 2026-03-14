@@ -20,6 +20,9 @@ const NAICS_OPTIONS = [
   { code: "238290", label: "238290 – Other Building Equipment Contractors" }
 ];
 
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const [mode, setMode] = useState("login"); // "login" | "register"
 const FEATURES = [
   { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", text: "Real-time SAM.gov opportunity search" },
   { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "AI-powered bid/no-bid scoring" },
@@ -64,6 +67,7 @@ export default function LoginPage() {
       if (mode === "login") {
         res = await authApi.login({ email: form.email, password: form.password });
       } else {
+        if (!form.name.trim()) { setError("Name is required."); return; }
         if (!form.name.trim()) {
           setError("Full name is required.");
           setLoading(false);
@@ -87,6 +91,35 @@ export default function LoginPage() {
   }
 
   return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex flex-col">
+      {/* Top Logo Bar */}
+      <header className="flex items-center justify-between px-8 py-5">
+        {/* BlackCrest Sourcing Group — top left */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center shadow-lg">
+            <span className="text-white font-bold text-lg leading-none">B</span>
+          </div>
+          <div>
+            <div className="text-white font-bold text-sm leading-tight">BlackCrest</div>
+            <div className="text-amber-400 text-xs leading-tight">Sourcing Group</div>
+          </div>
+        </div>
+
+        {/* GovCon AI Scanner — top right */}
+        <div className="flex items-center gap-3">
+          <div>
+            <div className="text-white font-bold text-sm leading-tight text-right">GovCon AI</div>
+            <div className="text-blue-400 text-xs leading-tight text-right">Scanner</div>
+          </div>
+          <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+        </div>
+      </header>
+
     <div className="min-h-screen flex" style={{ fontFamily: "Inter, system-ui, sans-serif" }}>
       {/* ── Left panel (branding) ── */}
       <div className="hidden lg:flex flex-col w-[480px] shrink-0 bg-gradient-to-b from-navy-950 to-navy-800 px-12 py-10 relative overflow-hidden">
@@ -180,6 +213,16 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Title */}
           <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">GovCon AI Scanner</h1>
+            <p className="text-slate-400 text-sm">
+              Federal contracting intelligence powered by AI
+            </p>
+          </div>
+
+          {/* Card */}
+          <div className="bg-white rounded-2xl shadow-2xl p-8">
+            {/* Tab switcher */}
+            <div className="flex rounded-lg bg-slate-100 p-1 mb-6">
             <h1 className="text-3xl font-bold mb-2" style={{ color: "#14243a" }}>GovCon AI Scanner</h1>
             <p className="text-sm" style={{ color: "#5d6b7c" }}>
               Federal contracting intelligence powered by AI
@@ -212,6 +255,9 @@ export default function LoginPage() {
                 onClick={() => { setMode("login"); setError(""); }}
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
                   mode === "login"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
                     ? "bg-white shadow-sm"
                     : ""
                 }`}
@@ -223,6 +269,9 @@ export default function LoginPage() {
                 onClick={() => { setMode("register"); setError(""); }}
                 className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
                   mode === "register"
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
                     ? "bg-white shadow-sm"
                     : ""
                 }`}
@@ -232,6 +281,8 @@ export default function LoginPage() {
               </button>
             </div>
 
+            {error && (
+              <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {/* Mode toggle */}
             <div className="flex rounded-xl bg-slate-200/80 p-1 mb-6">
               {[{ id: "login", label: "Sign In" }, { id: "register", label: "Create Account" }].map(({ id, label }) => (
@@ -261,6 +312,13 @@ export default function LoginPage() {
               </div>
             )}
 
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {mode === "register" && (
+                <>
+                  <div>
+                    <label className="label">Full Name</label>
+                    <input
+                      className="input"
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Register-only fields */}
@@ -281,6 +339,12 @@ export default function LoginPage() {
                     />
                   </div>
                   <div>
+                    <label className="label">Company (optional)</label>
+                    <input
+                      className="input"
+                      type="text"
+                      name="company"
+                      placeholder="BlackCrest Sourcing Group"
                     <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
                       Company Name
                     </label>
@@ -296,6 +360,40 @@ export default function LoginPage() {
                 </>
               )}
 
+              <div>
+                <label className="label">Email Address</label>
+                <input
+                  className="input"
+                  type="email"
+                  name="email"
+                  placeholder="you@company.com"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  autoComplete="email"
+                />
+              </div>
+
+              <div>
+                <label className="label">Password</label>
+                <input
+                  className="input"
+                  type="password"
+                  name="password"
+                  placeholder={mode === "register" ? "At least 8 characters" : "••••••••"}
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  autoComplete={mode === "register" ? "new-password" : "current-password"}
+                />
+              </div>
+
+              {mode === "register" && (
+                <div>
+                  <label className="label">NAICS Codes (select all that apply)</label>
+                  <div className="max-h-40 overflow-y-auto border border-slate-200 rounded-lg p-2 space-y-1">
+                    {NAICS_OPTIONS.map(({ code, label }) => (
+                      <label key={code} className="flex items-center gap-2 cursor-pointer hover:bg-slate-50 rounded px-2 py-1">
               {/* Email */}
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">
@@ -364,6 +462,9 @@ export default function LoginPage() {
                           type="checkbox"
                           checked={form.naicsCodes.includes(code)}
                           onChange={() => handleNaicsToggle(code)}
+                          className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-slate-700">{label}</span>
                           className="rounded border-slate-300 text-navy-600 focus:ring-navy-500"
                         />
                         {label}
@@ -378,11 +479,14 @@ export default function LoginPage() {
                     ))}
                   </div>
                   {form.naicsCodes.length > 0 && (
+                    <p className="text-xs text-blue-600 mt-1">{form.naicsCodes.length} code(s) selected</p>
                     <p className="text-xs mt-1" style={{ color: "#9a7724" }}>{form.naicsCodes.length} code(s) selected</p>
                   )}
                 </div>
               )}
 
+              <div className="flex items-center justify-between pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
               {/* Remember me / Forgot */}
               <div className="flex items-center justify-between">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -391,6 +495,12 @@ export default function LoginPage() {
                     name="rememberMe"
                     checked={form.rememberMe}
                     onChange={handleChange}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-slate-600">Remember me</span>
+                </label>
+                {mode === "login" && (
+                  <button type="button" className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                     className="rounded border-slate-300 text-navy-600 focus:ring-navy-500"
                     className="rounded"
                     style={{ borderColor: "#c8d5e6", accentColor: "#14243a" }}
@@ -405,6 +515,25 @@ export default function LoginPage() {
                 )}
               </div>
 
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full mt-2"
+              >
+                {loading
+                  ? "Please wait…"
+                  : mode === "login"
+                  ? "Sign In"
+                  : "Create Account"}
+              </button>
+            </form>
+          </div>
+
+          <p className="text-center text-slate-500 text-xs mt-6">
+            Designed for Non-Classified Use Only &bull; GovCon AI Scanner v2.0
+          </p>
+        </div>
+      </main>
               {/* Submit button */}
               <button
                 type="submit"

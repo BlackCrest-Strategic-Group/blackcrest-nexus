@@ -1,3 +1,4 @@
+import "./tracer.js"; // must be first — initialises Datadog APM
 import "./tracer.js"; // must be first — initializes Datadog APM
 import path from "path";
 import { fileURLToPath } from "url";
@@ -68,6 +69,37 @@ const apiLimiter = rateLimit({
   message: { success: false, error: "Too many requests. Please try again later." }
 });
 
+// ---------------------------------------------------------------------------
+// API Routes
+// ---------------------------------------------------------------------------
+app.use("/api/auth", authLimiter, authRouter);
+app.use("/api/opportunities", apiLimiter, opportunitiesRouter);
+app.use("/api/email", apiLimiter, emailRouter);
+app.use("/api/email-preferences", apiLimiter, emailRouter);
+
+// Health check (no auth required)
+app.get("/health", (req, res) => {
+  res.json({
+    ok: true,
+    app: "GovCon AI Scanner",
+    env: process.env.NODE_ENV || "development",
+    samConfigured: !!process.env.SAM_API_KEY,
+    mongoConfigured: !!process.env.MONGODB_URI
+  });
+});
+
+// ---------------------------------------------------------------------------
+});
+
+// General API limit for all other authenticated routes
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please try again later." }
+});
+
 // Admin endpoints — tighter limit to protect sensitive operations
 // Stricter limit for admin endpoints — reduces blast radius if an admin token is compromised
 const adminLimiter = rateLimit({
@@ -116,6 +148,7 @@ const pageLimiter = rateLimit({
   legacyHeaders: false
 });
 
+const frontendDist = path.join(__dirname, "frontend", "dist");
 const frontendDist = path.join(__dirname, "public");
 app.use(express.static(frontendDist));
 
@@ -142,6 +175,22 @@ app.get("*", pageLimiter, (req, res) => {
 // ---------------------------------------------------------------------------
 // Start server
 // ---------------------------------------------------------------------------
+async function start() {
+  try {
+    if (process.env.MONGODB_URI) {
+      await connectDB();
+    } else {
+      console.warn("MONGODB_URI not set — running without database. Auth endpoints will not work.");
+    }
+
+    app.listen(PORT, () => {
+      console.log(`GovCon AI Scanner running on port ${PORT}`);
+      console.log("SAM_API_KEY configured:", !!process.env.SAM_API_KEY);
+      console.log("MongoDB configured:", !!process.env.MONGODB_URI);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
 const MONGO_RETRY_DELAY_MS = 5000;
 const MONGO_MAX_RETRIES = 12; // ~1 minute of retries
 
