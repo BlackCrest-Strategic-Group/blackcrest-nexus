@@ -22,6 +22,11 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy — required on Render (and similar platforms) so that
+// express-rate-limit can read the real client IP from X-Forwarded-For.
+// Must be set BEFORE any rate-limiter middleware is registered.
+app.set("trust proxy", 1);
+
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
@@ -107,7 +112,7 @@ const pageLimiter = rateLimit({
   legacyHeaders: false
 });
 
-const frontendDist = path.join(__dirname, "frontend", "dist");
+const frontendDist = path.join(__dirname, "public");
 app.use(express.static(frontendDist));
 
 // SPA fallback — serve index.html for all non-API routes
