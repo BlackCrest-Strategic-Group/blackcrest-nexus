@@ -81,7 +81,7 @@ router.get("/debug", async (req, res) => {
     });
   }
 
-  console.log("✅ SAM_API_KEY is present (length:", process.env.SAM_API_KEY.length, ")");
+  console.log("✅ SAM_API_KEY is present.");
 
   // Use a narrow date window (last 7 days) with just the required params
   const today = new Date();
