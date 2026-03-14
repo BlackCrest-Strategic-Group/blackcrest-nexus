@@ -1,8 +1,16 @@
-# Updated render.yaml
-
-configuration:
-  name: govcon-ai-scanner
-  description: Configuration for the govcon AI scanner
-  settings:
-    - feature-x: true
-    - feature-y: true
+services:
+  govcon-ai-scanner:
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      NODE_ENV: production
+  govcon-opportunity-intelligence:
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      FLASK_ENV: production
+  govcon-intelligence:
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      FLASK_ENV: production
