@@ -23,9 +23,6 @@ function startOf(unit, offsetDays = 0) {
   return d;
 }
 
-/**
- * Returns an array of ISO date strings for the last `days` days (newest last).
- */
 function lastNDays(days) {
   return Array.from({ length: days }, (_, i) => {
     const d = new Date();
@@ -36,7 +33,7 @@ function lastNDays(days) {
 }
 
 // ---------------------------------------------------------------------------
-// Dashboard — key metrics
+// Dashboard Metrics
 // ---------------------------------------------------------------------------
 
 export async function getDashboardMetrics() {
@@ -45,11 +42,7 @@ export async function getDashboardMetrics() {
   const startLastMonth = new Date(startThisMonth);
   startLastMonth.setUTCMonth(startLastMonth.getUTCMonth() - 1);
   const endLastMonth = new Date(startThisMonth);
-/**
- * Returns high-level dashboard KPIs.
- */
-export async function getDashboardMetrics() {
-  const now = new Date();
+
   const thirtyDaysAgo = new Date(now);
   thirtyDaysAgo.setDate(now.getDate() - 30);
 
@@ -61,7 +54,8 @@ export async function getDashboardMetrics() {
     adminUsers,
     totalOpportunities,
     savedOpportunities,
-    emailPrefs
+    emailPrefs,
+    mau
   ] = await Promise.all([
     User.countDocuments(),
     User.countDocuments({ isActive: true }),
@@ -69,18 +63,10 @@ export async function getDashboardMetrics() {
     User.countDocuments({ createdAt: { $gte: startLastMonth, $lt: endLastMonth } }),
     User.countDocuments({ role: "admin" }),
     Opportunity.countDocuments(),
-    Opportunity.countDocuments({ savedBy: { $exists: true, $not: { $size: 0 } } }),
-    EmailPreference.countDocuments({ enabled: true })
+    Opportunity.countDocuments({ "savedBy.0": { $exists: true } }),
+    EmailPreference.countDocuments({ enabled: true }),
+    User.countDocuments({ isActive: true, updatedAt: { $gte: thirtyDaysAgo } })
   ]);
-
-  // Monthly Active Users: active users who logged in (or refreshed token) in the last 30 days.
-  // `updatedAt` is a reliable proxy because every login/token-refresh writes refreshToken to the DB.
-  // For finer-grained tracking, add a dedicated `lastLoginAt` timestamp to the User schema.
-  const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
-  const mau = await User.countDocuments({
-    isActive: true,
-    updatedAt: { $gte: thirtyDaysAgo }
-  });
 
   const growthRate =
     newUsersLastMonth > 0
@@ -88,20 +74,6 @@ export async function getDashboardMetrics() {
       : newUsersThisMonth > 0
       ? "100.0"
       : "0.0";
-
-    adminUsers,
-    totalOpportunities,
-    savedOpportunities,
-    emailPrefsEnabled
-  ] = await Promise.all([
-    User.countDocuments({}),
-    User.countDocuments({ isActive: true }),
-    User.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
-    User.countDocuments({ role: "admin" }),
-    Opportunity.countDocuments({}),
-    Opportunity.countDocuments({ "savedBy.0": { $exists: true } }),
-    EmailPreference.countDocuments({ enabled: true })
-  ]);
 
   return {
     users: {
@@ -113,48 +85,31 @@ export async function getDashboardMetrics() {
       growthRate: parseFloat(growthRate),
       mau
     },
-    opportunities: {
-      total: totalOpportunities,
-      withSaves: savedOpportunities
-    },
-    email: {
-      subscribed: emailPrefs
-    }
+    opportunities: { total: totalOpportunities, saved: savedOpportunities },
+    email: { subscribed: emailPrefs },
+    generatedAt: now.toISOString()
   };
 }
 
 // ---------------------------------------------------------------------------
-// Usage trends — daily registrations and activity
+// Usage Trends
 // ---------------------------------------------------------------------------
 
 export async function getUsageTrends(days = 30) {
   const labels = lastNDays(days);
   const since = new Date(labels[0]);
 
-  // New users per day
   const signupAgg = await User.aggregate([
     { $match: { createdAt: { $gte: since } } },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-        count: { $sum: 1 }
-      }
-    }
+    { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } }, count: { $sum: 1 } } }
+  ]);
+
+  const searchAgg = await Opportunity.aggregate([
+    { $match: { cachedAt: { $gte: since } } },
+    { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$cachedAt" } }, count: { $sum: 1 } } }
   ]);
 
   const signupMap = Object.fromEntries(signupAgg.map((r) => [r._id, r.count]));
-
-  // Opportunities cached per day (proxy for search activity)
-  const searchAgg = await Opportunity.aggregate([
-    { $match: { cachedAt: { $gte: since } } },
-    {
-      $group: {
-        _id: { $dateToString: { format: "%Y-%m-%d", date: "$cachedAt" } },
-        count: { $sum: 1 }
-      }
-    }
-  ]);
-
   const searchMap = Object.fromEntries(searchAgg.map((r) => [r._id, r.count]));
 
   return {
@@ -165,97 +120,49 @@ export async function getUsageTrends(days = 30) {
 }
 
 // ---------------------------------------------------------------------------
-// Revenue analytics — subscription approximation
-// (Without a Stripe webhook DB, we estimate from user data)
+// Revenue Analytics
 // ---------------------------------------------------------------------------
 
 export async function getRevenueAnalytics() {
-  // Approximate: count active, non-admin users as subscribers
   const [subscribers, churned] = await Promise.all([
     User.countDocuments({ isActive: true, role: "user" }),
     User.countDocuments({ isActive: false, role: "user" })
   ]);
 
-  const pricePerMonth = 79; // $79/month
+  const pricePerMonth = 79;
   const mrr = subscribers * pricePerMonth;
   const arr = mrr * 12;
 
-  // Trend: new users per month for last 6 months
-  const months = Array.from({ length: 6 }, (_, i) => {
-    const d = new Date();
-    d.setUTCDate(1);
-    d.setUTCHours(0, 0, 0, 0);
-    d.setUTCMonth(d.getUTCMonth() - (5 - i));
-    return d;
-  });
-
-  const monthlyAgg = await User.aggregate([
-    { $match: { createdAt: { $gte: months[0] } } },
-    {
-      $group: {
-        _id: {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" }
-        },
-        newUsers: { $sum: 1 }
-      }
-    }
-  ]);
-
-  const monthlyMap = Object.fromEntries(
-    monthlyAgg.map((r) => [`${r._id.year}-${String(r._id.month).padStart(2, "0")}`, r.newUsers])
-  );
-
-  const labels = months.map((d) =>
-    d.toLocaleDateString("en-US", { month: "short", year: "numeric" })
-  );
-  const keys = months.map((d) => `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
-
-  return {
-    mrr,
-    arr,
-    subscribers,
-    churned,
-    pricePerMonth,
-    trend: {
-      labels,
-      newSubscribers: keys.map((k) => monthlyMap[k] || 0),
-      revenue: keys.map((k) => (monthlyMap[k] || 0) * pricePerMonth)
-    }
-  };
+  return { mrr, arr, subscribers, churned, pricePerMonth };
 }
 
 // ---------------------------------------------------------------------------
-// Feature usage — NAICS code popularity and email settings
+// Feature Usage
 // ---------------------------------------------------------------------------
 
 export async function getFeatureUsage() {
-  const [naicsAgg, emailFreqAgg, analysisCount] = await Promise.all([
+  const [naicsAgg, emailFreqAgg] = await Promise.all([
     User.aggregate([
       { $unwind: "$naicsCodes" },
       { $group: { _id: "$naicsCodes", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
     ]),
-    EmailPreference.aggregate([
-      { $group: { _id: "$frequency", count: { $sum: 1 } } }
-    ]),
-    Opportunity.countDocuments({ bidScore: { $exists: true } })
+    EmailPreference.aggregate([{ $group: { _id: "$frequency", count: { $sum: 1 } } }])
   ]);
 
   return {
     topNaicsCodes: naicsAgg.map((r) => ({ code: r._id, users: r.count })),
-    emailFrequency: Object.fromEntries(emailFreqAgg.map((r) => [r._id, r.count])),
-    documentsAnalyzed: analysisCount
+    emailFrequency: Object.fromEntries(emailFreqAgg.map((r) => [r._id, r.count]))
   };
 }
 
 // ---------------------------------------------------------------------------
-// Search trends — popular keywords and NAICS from cached opportunities
+// Search Trends
 // ---------------------------------------------------------------------------
 
 export async function getSearchTrends() {
-  const [topNaics, topAgencies, recentSearches] = await Promise.all([
+  const [topNaics, topAgencies] = await Promise.all([
     Opportunity.aggregate([
       { $match: { naicsCode: { $ne: null } } },
       { $group: { _id: "$naicsCode", count: { $sum: 1 } } },
@@ -267,22 +174,17 @@ export async function getSearchTrends() {
       { $group: { _id: "$agency", count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 10 }
-    ]),
-    Opportunity.find({}, "title naicsCode agency postedDate cachedAt")
-      .sort({ cachedAt: -1 })
-      .limit(10)
-      .lean()
+    ])
   ]);
 
   return {
     topNaicsCodes: topNaics.map((r) => ({ code: r._id, count: r.count })),
-    topAgencies: topAgencies.map((r) => ({ agency: r._id, count: r.count })),
-    recentOpportunities: recentSearches
+    topAgencies: topAgencies.map((r) => ({ agency: r._id, count: r.count }))
   };
 }
 
 // ---------------------------------------------------------------------------
-// System health
+// System Health
 // ---------------------------------------------------------------------------
 
 export async function getSystemHealth() {
@@ -303,10 +205,7 @@ export async function getSystemHealth() {
 
   return {
     status: mongoStatus === "healthy" ? "healthy" : "degraded",
-    uptime: {
-      seconds: Math.round(uptimeSeconds),
-      human: formatUptime(uptimeSeconds)
-    },
+    uptime: { seconds: Math.round(uptimeSeconds), human: formatUptime(uptimeSeconds) },
     memory: {
       heapUsedMB: (mem.heapUsed / 1024 / 1024).toFixed(1),
       heapTotalMB: (mem.heapTotal / 1024 / 1024).toFixed(1),
@@ -315,10 +214,7 @@ export async function getSystemHealth() {
     integrations: {
       mongodb: { status: mongoStatus, latencyMs: mongoLatencyMs },
       samApi: { configured: !!process.env.SAM_API_KEY },
-      stripe: { configured: !!process.env.STRIPE_PAYMENT_LINK },
-      email: {
-        configured: !!(process.env.GMAIL_USER || process.env.SENDGRID_API_KEY)
-      }
+      stripe: { configured: !!process.env.STRIPE_PAYMENT_LINK }
     },
     nodeVersion: process.version,
     env: process.env.NODE_ENV || "development"
@@ -332,23 +228,11 @@ function formatUptime(seconds) {
   const s = Math.floor(seconds % 60);
   return `${d}d ${h}h ${m}m ${s}s`;
 }
-      newThisMonth: newUsersThisMonth,
-      admins: adminUsers
-    },
-    opportunities: {
-      cached: totalOpportunities,
-      saved: savedOpportunities
-    },
-    email: {
-      subscribed: emailPrefsEnabled
-    },
-    generatedAt: now.toISOString()
-  };
-}
 
-/**
- * Returns daily registration counts for the past N days.
- */
+// ---------------------------------------------------------------------------
+// Utility Functions
+// ---------------------------------------------------------------------------
+
 export async function getDailyRegistrations(days = 30) {
   const since = new Date();
   since.setDate(since.getDate() - days);
@@ -357,11 +241,7 @@ export async function getDailyRegistrations(days = 30) {
     { $match: { createdAt: { $gte: since } } },
     {
       $group: {
-        _id: {
-          year: { $year: "$createdAt" },
-          month: { $month: "$createdAt" },
-          day: { $dayOfMonth: "$createdAt" }
-        },
+        _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" }, day: { $dayOfMonth: "$createdAt" } },
         count: { $sum: 1 }
       }
     },
@@ -374,9 +254,6 @@ export async function getDailyRegistrations(days = 30) {
   }));
 }
 
-/**
- * Returns the most popular NAICS codes across all user profiles.
- */
 export async function getPopularNaicsCodes(limit = 20) {
   const result = await User.aggregate([
     { $unwind: "$naicsCodes" },
@@ -388,9 +265,6 @@ export async function getPopularNaicsCodes(limit = 20) {
   return result.map((r) => ({ naicsCode: r._id, userCount: r.count }));
 }
 
-/**
- * Returns saved-opportunity counts per NAICS code.
- */
 export async function getSavedOpportunityTrends(limit = 20) {
   const result = await Opportunity.aggregate([
     { $match: { "savedBy.0": { $exists: true } } },
@@ -402,26 +276,6 @@ export async function getSavedOpportunityTrends(limit = 20) {
   return result.map((r) => ({ naicsCode: r._id, totalSaves: r.saves, uniqueOpportunities: r.opportunities }));
 }
 
-/**
- * Returns feature usage breakdown.
- */
-export async function getFeatureUsage() {
-  const [usersWithNaics, usersWithEmail, opportunitiesSaved] = await Promise.all([
-    User.countDocuments({ "naicsCodes.0": { $exists: true } }),
-    EmailPreference.countDocuments({ enabled: true }),
-    Opportunity.countDocuments({ "savedBy.0": { $exists: true } })
-  ]);
-
-  return {
-    naicsCodeConfiguration: usersWithNaics,
-    emailAlertsEnabled: usersWithEmail,
-    opportunitiesSaved
-  };
-}
-
-/**
- * Returns paginated user list with basic stats.
- */
 export async function getUserList({ page = 1, limit = 20, search = "", role = null } = {}) {
   const query = {};
   if (search) {
@@ -436,15 +290,9 @@ export async function getUserList({ page = 1, limit = 20, search = "", role = nu
     User.countDocuments(query)
   ]);
 
-  return {
-    users,
-    pagination: { page, limit, total, pages: Math.ceil(total / limit) }
-  };
+  return { users, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };
 }
 
-/**
- * Returns detailed stats for a single user.
- */
 export async function getUserStats(userId) {
   const [user, emailPref, savedCount] = await Promise.all([
     User.findById(userId).select("-password -refreshToken"),
@@ -457,8 +305,6 @@ export async function getUserStats(userId) {
   return {
     user: user.toObject(),
     emailPreferences: emailPref,
-    stats: {
-      savedOpportunities: savedCount
-    }
+    stats: { savedOpportunities: savedCount }
   };
 }
