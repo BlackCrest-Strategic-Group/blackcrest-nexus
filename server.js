@@ -133,22 +133,41 @@ app.get("*", pageLimiter, (req, res) => {
 // ---------------------------------------------------------------------------
 // Start server
 // ---------------------------------------------------------------------------
-async function start() {
-  try {
-    if (process.env.MONGODB_URI) {
-      await connectDB();
-    } else {
-      console.warn("MONGODB_URI not set — running without database. Auth endpoints will not work.");
-    }
+const MONGO_RETRY_DELAY_MS = 5000;
+const MONGO_MAX_RETRIES = 12; // ~1 minute of retries
 
-    app.listen(PORT, () => {
-      console.log(`GovCon AI Scanner running on port ${PORT}`);
-      console.log("SAM_API_KEY configured:", !!process.env.SAM_API_KEY);
-      console.log("MongoDB configured:", !!process.env.MONGODB_URI);
-    });
+let mongoRetryTimeout = null;
+
+async function connectWithRetry(attempt = 1) {
+  try {
+    await connectDB();
+    mongoRetryTimeout = null;
+    console.log("MongoDB connected successfully.");
   } catch (error) {
-    console.error("Failed to start server:", error.message);
-    process.exit(1);
+    console.error(`MongoDB connection attempt ${attempt} failed: ${error.message}`);
+    if (attempt < MONGO_MAX_RETRIES) {
+      console.log(`Retrying MongoDB connection in ${MONGO_RETRY_DELAY_MS / 1000}s...`);
+      mongoRetryTimeout = setTimeout(() => connectWithRetry(attempt + 1), MONGO_RETRY_DELAY_MS);
+    } else {
+      mongoRetryTimeout = null;
+      console.error("MongoDB connection failed after maximum retries. Auth/DB endpoints will not work.");
+    }
+  }
+}
+
+async function start() {
+  // Start the HTTP server immediately — do not block on MongoDB.
+  app.listen(PORT, () => {
+    console.log(`GovCon AI Scanner running on port ${PORT}`);
+    console.log("SAM_API_KEY configured:", !!process.env.SAM_API_KEY);
+    console.log("MongoDB configured:", !!process.env.MONGODB_URI);
+  });
+
+  // Attempt MongoDB connection in the background with retries.
+  if (process.env.MONGODB_URI) {
+    connectWithRetry();
+  } else {
+    console.warn("MONGODB_URI not set — running without database. Auth endpoints will not work.");
   }
 }
 
