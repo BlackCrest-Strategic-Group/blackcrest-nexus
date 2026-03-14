@@ -15,6 +15,7 @@
 - 🔐 **JWT Authentication** — secure login / registration with refresh tokens
 - 💾 **MongoDB Persistence** — users, saved opportunities, email preferences
 - ⚡ **React + Tailwind CSS** — modern responsive frontend with both logos
+- 🧠 **Opportunity Intelligence** — cross-database trend analysis across SAM.gov, USASpending.gov, SBIR.gov, and Grants.gov
 
 ## Quick Start
 
@@ -60,6 +61,8 @@ See [docs/SETUP.md](docs/SETUP.md) for full setup, API reference, and deployment
 | `POST /api/opportunities/search` | Search SAM.gov by NAICS |
 | `POST /api/opportunities/analyze` | Analyze document |
 | `GET /api/opportunities` | Get saved opportunities |
+| `GET /api/opportunity-intelligence` | Get opportunity intelligence report |
+| `POST /api/opportunity-intelligence/refresh` | Refresh from all federal databases |
 | `POST /api/email-preferences/preferences/update` | Set email preferences |
 | `POST /api/email/send-daily-digest` | Trigger daily email |
 | `GET /health` | Health check |
@@ -70,6 +73,24 @@ See [docs/SETUP.md](docs/SETUP.md) for full setup, API reference, and deployment
 - **Frontend:** React 18, React Router, Tailwind CSS, Vite, Axios
 - **Services:** SAM.gov OpenGov API, Gmail / SendGrid
 - **Monitoring:** Datadog APM (optional)
+
+- **Services:** SAM.gov, USASpending.gov, SBIR.gov, Grants.gov, Gmail / SendGrid
+- **Intelligence:** Multi-source NAICS-filtered opportunity analysis with trend scoring (also available as a standalone Python/FastAPI microservice in `intelligence/`)
+- **Monitoring:** Datadog APM (optional)
+
+## Pricing & Payments
+
+GovCon AI Scanner includes a **30-day free trial** with full access to all features.
+
+After the trial period, users are directed to upgrade via Stripe:
+
+**Stripe Payment Link:** `https://buy.stripe.com/aFa7sK8peh2l4Up8aVf7i02`
+
+Set this link in your environment:
+
+```env
+STRIPE_PAYMENT_LINK=https://buy.stripe.com/aFa7sK8peh2l4Up8aVf7i02
+```
 
 ## Disclaimer
 
