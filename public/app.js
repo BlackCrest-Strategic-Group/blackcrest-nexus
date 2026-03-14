@@ -320,8 +320,11 @@ pasteForm.addEventListener("submit", (e) => {
 samSearchForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const keyword = document.getElementById("keyword").value.trim();
   const setAsideEl = document.getElementById("setAside");
 
+  const params = new URLSearchParams();
+  if (keyword) params.set("keyword", keyword);
   const params = new URLSearchParams({
     postedFrom: toIsoDate(document.getElementById("postedFrom").value),
     postedTo: toIsoDate(document.getElementById("postedTo").value),
@@ -332,16 +335,23 @@ samSearchForm.addEventListener("submit", async (e) => {
     noticeType: (document.getElementById("noticeType")?.value || "").trim()
   });
 
-  if (!params.get("postedFrom") || !params.get("postedTo")) {
-    alert("Posted From and Posted To are required for SAM search.");
-    return;
-  }
+  const naics = document.getElementById("naics").value.trim();
+  const psc = document.getElementById("psc").value.trim();
+  const postedFrom = toIsoDate(document.getElementById("postedFrom").value);
+  const postedTo = toIsoDate(document.getElementById("postedTo").value);
+  const setAside = setAsideEl ? setAsideEl.value.trim() : "";
+
+  if (naics) params.set("naics", naics);
+  if (psc) params.set("psc", psc);
+  if (postedFrom) params.set("postedFrom", postedFrom);
+  if (postedTo) params.set("postedTo", postedTo);
+  if (setAside) params.set("setAside", setAside);
 
   samStatusEl.textContent = "Searching SAM.gov...";
-  samResultsEl.innerHTML = `<p class="empty-state">Searching...</p>`;
+  samResultsEl.innerHTML = `<p class="empty-state">Loading results, please wait…</p>`;
 
   try {
-    const response = await fetch(`/api/opportunities?${params.toString()}`);
+    const response = await fetch(`/api/sam-search?${params.toString()}`);
     const contentType = response.headers.get("content-type") || "";
     const rawText = await response.text();
 
@@ -449,7 +459,7 @@ samSearchForm.addEventListener("submit", async (e) => {
   } catch (error) {
     console.error(error);
     samStatusEl.textContent = "Search failed.";
-    samResultsEl.innerHTML = `<p class="empty-state">${error.message || "Unable to search SAM.gov."}</p>`;
+    samResultsEl.innerHTML = `<p class="empty-state">${error.message || "Unable to search SAM.gov. Please try again."}</p>`;
   }
 });
 

@@ -5,6 +5,10 @@ import { fileURLToPath } from "url";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import fs from "fs";
+import { tracer } from "./tracer.js";
+import opportunitiesRouter from "./routes/opportunities.js";
+import samSearchRouter from "./routes/samSearch.js";
 import rateLimit from "express-rate-limit";
 
 import connectDB from "./backend/config/db.js";
@@ -28,6 +32,9 @@ const PORT = process.env.PORT || 3000;
 // Must be set BEFORE any rate-limiter middleware is registered.
 app.set("trust proxy", 1);
 
+// API routes — registered early so they are matched before the wildcard fallback
+app.use("/api/opportunities", opportunitiesRouter);
+app.use("/api/sam-search", samSearchRouter);
 // ---------------------------------------------------------------------------
 // Middleware
 // ---------------------------------------------------------------------------
