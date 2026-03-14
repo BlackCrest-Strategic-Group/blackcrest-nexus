@@ -34,6 +34,7 @@ app.set("trust proxy", 1);
 
 // API routes — registered early so they are matched before the wildcard fallback
 app.use("/api/opportunities", opportunitiesRouter);
+app.use("/api/sam-search", opportunitiesRouter);
 app.use("/api/sam-search", samSearchRouter);
 // ---------------------------------------------------------------------------
 // Middleware
