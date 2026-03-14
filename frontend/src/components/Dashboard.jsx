@@ -6,11 +6,16 @@ import { opportunitiesApi, emailApi } from "../utils/api.js";
 import { getUser } from "../utils/auth.js";
 
 /* ─── helpers ────────────────────────────────────────────────── */
+function sanitizeCsvCell(value) {
+  const str = value == null ? "" : String(value);
+  return /^[=+\-@]/.test(str) ? "'" + str : str;
+}
+
 function exportCSV(rows, filename = "govcon-export.csv") {
   if (!rows?.length) return;
   const headers = Object.keys(rows[0]);
   const lines = [headers.join(","), ...rows.map((r) =>
-    headers.map((h) => JSON.stringify(r[h] ?? "")).join(",")
+    headers.map((h) => JSON.stringify(sanitizeCsvCell(r[h] ?? ""))).join(",")
   )];
   const blob = new Blob([lines.join("\n")], { type: "text/csv" });
   const url = URL.createObjectURL(blob);
