@@ -79,11 +79,11 @@ app.get("/health", (req, res) => {
 });
 
 // Serve static files
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: "app.html" }));
 
-// Fallback to index.html for SPA
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+// Fallback to app.html for SPA
+app.get("*", apiLimiter, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "app.html"));
 });
 
 // Error handling
