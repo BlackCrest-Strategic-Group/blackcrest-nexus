@@ -79,8 +79,10 @@ app.get("/health", (req, res) => {
 });
 
 // Serve static files
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { index: "app.html" }));
 
+// Fallback to app.html for SPA
+app.get("*", apiLimiter, (req, res) => {
 // Explicit login route
 app.get("/login", apiLimiter, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
