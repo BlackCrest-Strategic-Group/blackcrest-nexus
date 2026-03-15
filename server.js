@@ -81,9 +81,9 @@ app.get("/health", (req, res) => {
 // Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// Fallback to index.html for SPA
+// Fallback to app.html for SPA
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(__dirname, "public", "app.html"));
 });
 
 // Error handling
