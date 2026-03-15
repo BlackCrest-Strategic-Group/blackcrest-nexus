@@ -17,6 +17,11 @@ function generateTokens(userId) {
   return { accessToken, refreshToken };
 }
 
+function sanitizeNaicsCodes(codes) {
+  if (!Array.isArray(codes)) return [];
+  return codes.filter((c) => typeof c === "string" && /^\d{2,6}$/.test(c.trim()));
+}
+
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
   try {
@@ -40,7 +45,7 @@ router.post("/register", async (req, res) => {
       password,
       name: name?.trim() || "",
       company: company?.trim() || "",
-      naicsCodes: Array.isArray(naicsCodes) ? naicsCodes : []
+      naicsCodes: sanitizeNaicsCodes(naicsCodes)
     });
 
     await user.save();
@@ -163,7 +168,7 @@ router.patch("/profile", authenticateToken, async (req, res) => {
     const updates = {};
     if (name !== undefined) updates.name = name.trim();
     if (company !== undefined) updates.company = company.trim();
-    if (Array.isArray(naicsCodes)) updates.naicsCodes = naicsCodes;
+    if (Array.isArray(naicsCodes)) updates.naicsCodes = sanitizeNaicsCodes(naicsCodes);
 
     const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
     if (!user) {

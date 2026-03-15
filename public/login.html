@@ -149,6 +149,52 @@
     .register-fields.visible {
       display: flex;
     }
+
+    .naics-list {
+      max-height: 176px;
+      overflow-y: auto;
+      border: 1px solid #c8d5e6;
+      border-radius: 12px;
+      padding: 8px;
+      background: #fbfdff;
+    }
+
+    .naics-list label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: normal;
+      font-size: 0.88rem;
+      color: #14243a;
+      margin-bottom: 0;
+    }
+
+    .naics-list label:hover {
+      background: rgba(20, 36, 58, 0.05);
+    }
+
+    .naics-list input[type="checkbox"] {
+      width: auto;
+      padding: 0;
+      accent-color: #14243a;
+    }
+
+    .naics-help {
+      font-size: 0.82rem;
+      color: #5d6b7c;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .naics-count {
+      font-size: 0.82rem;
+      color: #9a7724;
+      margin-top: 4px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -175,6 +221,27 @@
             <label for="company">Company (optional)</label>
             <input type="text" id="company" name="company" placeholder="Acme Corp" autocomplete="organization" />
           </div>
+          <div>
+            <label for="naics-section">NAICS Codes <span style="font-weight:normal;color:#5d6b7c">(optional — improves opportunity matching)</span></label>
+            <span class="naics-help">Select the industry codes that best describe your business to surface the most relevant federal opportunities.</span>
+            <div class="naics-list" id="naics-list">
+              <label><input type="checkbox" value="238290" onchange="updateNaicsCount()" /> 238290 – Other Building Equipment Contractors</label>
+              <label><input type="checkbox" value="332710" onchange="updateNaicsCount()" /> 332710 – Machine Shops</label>
+              <label><input type="checkbox" value="336411" onchange="updateNaicsCount()" /> 336411 – Aircraft Manufacturing</label>
+              <label><input type="checkbox" value="541330" onchange="updateNaicsCount()" /> 541330 – Engineering Services</label>
+              <label><input type="checkbox" value="541511" onchange="updateNaicsCount()" /> 541511 – Custom Computer Programming</label>
+              <label><input type="checkbox" value="541512" onchange="updateNaicsCount()" /> 541512 – Computer Systems Design</label>
+              <label><input type="checkbox" value="541513" onchange="updateNaicsCount()" /> 541513 – Computer Facilities Management</label>
+              <label><input type="checkbox" value="541519" onchange="updateNaicsCount()" /> 541519 – Other Computer-Related Services</label>
+              <label><input type="checkbox" value="541611" onchange="updateNaicsCount()" /> 541611 – Management Consulting</label>
+              <label><input type="checkbox" value="541690" onchange="updateNaicsCount()" /> 541690 – Other Scientific &amp; Technical Consulting</label>
+              <label><input type="checkbox" value="541990" onchange="updateNaicsCount()" /> 541990 – All Other Professional Services</label>
+              <label><input type="checkbox" value="561110" onchange="updateNaicsCount()" /> 561110 – Office Administrative Services</label>
+              <label><input type="checkbox" value="561210" onchange="updateNaicsCount()" /> 561210 – Facilities Support Services</label>
+              <label><input type="checkbox" value="611430" onchange="updateNaicsCount()" /> 611430 – Professional &amp; Management Training</label>
+            </div>
+            <span class="naics-count" id="naics-count"></span>
+          </div>
         </div>
 
         <div>
@@ -195,6 +262,22 @@
 
   <script>
     var currentMode = "login";
+
+    function updateNaicsCount() {
+      var checkboxes = document.querySelectorAll("#naics-list input[type='checkbox']:checked");
+      var countEl = document.getElementById("naics-count");
+      if (checkboxes.length > 0) {
+        countEl.textContent = checkboxes.length + " code" + (checkboxes.length !== 1 ? "s" : "") + " selected";
+        countEl.style.display = "block";
+      } else {
+        countEl.style.display = "none";
+      }
+    }
+
+    function getSelectedNaicsCodes() {
+      var checkboxes = document.querySelectorAll("#naics-list input[type='checkbox']:checked");
+      return Array.from(checkboxes).map(function(cb) { return cb.value; });
+    }
 
     function switchTab(mode) {
       currentMode = mode;
@@ -245,6 +328,8 @@
         }
         payload.name = name;
         if (company) payload.company = company;
+        var naicsCodes = getSelectedNaicsCodes();
+        if (naicsCodes.length > 0) payload.naicsCodes = naicsCodes;
       }
 
       btn.disabled = true;
