@@ -83,6 +83,13 @@ app.use(express.static(path.join(__dirname, "public"), { index: "app.html" }));
 
 // Fallback to app.html for SPA
 app.get("*", apiLimiter, (req, res) => {
+// Explicit login route
+app.get("/login", apiLimiter, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// Fallback to app.html for SPA
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "app.html"));
 });
 
