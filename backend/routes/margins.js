@@ -128,7 +128,7 @@ router.get("/agency-trends", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
     const agencyStats = await Opportunity.aggregate([
-      { $match: { savedBy: { $elemMatch: { $eq: userId } } } },
+      { $match: { savedBy: userId } },
       {
         $group: {
           _id: "$agency",

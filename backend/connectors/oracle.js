@@ -61,9 +61,17 @@ async function erpPost(tenantUrl, path, accessToken, body) {
   return response.data;
 }
 
+// Sanitize a string value for inclusion in Oracle FIQL/OData query strings.
+function sanitizeQueryValue(val) {
+  return String(val).replace(/['";<>\\]/g, "");
+}
+
 // Fetch purchase orders from Oracle Procurement Cloud.
 export async function getPurchaseOrders(tenantUrl, accessToken, options = {}) {
   const { offset = 0, limit = 50, status, supplierName } = options;
+  const queryParts = [];
+  if (status) queryParts.push(`Status=${sanitizeQueryValue(status)}`);
+  if (supplierName) queryParts.push(`SupplierName=${sanitizeQueryValue(supplierName)}`);
   return erpGet(
     tenantUrl,
     "/fscmRestApi/resources/11.13.18.05/purchaseOrders",
@@ -71,8 +79,7 @@ export async function getPurchaseOrders(tenantUrl, accessToken, options = {}) {
     {
       offset,
       limit,
-      ...(status ? { q: `Status=${status}` } : {}),
-      ...(supplierName ? { q: `SupplierName=${supplierName}` } : {})
+      ...(queryParts.length > 0 ? { q: queryParts.join(";") } : {})
     }
   );
 }
@@ -93,13 +100,17 @@ export async function getSuppliers(tenantUrl, accessToken, options = {}) {
   return erpGet(tenantUrl, "/fscmRestApi/resources/11.13.18.05/suppliers", accessToken, {
     offset,
     limit,
-    ...(search ? { q: `SupplierName=*${search}*` } : {})
+    ...(search ? { q: `SupplierName=*${sanitizeQueryValue(search)}*` } : {})
   });
 }
 
 // Fetch invoices from Oracle Financials.
 export async function getInvoices(tenantUrl, accessToken, options = {}) {
   const { offset = 0, limit = 50, status, invoiceDateFrom, invoiceDateTo } = options;
+  const queryParts = [];
+  if (status) queryParts.push(`InvoiceStatus=${sanitizeQueryValue(status)}`);
+  if (invoiceDateFrom) queryParts.push(`InvoiceDate>=${sanitizeQueryValue(invoiceDateFrom)}`);
+  if (invoiceDateTo) queryParts.push(`InvoiceDate<=${sanitizeQueryValue(invoiceDateTo)}`);
   return erpGet(
     tenantUrl,
     "/fscmRestApi/resources/11.13.18.05/invoices",
@@ -107,9 +118,7 @@ export async function getInvoices(tenantUrl, accessToken, options = {}) {
     {
       offset,
       limit,
-      ...(status ? { q: `InvoiceStatus=${status}` } : {}),
-      ...(invoiceDateFrom ? { q: `InvoiceDate>=${invoiceDateFrom}` } : {}),
-      ...(invoiceDateTo ? { q: `InvoiceDate<=${invoiceDateTo}` } : {})
+      ...(queryParts.length > 0 ? { q: queryParts.join(";") } : {})
     }
   );
 }

@@ -32,7 +32,7 @@ router.get("/capture", authenticateToken, async (req, res) => {
 
     // Win probability distribution (based on bid scores)
     const scoreDistribution = await Opportunity.aggregate([
-      { $match: { savedBy: { $elemMatch: { $eq: userId } }, bidScore: { $ne: null } } },
+      { $match: { savedBy: userId, bidScore: { $ne: null } } },
       {
         $bucket: {
           groupBy: "$bidScore",

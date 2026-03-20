@@ -126,6 +126,15 @@ router.post("/:id/test", authenticateToken, async (req, res) => {
   }
 });
 
+// Build a normalised pagination options object from query parameters.
+// Each connector reads only the fields it needs (page/pageSize, top/skip, offset/limit).
+function buildPaginationOpts(query) {
+  const pageSize = Number(query.pageSize) || 50;
+  const page = Number(query.page) || 1;
+  const skip = (page - 1) * pageSize;
+  return { page, pageSize, top: pageSize, skip, offset: skip, limit: pageSize };
+}
+
 // ── GET /api/erp/:id/purchase-orders ─────────────────────────────
 router.get("/:id/purchase-orders", authenticateToken, async (req, res) => {
   try {
@@ -135,12 +144,7 @@ router.get("/:id/purchase-orders", authenticateToken, async (req, res) => {
     const token = await resolveToken(cfg);
     const connector = connectors[cfg.system];
     const data = await connector.getPurchaseOrders(cfg.tenantUrl, token, {
-      page: Number(req.query.page) || 1,
-      pageSize: Number(req.query.pageSize) || 50,
-      top: Number(req.query.pageSize) || 50,
-      skip: ((Number(req.query.page) || 1) - 1) * (Number(req.query.pageSize) || 50),
-      offset: ((Number(req.query.page) || 1) - 1) * (Number(req.query.pageSize) || 50),
-      limit: Number(req.query.pageSize) || 50,
+      ...buildPaginationOpts(req.query),
       status: req.query.status || undefined
     });
 
@@ -160,12 +164,7 @@ router.get("/:id/suppliers", authenticateToken, async (req, res) => {
     const token = await resolveToken(cfg);
     const connector = connectors[cfg.system];
     const data = await connector.getSuppliers(cfg.tenantUrl, token, {
-      page: Number(req.query.page) || 1,
-      pageSize: Number(req.query.pageSize) || 50,
-      top: Number(req.query.pageSize) || 50,
-      skip: ((Number(req.query.page) || 1) - 1) * (Number(req.query.pageSize) || 50),
-      offset: ((Number(req.query.page) || 1) - 1) * (Number(req.query.pageSize) || 50),
-      limit: Number(req.query.pageSize) || 50,
+      ...buildPaginationOpts(req.query),
       search: req.query.search || undefined
     });
 
@@ -185,12 +184,7 @@ router.get("/:id/invoices", authenticateToken, async (req, res) => {
     const token = await resolveToken(cfg);
     const connector = connectors[cfg.system];
     const data = await connector.getInvoices(cfg.tenantUrl, token, {
-      page: Number(req.query.page) || 1,
-      pageSize: Number(req.query.pageSize) || 50,
-      top: Number(req.query.pageSize) || 50,
-      skip: ((Number(req.query.page) || 1) - 1) * (Number(req.query.pageSize) || 50),
-      offset: ((Number(req.query.page) || 1) - 1) * (Number(req.query.pageSize) || 50),
-      limit: Number(req.query.pageSize) || 50,
+      ...buildPaginationOpts(req.query),
       status: req.query.status || undefined,
       fromDate: req.query.fromDate || undefined,
       toDate: req.query.toDate || undefined

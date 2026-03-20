@@ -86,6 +86,12 @@ export async function createPurchaseOrder(tenantUrl, accessToken, orderData) {
   );
 }
 
+// Sanitize a string for safe inclusion in OData $filter expressions.
+// Escapes single-quotes per the OData string literal spec.
+function sanitizeODataString(val) {
+  return String(val).replace(/'/g, "''");
+}
+
 // Fetch supplier master data from SAP Business Partner API.
 export async function getSuppliers(tenantUrl, accessToken, options = {}) {
   const { top = 50, skip = 0, search } = options;
@@ -96,7 +102,9 @@ export async function getSuppliers(tenantUrl, accessToken, options = {}) {
     {
       $top: top,
       $skip: skip,
-      ...(search ? { $filter: `contains(Supplier,'${search}')` } : {})
+      ...(search
+        ? { $filter: `contains(Supplier,'${sanitizeODataString(search)}')` }
+        : {})
     }
   );
 }
@@ -111,7 +119,7 @@ export async function getInvoices(tenantUrl, accessToken, options = {}) {
     {
       $top: top,
       $skip: skip,
-      ...(filter ? { $filter: filter } : {})
+      ...(filter ? { $filter: sanitizeODataString(filter) } : {})
     }
   );
 }
