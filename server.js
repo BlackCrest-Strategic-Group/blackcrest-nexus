@@ -6,6 +6,7 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
 import { connectDB } from "./backend/config/db.js";
 
 // Backend route handlers
@@ -96,8 +97,17 @@ app.use(express.static(path.join(__dirname, "public")));
 const distDir = path.join(__dirname, "frontend", "dist");
 app.use(express.static(distDir));
 
+// ---------------------------------------------------------------------------
 // SPA catch-all: serve index.html for any non-API route so React Router works
-app.get("*", (req, res, next) => {
+// ---------------------------------------------------------------------------
+const spaLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.get("*", spaLimiter, (req, res, next) => {
   if (req.path.startsWith("/api/")) return next();
   const indexPath = path.join(distDir, "index.html");
   res.sendFile(indexPath, (err) => {
