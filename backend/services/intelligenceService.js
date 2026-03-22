@@ -109,7 +109,7 @@ async function fetchSam(naicsCodes, daysBack) {
   const fromDate = new Date(today);
   fromDate.setDate(today.getDate() - daysBack);
   const fmt = (d) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
 
   const results = [];
 
@@ -117,7 +117,7 @@ async function fetchSam(naicsCodes, daysBack) {
   const fetchTasks = naicsCodes.length
     ? naicsCodes.slice(0, 10).map((naics) =>
         fetch(
-          `https://api.sam.gov/opportunities/v1/search?` +
+          `https://api.sam.gov/opportunities/v2/search?` +
             new URLSearchParams({
               api_key: apiKey,
               postedFrom: fmt(fromDate),
@@ -151,7 +151,7 @@ async function fetchSam(naicsCodes, daysBack) {
       )
     : [
         fetch(
-          `https://api.sam.gov/opportunities/v1/search?` +
+          `https://api.sam.gov/opportunities/v2/search?` +
             new URLSearchParams({
               api_key: apiKey,
               postedFrom: fmt(fromDate),
