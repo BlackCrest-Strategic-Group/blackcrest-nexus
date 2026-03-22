@@ -121,7 +121,10 @@ router.post("/refresh", async (req, res) => {
 
     const user = await User.findById(decoded.id);
     const incomingHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
-    if (!user || user.refreshToken !== incomingHash) {
+    const storedHash = user?.refreshToken || "";
+    const hashesMatch = storedHash.length === incomingHash.length &&
+      crypto.timingSafeEqual(Buffer.from(storedHash), Buffer.from(incomingHash));
+    if (!user || !hashesMatch) {
       return res.status(403).json({ success: false, error: "Invalid refresh token." });
     }
 
