@@ -92,7 +92,7 @@ router.post("/login", async (req, res) => {
     }
 
     const { accessToken, refreshToken } = generateTokens(user._id);
-    user.refreshToken = refreshToken;
+    user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
     await user.save();
 
     res.json({
@@ -120,12 +120,16 @@ router.post("/refresh", async (req, res) => {
     const decoded = jwt.verify(refreshToken, refreshSecret);
 
     const user = await User.findById(decoded.id);
-    if (!user || user.refreshToken !== refreshToken) {
+    const incomingHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    const storedHash = user?.refreshToken || "";
+    const hashesMatch = storedHash.length === incomingHash.length &&
+      crypto.timingSafeEqual(Buffer.from(storedHash), Buffer.from(incomingHash));
+    if (!user || !hashesMatch) {
       return res.status(403).json({ success: false, error: "Invalid refresh token." });
     }
 
     const tokens = generateTokens(user._id);
-    user.refreshToken = tokens.refreshToken;
+    user.refreshToken = crypto.createHash("sha256").update(tokens.refreshToken).digest("hex");
     await user.save();
 
     res.json({ success: true, ...tokens });
