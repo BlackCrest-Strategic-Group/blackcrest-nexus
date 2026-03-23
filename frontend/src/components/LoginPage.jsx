@@ -39,6 +39,7 @@ export default function LoginPage() {
     rememberMe: false
   });
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
 
   function handleChange(e) {
@@ -58,8 +59,16 @@ export default function LoginPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    setSuccessMsg("");
     setLoading(true);
     try {
+      if (mode === "forgotPassword") {
+        await authApi.forgotPassword(form.email);
+        setSuccessMsg("If that email is registered, a reset link has been sent. Please check your inbox.");
+        setLoading(false);
+        return;
+      }
+
       let res;
       if (mode === "login") {
         res = await authApi.login({ email: form.email, password: form.password });
@@ -97,13 +106,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-16 relative">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "#9a7724" }}>
-            <span className="text-white font-bold text-lg leading-none">B</span>
-          </div>
-          <div>
-            <div className="text-white font-bold text-sm">BlackCrest Sourcing Group</div>
-            <div className="text-xs tracking-widest uppercase" style={{ color: "#9a7724" }}>GovCon AI Scanner</div>
-          </div>
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Sourcing Group – GovCon AI Scanner" style={{ height: 48, width: "auto" }} />
         </div>
 
         {/* Hero text */}
@@ -149,22 +152,8 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col" style={{ background: "#f7fafe" }}>
         {/* Top bar */}
         <header className="flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(20,36,58,0.10)", background: "#ffffff" }}>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "#14243a" }}>
-              <span className="text-white font-bold text-sm leading-none">B</span>
-            </div>
-            <div>
-              <div className="font-bold text-sm" style={{ color: "#14243a" }}>BlackCrest Sourcing Group</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "#14243a" }}>
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-            <div className="text-sm font-bold" style={{ color: "#14243a" }}>GovCon AI Scanner</div>
-          </div>
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Sourcing Group" style={{ height: 36, width: "auto" }} />
+          <img src="/logos/govcon-logo.svg" alt="GovCon AI Scanner" style={{ height: 36, width: "auto" }} />
         </header>
 
         {/* Form area */}
@@ -173,36 +162,40 @@ export default function LoginPage() {
             {/* Heading */}
             <div className="mb-8">
               <h1 className="text-2xl font-bold" style={{ color: "#14243a" }}>
-                {mode === "login" ? "Welcome back" : "Create your account"}
+                {mode === "login" && "Welcome back"}
+                {mode === "register" && "Create your account"}
+                {mode === "forgotPassword" && "Forgot Password"}
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5d6b7c" }}>
-                {mode === "login"
-                  ? "Sign in to access your GovCon dashboard"
-                  : "Start your 14-day free trial — no credit card required"}
+                {mode === "login" && "Sign in to access your GovCon dashboard"}
+                {mode === "register" && "Start your 14-day free trial — no credit card required"}
+                {mode === "forgotPassword" && "Enter your email and we'll send you a reset link"}
               </p>
             </div>
 
             {/* Card */}
             <div className="bg-white rounded-2xl p-8" style={{ border: "1px solid rgba(20,36,58,0.12)", boxShadow: "0 10px 28px rgba(20,36,58,0.08)" }}>
-              {/* Tab switcher */}
-              <div className="flex rounded-lg p-1 mb-6" style={{ background: "#edf3fb" }}>
-                <button
-                  type="button"
-                  onClick={() => { setMode("login"); setError(""); }}
-                  className="flex-1 py-2 rounded-md text-sm font-medium transition-colors"
-                  style={mode === "login" ? { background: "#ffffff", color: "#14243a", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" } : { color: "#5d6b7c" }}
-                >
-                  Sign In
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setMode("register"); setError(""); }}
-                  className="flex-1 py-2 rounded-md text-sm font-medium transition-colors"
-                  style={mode === "register" ? { background: "#ffffff", color: "#14243a", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" } : { color: "#5d6b7c" }}
-                >
-                  Register
-                </button>
-              </div>
+              {/* Tab switcher — hidden on forgot password mode */}
+              {mode !== "forgotPassword" && (
+                <div className="flex rounded-lg p-1 mb-6" style={{ background: "#edf3fb" }}>
+                  <button
+                    type="button"
+                    onClick={() => { setMode("login"); setError(""); setSuccessMsg(""); }}
+                    className="flex-1 py-2 rounded-md text-sm font-medium transition-colors"
+                    style={mode === "login" ? { background: "#ffffff", color: "#14243a", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" } : { color: "#5d6b7c" }}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setMode("register"); setError(""); setSuccessMsg(""); }}
+                    className="flex-1 py-2 rounded-md text-sm font-medium transition-colors"
+                    style={mode === "register" ? { background: "#ffffff", color: "#14243a", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" } : { color: "#5d6b7c" }}
+                  >
+                    Register
+                  </button>
+                </div>
+              )}
 
               {/* Error message */}
               {error && (
@@ -211,8 +204,54 @@ export default function LoginPage() {
                 </div>
               )}
 
+              {/* Success message */}
+              {successMsg && (
+                <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d" }}>
+                  {successMsg}
+                </div>
+              )}
+
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Forgot password mode: email only */}
+                {mode === "forgotPassword" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>
+                        Email Address
+                      </label>
+                      <input
+                        className="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                        style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
+                        type="email"
+                        name="email"
+                        placeholder="you@company.com"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                        autoComplete="email"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full py-3 rounded-xl font-bold text-sm text-white mt-2"
+                      style={{ background: loading ? "#4a6080" : "#14243a", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+                    >
+                      {loading ? "Sending…" : "Send Reset Link"}
+                    </button>
+                    <p className="text-center text-sm">
+                      <button
+                        type="button"
+                        onClick={() => { setMode("login"); setError(""); setSuccessMsg(""); }}
+                        style={{ color: "#9a7724", background: "none", border: "none", padding: 0, cursor: "pointer", fontWeight: 500 }}
+                      >
+                        ← Back to Sign In
+                      </button>
+                    </p>
+                  </>
+                )}
+
                 {/* Register-only fields */}
                 {mode === "register" && (
                   <>
@@ -250,41 +289,45 @@ export default function LoginPage() {
                   </>
                 )}
 
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>
-                    Email Address
-                  </label>
-                  <input
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                    style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
-                    type="email"
-                    name="email"
-                    placeholder="you@company.com"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    autoComplete="email"
-                  />
-                </div>
+                {/* Email (login/register only) */}
+                {mode !== "forgotPassword" && (
+                  <div>
+                    <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>
+                      Email Address
+                    </label>
+                    <input
+                      className="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                      style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
+                      type="email"
+                      name="email"
+                      placeholder="you@company.com"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
+                )}
 
-                {/* Password */}
-                <div>
-                  <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>
-                    Password
-                  </label>
-                  <input
-                    className="w-full px-3.5 py-2.5 rounded-xl text-sm"
-                    style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
-                    type="password"
-                    name="password"
-                    placeholder={mode === "register" ? "At least 8 characters" : "••••••••"}
-                    value={form.password}
-                    onChange={handleChange}
-                    required
-                    autoComplete={mode === "register" ? "new-password" : "current-password"}
-                  />
-                </div>
+                {/* Password (login/register only) */}
+                {mode !== "forgotPassword" && (
+                  <div>
+                    <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>
+                      Password
+                    </label>
+                    <input
+                      className="w-full px-3.5 py-2.5 rounded-xl text-sm"
+                      style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
+                      type="password"
+                      name="password"
+                      placeholder={mode === "register" ? "At least 8 characters" : "••••••••"}
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                      autoComplete={mode === "register" ? "new-password" : "current-password"}
+                    />
+                  </div>
+                )}
 
                 {/* NAICS codes (register only) */}
                 {mode === "register" && (
@@ -324,36 +367,59 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                {/* Remember me / Forgot */}
-                <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      name="rememberMe"
-                      checked={form.rememberMe}
-                      onChange={handleChange}
-                      style={{ accentColor: "#14243a" }}
-                    />
-                    <span className="text-sm" style={{ color: "#5d6b7c" }}>Remember me</span>
-                  </label>
-                  {mode === "login" && (
-                    <button type="button" className="text-sm font-medium" style={{ color: "#9a7724", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+                {/* Remember me / Forgot (login only) */}
+                {mode === "login" && (
+                  <div className="flex items-center justify-between pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        name="rememberMe"
+                        checked={form.rememberMe}
+                        onChange={handleChange}
+                        style={{ accentColor: "#14243a" }}
+                      />
+                      <span className="text-sm" style={{ color: "#5d6b7c" }}>Remember me</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="text-sm font-medium"
+                      style={{ color: "#9a7724", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                      onClick={() => { setMode("forgotPassword"); setError(""); setSuccessMsg(""); }}
+                    >
                       Forgot password?
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                {/* Submit */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 rounded-xl font-bold text-sm text-white mt-2"
-                  style={{ background: loading ? "#4a6080" : "#14243a", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
-                >
-                  {loading
-                    ? (mode === "login" ? "Signing in…" : "Creating account…")
-                    : (mode === "login" ? "Sign In" : "Create Account")}
-                </button>
+                {/* Remember me (register only) */}
+                {mode === "register" && (
+                  <div className="flex items-center pt-1">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        name="rememberMe"
+                        checked={form.rememberMe}
+                        onChange={handleChange}
+                        style={{ accentColor: "#14243a" }}
+                      />
+                      <span className="text-sm" style={{ color: "#5d6b7c" }}>Remember me</span>
+                    </label>
+                  </div>
+                )}
+
+                {/* Submit (login/register only) */}
+                {mode !== "forgotPassword" && (
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full py-3 rounded-xl font-bold text-sm text-white mt-2"
+                    style={{ background: loading ? "#4a6080" : "#14243a", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+                  >
+                    {loading
+                      ? (mode === "login" ? "Signing in…" : "Creating account…")
+                      : (mode === "login" ? "Sign In" : "Create Account")}
+                  </button>
+                )}
               </form>
 
               {/* Pricing note (register) */}

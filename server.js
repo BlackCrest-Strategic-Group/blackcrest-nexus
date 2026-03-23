@@ -165,6 +165,7 @@ const PORT = process.env.PORT || 3000;
 
 connectDB()
   .then(() => {
+    startDigestScheduler();
     // Start the daily email digest scheduler after the DB is ready
     startDigestScheduler();
 

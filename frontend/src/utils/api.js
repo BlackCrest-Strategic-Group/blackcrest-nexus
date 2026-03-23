@@ -68,7 +68,9 @@ export const authApi = {
   login: (data) => api.post("/api/auth/login", data),
   logout: () => api.post("/api/auth/logout"),
   profile: () => api.get("/api/auth/profile"),
-  updateProfile: (data) => api.patch("/api/auth/profile", data)
+  updateProfile: (data) => api.patch("/api/auth/profile", data),
+  forgotPassword: (email) => api.post("/api/auth/forgot-password", { email }),
+  resetPassword: (token, password) => api.post("/api/auth/reset-password", { token, password })
 };
 
 // Opportunities

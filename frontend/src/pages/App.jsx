@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../components/LoginPage.jsx";
 import Dashboard from "../components/Dashboard.jsx";
+import ResetPasswordPage from "../components/ResetPasswordPage.jsx";
 import { getToken } from "../utils/auth.js";
 
 function isTokenExpired(token) {
@@ -27,6 +28,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/*"
           element={

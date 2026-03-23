@@ -47,17 +47,7 @@ export default function Header() {
     <header className="bg-navy-950 border-b border-white/10 px-6 py-0 flex items-center justify-between h-16 sticky top-0 z-50">
       {/* ── Left: Brand ── */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-gold-500 rounded-lg flex items-center justify-center shadow-sm shrink-0">
-          <svg className="w-4 h-4 text-navy-950" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd"
-              d="M10 1a9 9 0 100 18A9 9 0 0010 1zm-1 5a1 1 0 112 0v4a1 1 0 11-2 0V6zm1 8a1.25 1.25 0 110-2.5A1.25 1.25 0 0110 14z"
-              clipRule="evenodd" />
-          </svg>
-        </div>
-        <div className="hidden sm:block leading-tight">
-          <div className="text-white font-bold text-sm tracking-tight">BlackCrest Sourcing</div>
-          <div className="text-gold-400 text-[10px] font-semibold tracking-widest uppercase">GovCon AI Scanner</div>
-        </div>
+        <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Sourcing Group" className="h-8 w-auto" />
       </div>
 
       {/* ── Center: Nav links ── */}
