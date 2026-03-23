@@ -24,6 +24,7 @@ import capacityRoutes from "./backend/routes/capacity.js";
 import dashboardRoutes from "./backend/routes/dashboard.js";
 import opportunityIntelligenceRoutes from "./backend/routes/opportunityIntelligence.js";
 import mobileRoutes from "./backend/routes/mobile.js";
+import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,6 +165,7 @@ const PORT = process.env.PORT || 3000;
 
 connectDB()
   .then(() => {
+    startDigestScheduler();
     app.listen(PORT, () => {
       console.log(`[Server] Listening on port ${PORT} (${process.env.NODE_ENV || "development"})`);
     });

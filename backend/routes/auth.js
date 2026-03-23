@@ -1,11 +1,22 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import rateLimit from "express-rate-limit";
 import User from "../models/User.js";
 import EmailPreference from "../models/EmailPreference.js";
 import { authenticateToken } from "../middleware/auth.js";
 import crypto from "crypto";
+import { sendPasswordResetEmail } from "../services/emailService.js";
 
 const router = express.Router();
+
+// Stricter rate limiter for password-related endpoints (5 requests per 15 minutes)
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
 
 function generateTokens(userId) {
   const secret = process.env.JWT_SECRET;
@@ -181,6 +192,90 @@ router.patch("/profile", authenticateToken, async (req, res) => {
     res.json({ success: true, user: user.toPublic() });
   } catch (error) {
     res.status(500).json({ success: false, error: "Failed to update profile." });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email is required." });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    // Always respond with success to prevent email enumeration
+    if (!user || !user.isActive) {
+      return res.json({
+        success: true,
+        message: "If that email address is registered, a password reset link has been sent."
+      });
+    }
+
+    // Generate a secure random token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    user.resetPasswordToken = resetTokenHash;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    try {
+      await sendPasswordResetEmail(user, resetToken);
+    } catch (emailErr) {
+      console.error("Password reset email failed:", emailErr.message);
+      // Clear token if email failed so the user can retry
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+      return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again." });
+    }
+
+    res.json({
+      success: true,
+      message: "If that email address is registered, a password reset link has been sent."
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to process request. Please try again." });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post("/reset-password", passwordResetLimiter, async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, error: "Token and new password are required." });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, error: "Password must be at least 8 characters." });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: "Password reset token is invalid or has expired." });
+    }
+
+    user.password = password;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    // Invalidate any existing refresh token
+    user.refreshToken = null;
+    await user.save();
+
+    res.json({ success: true, message: "Your password has been reset. You can now sign in." });
+  } catch (error) {
+    console.error("Reset password error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to reset password. Please try again." });
   }
 });
 

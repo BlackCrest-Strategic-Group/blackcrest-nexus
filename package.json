@@ -6,7 +6,7 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "build": "npm run build:frontend",
-   "build:frontend": "cd frontend && npm install --include=dev && npm run build",
+    "build:frontend": "cd frontend && npm install --include=dev && npm run build",
     "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\""
   },
   "keywords": [
@@ -34,8 +34,8 @@
     "mongodb": "^7.1.0",
     "mongoose": "^8.15.1",
     "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.13",
-  
     "pdf-parse": "1.1.1",
     "swagger-ui-express": "^5.0.1"
   },
