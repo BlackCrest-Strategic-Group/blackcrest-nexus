@@ -1,7 +1,3 @@
-// Refactored code for digestScheduler.js
-
-// Sample refactored content
-
 const schedule = require('node-schedule');
 const logger = require('../logger');
 const DigestService = require('./DigestService');
@@ -35,4 +31,10 @@ class DigestScheduler {
     }
 }
 
-module.exports = new DigestScheduler();
+const instance = new DigestScheduler();
+const startDigestScheduler = instance.scheduleDigest.bind(instance);
+
+module.exports = {
+    startDigestScheduler,
+    digestScheduler: instance
+};
