@@ -1,5 +1,4 @@
 import cron from "node-cron";
-import User from "../models/User.js";
 import EmailPreference from "../models/EmailPreference.js";
 import { sendDailyDigest } from "./emailService.js";
 
