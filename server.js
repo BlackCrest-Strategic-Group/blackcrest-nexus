@@ -166,6 +166,9 @@ const PORT = process.env.PORT || 3000;
 connectDB()
   .then(() => {
     startDigestScheduler();
+    // Start the daily email digest scheduler after the DB is ready
+    startDigestScheduler();
+
     app.listen(PORT, () => {
       console.log(`[Server] Listening on port ${PORT} (${process.env.NODE_ENV || "development"})`);
     });

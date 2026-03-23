@@ -91,16 +91,31 @@ function formatOpportunitiesHtml(opportunities) {
 }
 
 export async function sendDailyDigest(user) {
+  if (!user || !user._id || !user.email) {
+    throw new Error("sendDailyDigest: invalid user object (must have _id and email)");
+  }
+
   const transport = createTransport();
   const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
 
-  // Fetch opportunities saved by this user
+  // Fetch email preferences for this user
   const prefs = await EmailPreference.findOne({ user: user._id });
-  const naicsFilter = prefs?.naicsFilter?.length ? prefs.naicsFilter : null;
   const minScore = prefs?.minBidScore ?? 0;
 
-  const query = { savedBy: user._id };
-  if (naicsFilter) query.naicsCode = { $in: naicsFilter };
+  // Build the combined NAICS filter: merge preference-level filter with
+  // the user's own registered NAICS codes so we surface relevant opps
+  // even when no opportunities have been explicitly saved.
+  const naicsFromPrefs = Array.isArray(prefs?.naicsFilter) ? prefs.naicsFilter : [];
+  const naicsFromProfile = Array.isArray(user.naicsCodes) ? user.naicsCodes : [];
+  const combinedNaics = [...new Set([...naicsFromPrefs, ...naicsFromProfile])];
+
+  // Match opportunities saved by the user OR matching their NAICS codes
+  const orClauses = [{ savedBy: user._id }];
+  if (combinedNaics.length) {
+    orClauses.push({ naicsCode: { $in: combinedNaics } });
+  }
+
+  const query = { $or: orClauses };
   if (minScore > 0) query.bidScore = { $gte: minScore };
 
   const opportunities = await Opportunity.find(query).sort({ postedDate: -1 }).limit(20);
