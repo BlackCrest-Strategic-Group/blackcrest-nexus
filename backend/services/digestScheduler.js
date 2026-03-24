@@ -1,9 +1,7 @@
-// Improvements for better named exports
-
-export const digestScheduler = () => {
-    // your existing logic
+export const startDigestScheduler = () => {
+    // implementation of startDigestScheduler
 };
 
-export const anotherFunction = () => {
-    // other logic
-};
+const digestScheduler = new SomeClass();
+
+export { digestScheduler };
