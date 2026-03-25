@@ -9,8 +9,10 @@ import WorkflowManager from "./WorkflowManager.jsx";
 import SupplierScorecard from "./SupplierScorecard.jsx";
 import MarginLeakage from "./MarginLeakage.jsx";
 import CapacityPlanner from "./CapacityPlanner.jsx";
-import { opportunitiesApi, emailApi } from "../utils/api.js";
+import FitCheckModal from "./FitCheckModal.jsx";
+import { opportunitiesApi, emailApi, opportunityApi } from "../utils/api.js";
 import { getUser } from "../utils/auth.js";
+import { MOCK_COMPANY_PROFILE, MOCK_SUPPLIERS } from "../utils/fitCheckMockData.js";
 
 /* ─── helpers ────────────────────────────────────────────────── */
 function sanitizeCsvCell(value) {
@@ -105,48 +107,96 @@ const TABS = [
 ];
 
 function OpportunityCard({ opp, onSave, saved }) {
-  const daysUntilDue = opp.responseDeadLine
-    ? Math.ceil((new Date(opp.responseDeadLine) - Date.now()) / 86400000)
-    : null;
-  const urgencyBadge =
-    daysUntilDue !== null && daysUntilDue <= 7 ? "badge-red"
-    : daysUntilDue !== null && daysUntilDue <= 14 ? "badge-yellow"
-    : "badge-slate";
+  const [fitLoading, setFitLoading] = useState(false);
+  const [fitResult, setFitResult] = useState(null);
+  const [fitError, setFitError] = useState(null);
+
+  async function handleAnalyzeFit() {
+    setFitLoading(true);
+    setFitError(null);
+    try {
+      const naicsCodes = opp.naicsCode ? [opp.naicsCode] : [];
+      const { data } = await opportunityApi.evaluate({
+        companyProfile: MOCK_COMPANY_PROFILE,
+        opportunity: {
+          ...opp,
+          naicsCodes,
+          setAside: opp.setAside || "",
+          setAsideStatus: opp.setAside ? [opp.setAside] : []
+        },
+        suppliers: MOCK_SUPPLIERS
+      });
+      setFitResult(data);
+    } catch (err) {
+      setFitError(err.response?.data?.error || "Failed to analyze fit. Please try again.");
+    } finally {
+      setFitLoading(false);
+    }
+  }
 
   return (
-    <div className="card-hover group animate-fade-in">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <a
-            href={opp.uiLink || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm block truncate"
-          >
-            {opp.title || "Untitled Opportunity"}
-          </a>
-          <p className="text-xs text-slate-500 mt-1">
-            {opp.agency || "N/A"} &bull; NAICS: {opp.naicsCode || "N/A"} &bull; {opp.setAside || "No set-aside"}
-          </p>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Posted: {opp.postedDate || "N/A"} &bull; Due: {opp.responseDeadLine || "N/A"}
-          </p>
+    <>
+      <div className="card-hover group animate-fade-in">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <a
+              href={opp.uiLink || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 font-medium text-sm block truncate"
+            >
+              {opp.title || "Untitled Opportunity"}
+            </a>
+            <p className="text-xs text-slate-500 mt-1">
+              {opp.agency || "N/A"} &bull; NAICS: {opp.naicsCode || "N/A"} &bull; {opp.setAside || "No set-aside"}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Posted: {opp.postedDate || "N/A"} &bull; Due: {opp.responseDeadLine || "N/A"}
+            </p>
+          </div>
+          <div className="flex flex-col items-end gap-2 shrink-0">
+            <button
+              onClick={() => onSave(opp)}
+              disabled={saved}
+              className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-all duration-150 ${
+                saved
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
+                  : "bg-white text-slate-600 border-slate-200 hover:border-navy-400 hover:text-navy-600 hover:bg-navy-50"
+              }`}
+            >
+              {saved ? "✓ Saved" : "Save"}
+            </button>
+            <button
+              onClick={handleAnalyzeFit}
+              disabled={fitLoading}
+              className="text-xs px-3 py-1.5 rounded-lg font-semibold border transition-all duration-150 bg-navy-50 text-navy-700 border-navy-200 hover:bg-navy-100 disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5"
+            >
+              {fitLoading ? (
+                <>
+                  <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Analyzing…
+                </>
+              ) : "Analyze Fit"}
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col items-end gap-2 shrink-0">
-          <button
-            onClick={() => onSave(opp)}
-            disabled={saved}
-            className={`text-xs px-3 py-1.5 rounded-lg font-semibold border transition-all duration-150 ${
-              saved
-                ? "bg-emerald-50 text-emerald-700 border-emerald-200 cursor-default"
-                : "bg-white text-slate-600 border-slate-200 hover:border-navy-400 hover:text-navy-600 hover:bg-navy-50"
-            }`}
-          >
-            {saved ? "✓ Saved" : "Save"}
-          </button>
-        </div>
+        {fitError && (
+          <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {fitError}
+          </div>
+        )}
       </div>
-    </div>
+      {fitResult && (
+        <FitCheckModal
+          result={fitResult}
+          opportunityTitle={opp.title || "Untitled Opportunity"}
+          onClose={() => setFitResult(null)}
+        />
+      )}
+    </>
   );
 }
 
