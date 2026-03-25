@@ -49,6 +49,10 @@ const userSchema = new mongoose.Schema(
     resetPasswordExpires: {
       type: Date,
       default: null
+    },
+    isDemo: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }
@@ -75,6 +79,7 @@ userSchema.methods.toPublic = function () {
     company: this.company,
     naicsCodes: this.naicsCodes,
     role: this.role,
+    isDemo: this.isDemo,
     createdAt: this.createdAt
   };
 };

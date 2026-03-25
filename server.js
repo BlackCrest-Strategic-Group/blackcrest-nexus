@@ -25,6 +25,7 @@ import dashboardRoutes from "./backend/routes/dashboard.js";
 import opportunityIntelligenceRoutes from "./backend/routes/opportunityIntelligence.js";
 import mobileRoutes from "./backend/routes/mobile.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
+import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,9 +165,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 connectDB()
-  .then(() => {
-    startDigestScheduler();
-    // Start the daily email digest scheduler after the DB is ready
+  .then(async () => {
+    await seedDemoUser();
     startDigestScheduler();
 
     app.listen(PORT, () => {
