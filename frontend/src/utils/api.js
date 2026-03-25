@@ -159,4 +159,9 @@ export const capacityApi = {
   forecast: () => api.get("/api/capacity/forecast")
 };
 
+// Opportunity Fit Check
+export const opportunityApi = {
+  evaluate: (data) => api.post("/api/opportunity/evaluate", data)
+};
+
 export default api;
