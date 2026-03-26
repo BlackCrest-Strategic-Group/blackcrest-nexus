@@ -25,6 +25,7 @@ import dashboardRoutes from "./backend/routes/dashboard.js";
 import opportunityIntelligenceRoutes from "./backend/routes/opportunityIntelligence.js";
 import mobileRoutes from "./backend/routes/mobile.js";
 import opportunityEvaluateRoutes from "./backend/routes/opportunityEvaluate.js";
+import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
 
@@ -93,6 +94,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/opportunity-intelligence", opportunityIntelligenceRoutes);
 app.use("/api/mobile", mobileRoutes);
 app.use("/api/opportunity", opportunityEvaluateRoutes);
+app.use("/api/find-suppliers", findSuppliersRoutes);
 app.use("/", docsRoutes);
 
 // ---------------------------------------------------------------------------

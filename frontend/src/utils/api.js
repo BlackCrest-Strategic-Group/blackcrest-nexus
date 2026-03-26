@@ -164,4 +164,9 @@ export const opportunityApi = {
   evaluate: (data) => api.post("/api/opportunity/evaluate", data)
 };
 
+// Find Suppliers
+export const findSuppliersApi = {
+  search: (data) => api.post("/api/find-suppliers", data)
+};
+
 export default api;
