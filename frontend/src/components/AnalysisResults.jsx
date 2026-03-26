@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { findSuppliersApi, suppliersApi } from "../utils/api.js";
 
 const RECOMMENDATION_STYLE = {
   "Strong Bid":      { badge: "badge-green",  bar: "bg-emerald-500", label: "Strong Bid" },
@@ -74,6 +75,12 @@ function exportAnalysis(result) {
 
 export default function AnalysisResults({ result }) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [suppliersLoading, setSuppliersLoading] = useState(false);
+  const [suppliersResult, setSuppliersResult] = useState(null);
+  const [suppliersError, setSuppliersError] = useState(null);
+  const [savedSupplierIds, setSavedSupplierIds] = useState(new Set());
+  const [saveError, setSaveError] = useState(null);
+
   if (!result) return null;
 
   const {
@@ -86,12 +93,50 @@ export default function AnalysisResults({ result }) {
     summary = [],
     clausesDetected = [],
     extractedTextPreview,
-    disclaimer
+    disclaimer,
+    naicsCode,
+    location
   } = result;
 
   const positiveFlags = flags.filter((f) => f.startsWith("+"));
   const negativeFlags = flags.filter((f) => f.startsWith("-"));
   const recStyle = RECOMMENDATION_STYLE[recommendation] || { badge: "badge-slate", bar: "bg-slate-400", label: recommendation };
+
+  async function handleFindSuppliers() {
+    setSuppliersError(null);
+    setSuppliersResult(null);
+    setSuppliersLoading(true);
+    try {
+      const summaryText = Array.isArray(summary) ? summary.join(" ") : summary || "";
+      const { data } = await findSuppliersApi.search({
+        summary: summaryText,
+        naicsCode: naicsCode || "",
+        location: location || "",
+        govReady: true
+      });
+      setSuppliersResult(data.suppliers || []);
+    } catch (err) {
+      setSuppliersError(err.response?.data?.error || "Failed to find suppliers. Please try again.");
+    } finally {
+      setSuppliersLoading(false);
+    }
+  }
+
+  async function handleSaveSupplier(supplier) {
+    setSaveError(null);
+    try {
+      await suppliersApi.create({
+        name: supplier.name,
+        naicsCodes: supplier.naicsCodes || [],
+        // Prefix AI-generated content to distinguish it from user notes
+        notes: supplier.explanation ? `AI Insight: ${supplier.explanation}` : "",
+        status: "active"
+      });
+      setSavedSupplierIds((prev) => new Set([...prev, supplier.id]));
+    } catch (err) {
+      setSaveError(err.response?.data?.error || "Failed to save supplier. Please try again.");
+    }
+  }
 
   return (
     <div className="space-y-4 animate-slide-up">
@@ -101,13 +146,35 @@ export default function AnalysisResults({ result }) {
           <h3 className="section-title">Analysis Complete</h3>
           {fileName && <p className="section-subtitle">{fileName}</p>}
         </div>
-        <button onClick={() => exportAnalysis(result)} className="btn-secondary text-xs py-1.5 px-3">
-          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Export Report
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleFindSuppliers}
+            disabled={suppliersLoading}
+            className="btn-primary text-xs py-1.5 px-3"
+          >
+            {suppliersLoading ? (
+              <>
+                <span className="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Searching…
+              </>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Find Suppliers
+              </>
+            )}
+          </button>
+          <button onClick={() => exportAnalysis(result)} className="btn-secondary text-xs py-1.5 px-3">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export Report
+          </button>
+        </div>
       </div>
 
       {/* ── Score summary row ── */}
@@ -252,6 +319,138 @@ export default function AnalysisResults({ result }) {
 
       {disclaimer && (
         <p className="text-center text-xs text-slate-400 py-2">{disclaimer}</p>
+      )}
+
+      {/* ── Find Suppliers Results ── */}
+      {(suppliersLoading || suppliersError || suppliersResult !== null) && (
+        <div className="space-y-3 animate-fade-in">
+          <h3 className="section-title">Matched Suppliers</h3>
+
+          {saveError && (
+            <div className="card border-red-200 bg-red-50">
+              <div className="flex items-center gap-2 text-red-700">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-medium">{saveError}</p>
+              </div>
+            </div>
+          )}
+
+          {suppliersLoading && (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="card animate-pulse">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-slate-200 rounded-full shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 bg-slate-200 rounded w-1/3" />
+                      <div className="h-3 bg-slate-200 rounded w-1/4" />
+                      <div className="h-3 bg-slate-200 rounded w-2/3" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {suppliersError && (
+            <div className="card border-red-200 bg-red-50">
+              <div className="flex items-center gap-2 text-red-700">
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm font-medium">{suppliersError}</p>
+              </div>
+            </div>
+          )}
+
+          {!suppliersLoading && suppliersResult !== null && suppliersResult.length === 0 && (
+            <div className="card text-center py-8">
+              <svg className="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <p className="text-slate-500 font-medium">No matching suppliers found</p>
+              <p className="text-slate-400 text-sm mt-1">Try broadening the opportunity details or check back later.</p>
+            </div>
+          )}
+
+          {!suppliersLoading && suppliersResult && suppliersResult.length > 0 && (
+            <div className="space-y-3">
+              {suppliersResult.map((supplier) => {
+                const isSaved = savedSupplierIds.has(supplier.id);
+                const scoreColor =
+                  supplier.fitScore >= 70 ? "text-emerald-600 bg-emerald-50 border-emerald-200"
+                  : supplier.fitScore >= 40 ? "text-blue-600 bg-blue-50 border-blue-200"
+                  : "text-amber-600 bg-amber-50 border-amber-200";
+
+                return (
+                  <div key={supplier.id} className="card hover:shadow-md transition-shadow">
+                    <div className="flex items-start gap-4">
+                      {/* Fit score badge */}
+                      <div className={`shrink-0 w-12 h-12 rounded-full border-2 flex flex-col items-center justify-center ${scoreColor}`}>
+                        <span className="text-sm font-bold leading-none">{supplier.fitScore}</span>
+                        <span className="text-[9px] leading-none mt-0.5">fit</span>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="font-semibold text-slate-800">{supplier.name}</p>
+                            <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                              <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {supplier.location}
+                              {supplier.govReady && (
+                                <span className="ml-2 inline-flex items-center gap-0.5 text-emerald-700 font-medium">
+                                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                  </svg>
+                                  Gov-Ready
+                                </span>
+                              )}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleSaveSupplier(supplier)}
+                            disabled={isSaved}
+                            className={`shrink-0 text-xs py-1 px-2.5 rounded-lg border transition-colors ${
+                              isSaved
+                                ? "bg-emerald-50 border-emerald-200 text-emerald-700 cursor-default"
+                                : "btn-secondary"
+                            }`}
+                          >
+                            {isSaved ? "✓ Saved" : "Save Supplier"}
+                          </button>
+                        </div>
+
+                        {supplier.explanation && (
+                          <p className="text-sm text-slate-600 mt-2 leading-relaxed">{supplier.explanation}</p>
+                        )}
+
+                        {supplier.matchReasons && supplier.matchReasons.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {supplier.matchReasons.map((reason, i) => (
+                              <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                                {reason}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
