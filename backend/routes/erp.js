@@ -4,13 +4,23 @@
  */
 
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middleware/auth.js";
 import ErpConfig from "../models/ErpConfig.js";
+import User from "../models/User.js";
 import * as infor from "../connectors/infor.js";
 import * as oracle from "../connectors/oracle.js";
 import * as sap from "../connectors/sap.js";
 
 const router = express.Router();
+
+const erpWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
 
 // Helper: map system identifier to connector module
 const connectors = { infor_syteline: infor, oracle, sap };
@@ -34,6 +44,44 @@ async function resolveToken(cfg) {
   return cfg.accessToken;
 }
 
+/**
+ * Middleware: require recent MFA verification if user has MFA enabled.
+ * For ERP connection creation, users with MFA must have verified within the configured window.
+ */
+async function requireMfaForErp(req, res, next) {
+  try {
+    const user = await User.findById(req.user.id).select("mfaEnabled lastMfaVerificationAt");
+    if (!user) return res.status(404).json({ success: false, error: "User not found." });
+
+    if (user.mfaEnabled) {
+      const maxAgeHours = parseInt(process.env.MFA_ERP_ACCESS_MAX_AGE_HOURS || "24", 10);
+      const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
+      if (!user.lastMfaVerificationAt || (Date.now() - user.lastMfaVerificationAt.getTime()) > maxAgeMs) {
+        return res.status(403).json({
+          success: false,
+          error: "MFA verification required. Please sign in with MFA to access ERP settings.",
+          requiresMfaVerification: true
+        });
+      }
+    }
+    next();
+  } catch (err) {
+    console.error("MFA ERP check error:", err.message);
+    res.status(500).json({ success: false, error: "Authorization check failed." });
+  }
+}
+
+/** Log ERP data access with MFA status */
+async function logErpAccess(userId, configId, endpoint) {
+  try {
+    const user = await User.findById(userId).select("mfaEnabled lastMfaVerificationAt email");
+    const mfaStatus = user?.mfaEnabled ? "mfa-enabled" : "mfa-disabled";
+    console.log(`[ERP Access] user=${userId} email=${user?.email} config=${configId} endpoint=${endpoint} mfaStatus=${mfaStatus} ts=${new Date().toISOString()}`);
+  } catch {
+    // Non-blocking log
+  }
+}
+
 // ── GET /api/erp ─────────────────────────────────────────────────
 // List all ERP configs for the current user
 router.get("/", authenticateToken, async (req, res) => {
@@ -47,8 +95,8 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // ── POST /api/erp ─────────────────────────────────────────────────
-// Create a new ERP configuration
-router.post("/", authenticateToken, async (req, res) => {
+// Create a new ERP configuration (requires MFA verification if MFA is enabled)
+router.post("/", erpWriteLimiter, authenticateToken, requireMfaForErp, async (req, res) => {
   try {
     const { system, label, tenantUrl, clientId, clientSecret, tokenUrl, scope } = req.body;
     if (!system || !tenantUrl || !clientId || !clientSecret) {
@@ -72,6 +120,8 @@ router.post("/", authenticateToken, async (req, res) => {
     cfg.setClientId(clientId);
     cfg.setClientSecret(clientSecret);
     await cfg.save();
+
+    console.log(`[ERP Create] user=${req.user.id} system=${system} config=${cfg._id} ts=${new Date().toISOString()}`);
 
     res.status(201).json({ success: true, config: cfg.toPublic() });
   } catch (err) {
@@ -138,6 +188,7 @@ function buildPaginationOpts(query) {
 // ── GET /api/erp/:id/purchase-orders ─────────────────────────────
 router.get("/:id/purchase-orders", authenticateToken, async (req, res) => {
   try {
+    logErpAccess(req.user.id, req.params.id, "purchase-orders");
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
@@ -158,6 +209,7 @@ router.get("/:id/purchase-orders", authenticateToken, async (req, res) => {
 // ── GET /api/erp/:id/suppliers ────────────────────────────────────
 router.get("/:id/suppliers", authenticateToken, async (req, res) => {
   try {
+    logErpAccess(req.user.id, req.params.id, "suppliers");
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
@@ -178,6 +230,7 @@ router.get("/:id/suppliers", authenticateToken, async (req, res) => {
 // ── GET /api/erp/:id/invoices ─────────────────────────────────────
 router.get("/:id/invoices", authenticateToken, async (req, res) => {
   try {
+    logErpAccess(req.user.id, req.params.id, "invoices");
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
@@ -198,3 +251,4 @@ router.get("/:id/invoices", authenticateToken, async (req, res) => {
 });
 
 export default router;
+

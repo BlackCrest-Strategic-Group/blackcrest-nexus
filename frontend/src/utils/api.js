@@ -70,7 +70,19 @@ export const authApi = {
   profile: () => api.get("/api/auth/profile"),
   updateProfile: (data) => api.patch("/api/auth/profile", data),
   forgotPassword: (email) => api.post("/api/auth/forgot-password", { email }),
-  resetPassword: (token, password) => api.post("/api/auth/reset-password", { token, password })
+  resetPassword: (token, password) => api.post("/api/auth/reset-password", { token, password }),
+  verifyMfaLogin: (data) => api.post("/api/auth/verify-mfa-login", data)
+};
+
+// MFA
+export const mfaApi = {
+  setupEmail: () => api.post("/api/mfa/setup/email"),
+  setupSms: (phoneNumber) => api.post("/api/mfa/setup/sms", { phoneNumber }),
+  verifySetup: (data) => api.post("/api/mfa/verify-setup", data),
+  disable: (method) => api.post("/api/mfa/disable", { method }),
+  generateBackupCodes: () => api.post("/api/mfa/generate-backup-codes"),
+  status: () => api.get("/api/mfa/status"),
+  resendLoginOtp: (mfaToken, method) => api.post("/api/mfa/resend-login-otp", { mfaToken, method })
 };
 
 // Opportunities

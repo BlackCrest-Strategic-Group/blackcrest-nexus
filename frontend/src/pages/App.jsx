@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../components/LoginPage.jsx";
 import Dashboard from "../components/Dashboard.jsx";
 import ResetPasswordPage from "../components/ResetPasswordPage.jsx";
+import MFASetupPage from "../components/MFASetupPage.jsx";
+import MFASettingsPage from "../components/MFASettingsPage.jsx";
 import { getToken } from "../utils/auth.js";
 
 function isTokenExpired(token) {
@@ -29,6 +31,22 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route
+          path="/mfa-setup"
+          element={
+            <ProtectedRoute>
+              <MFASetupPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mfa-settings"
+          element={
+            <ProtectedRoute>
+              <MFASettingsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/*"
           element={
