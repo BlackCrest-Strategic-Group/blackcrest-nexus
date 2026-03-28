@@ -47,6 +47,15 @@ const otpVerifyLimiter = rateLimit({
   message: { success: false, error: "Too many verification attempts. Please wait before trying again." }
 });
 
+const generalMfaLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `${req.user?.id || req.ip}`,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
+
 // ---------------------------------------------------------------------------
 // Encryption helpers (same pattern as ErpConfig)
 // ---------------------------------------------------------------------------
@@ -85,11 +94,17 @@ function decryptPhone(payload) {
 // OTP helpers
 // ---------------------------------------------------------------------------
 
-/** Generate a cryptographically secure 6-digit OTP */
+/** Generate a cryptographically secure 6-digit OTP without modular bias */
 function generateOtp() {
-  const bytes = crypto.randomBytes(4);
-  const num = bytes.readUInt32BE(0) % 1000000;
-  return String(num).padStart(6, "0");
+  // Rejection sampling: discard values >= 4,294,000,000 (max uint32 multiple of 1,000,000)
+  // to avoid modular bias. Rejection probability is ~(4,967,296 / 4,294,967,296) < 0.12%.
+  const LIMIT = 4294000000; // Math.floor(0x100000000 / 1000000) * 1000000
+  let num;
+  do {
+    const bytes = crypto.randomBytes(4);
+    num = bytes.readUInt32BE(0);
+  } while (num >= LIMIT);
+  return String(num % 1000000).padStart(6, "0");
 }
 
 /** Hash an OTP for storage */
@@ -106,13 +121,21 @@ async function verifyOtp(otp, hash) {
 // Backup code helpers
 // ---------------------------------------------------------------------------
 
-/** Generate `count` random 10-character alphanumeric backup codes */
+/** Generate `count` random 10-character alphanumeric backup codes without modular bias */
 function generateBackupCodes(count = BACKUP_CODE_COUNT) {
   const CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  return Array.from({ length: count }, () => {
-    const bytes = crypto.randomBytes(10);
-    return Array.from(bytes).map((b) => CHARS[b % CHARS.length]).join("");
-  });
+  // Rejection sampling threshold: floor(256 / CHARS.length) * CHARS.length = 4 * 62 = 248
+  const MAX_VALID = Math.floor(256 / CHARS.length) * CHARS.length;
+
+  function randomChar() {
+    let b;
+    do { b = crypto.randomBytes(1)[0]; } while (b >= MAX_VALID);
+    return CHARS[b % CHARS.length];
+  }
+
+  return Array.from({ length: count }, () =>
+    Array.from({ length: 10 }, randomChar).join("")
+  );
 }
 
 /** Hash all backup codes for storage */
@@ -177,7 +200,7 @@ function verifySetupToken(token) {
 // POST /api/mfa/setup/email
 // Start email MFA setup – send OTP to user's email
 // ---------------------------------------------------------------------------
-router.post("/setup/email", authenticateToken, otpGenerateLimiter, async (req, res) => {
+router.post("/setup/email", otpGenerateLimiter, authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user || !user.isActive) {
@@ -207,7 +230,7 @@ router.post("/setup/email", authenticateToken, otpGenerateLimiter, async (req, r
 // POST /api/mfa/setup/sms
 // Start SMS MFA setup – send OTP via Twilio
 // ---------------------------------------------------------------------------
-router.post("/setup/sms", authenticateToken, otpGenerateLimiter, async (req, res) => {
+router.post("/setup/sms", otpGenerateLimiter, authenticateToken, async (req, res) => {
   try {
     const { phoneNumber } = req.body;
     if (!phoneNumber || typeof phoneNumber !== "string" || !/^\+\d{7,15}$/.test(phoneNumber.trim())) {
@@ -247,7 +270,7 @@ router.post("/setup/sms", authenticateToken, otpGenerateLimiter, async (req, res
 // POST /api/mfa/verify-setup
 // Verify OTP and enable MFA method; return backup codes
 // ---------------------------------------------------------------------------
-router.post("/verify-setup", authenticateToken, otpVerifyLimiter, async (req, res) => {
+router.post("/verify-setup", otpVerifyLimiter, authenticateToken, async (req, res) => {
   try {
     const { setupToken, otp, method } = req.body;
 
@@ -328,7 +351,7 @@ router.post("/verify-setup", authenticateToken, otpVerifyLimiter, async (req, re
 // POST /api/mfa/disable
 // Disable a specific MFA method
 // ---------------------------------------------------------------------------
-router.post("/disable", authenticateToken, async (req, res) => {
+router.post("/disable", generalMfaLimiter, authenticateToken, async (req, res) => {
   try {
     const { method } = req.body;
     if (!method || !["email", "sms"].includes(method)) {
@@ -368,7 +391,7 @@ router.post("/disable", authenticateToken, async (req, res) => {
 // POST /api/mfa/generate-backup-codes
 // Regenerate backup codes (invalidates old ones)
 // ---------------------------------------------------------------------------
-router.post("/generate-backup-codes", authenticateToken, async (req, res) => {
+router.post("/generate-backup-codes", generalMfaLimiter, authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user || !user.isActive) {
@@ -399,7 +422,7 @@ router.post("/generate-backup-codes", authenticateToken, async (req, res) => {
 // GET /api/mfa/status
 // Return current MFA configuration for the authenticated user
 // ---------------------------------------------------------------------------
-router.get("/status", authenticateToken, async (req, res) => {
+router.get("/status", generalMfaLimiter, authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user || !user.isActive) {
@@ -430,8 +453,6 @@ router.get("/status", authenticateToken, async (req, res) => {
     res.status(500).json({ success: false, error: "Failed to fetch MFA status." });
   }
 });
-
-export default router;
 
 // ---------------------------------------------------------------------------
 // POST /api/mfa/resend-login-otp (no authentication required — uses mfaToken)
@@ -500,3 +521,5 @@ router.post("/resend-login-otp", otpGenerateLimiter, async (req, res) => {
 // Exported helpers (used by auth.js for login MFA verification)
 // ---------------------------------------------------------------------------
 export { verifyOtp, findMatchingBackupCode };
+
+export default router;

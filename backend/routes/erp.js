@@ -4,6 +4,7 @@
  */
 
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middleware/auth.js";
 import ErpConfig from "../models/ErpConfig.js";
 import User from "../models/User.js";
@@ -12,6 +13,14 @@ import * as oracle from "../connectors/oracle.js";
 import * as sap from "../connectors/sap.js";
 
 const router = express.Router();
+
+const erpWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
 
 // Helper: map system identifier to connector module
 const connectors = { infor_syteline: infor, oracle, sap };
@@ -37,7 +46,7 @@ async function resolveToken(cfg) {
 
 /**
  * Middleware: require recent MFA verification if user has MFA enabled.
- * For ERP connection creation, users with MFA must have verified within the last 24 hours.
+ * For ERP connection creation, users with MFA must have verified within the configured window.
  */
 async function requireMfaForErp(req, res, next) {
   try {
@@ -45,7 +54,8 @@ async function requireMfaForErp(req, res, next) {
     if (!user) return res.status(404).json({ success: false, error: "User not found." });
 
     if (user.mfaEnabled) {
-      const maxAgeMs = 24 * 60 * 60 * 1000; // 24 hours
+      const maxAgeHours = parseInt(process.env.MFA_ERP_ACCESS_MAX_AGE_HOURS || "24", 10);
+      const maxAgeMs = maxAgeHours * 60 * 60 * 1000;
       if (!user.lastMfaVerificationAt || (Date.now() - user.lastMfaVerificationAt.getTime()) > maxAgeMs) {
         return res.status(403).json({
           success: false,
@@ -86,7 +96,7 @@ router.get("/", authenticateToken, async (req, res) => {
 
 // ── POST /api/erp ─────────────────────────────────────────────────
 // Create a new ERP configuration (requires MFA verification if MFA is enabled)
-router.post("/", authenticateToken, requireMfaForErp, async (req, res) => {
+router.post("/", erpWriteLimiter, authenticateToken, requireMfaForErp, async (req, res) => {
   try {
     const { system, label, tenantUrl, clientId, clientSecret, tokenUrl, scope } = req.body;
     if (!system || !tenantUrl || !clientId || !clientSecret) {

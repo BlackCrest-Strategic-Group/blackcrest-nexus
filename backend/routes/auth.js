@@ -10,13 +10,22 @@ import { sendPasswordResetEmail, sendMfaOtpEmail } from "../services/emailServic
 
 const router = express.Router();
 
-// Stricter rate limiter for password-related endpoints (5 requests per 15 minutes)
-const passwordResetLimiter = rateLimit({
+// Rate limiter for login (10 per 15 minutes per IP)
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 10,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, error: "Too many requests. Please wait before trying again." }
+  message: { success: false, error: "Too many login attempts. Please wait before trying again." }
+});
+
+// Rate limiter for registration (10 per 15 minutes per IP)
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many registration attempts. Please wait before trying again." }
 });
 
 // Rate limiter for MFA verification during login (5 attempts per 15 minutes)
@@ -26,6 +35,15 @@ const mfaLoginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, error: "Too many MFA attempts. Please wait before trying again." }
+});
+
+// Stricter rate limiter for password-related endpoints (5 requests per 15 minutes)
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
 });
 
 const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
@@ -78,13 +96,18 @@ function generateMfaLoginToken(userId) {
 }
 
 function generateOtpForLogin() {
-  const bytes = crypto.randomBytes(4);
-  const num = bytes.readUInt32BE(0) % 1000000;
-  return String(num).padStart(6, "0");
+  // Rejection sampling to avoid modular bias (LIMIT = floor(2^32 / 1,000,000) * 1,000,000)
+  const LIMIT = 4294000000;
+  let num;
+  do {
+    const bytes = crypto.randomBytes(4);
+    num = bytes.readUInt32BE(0);
+  } while (num >= LIMIT);
+  return String(num % 1000000).padStart(6, "0");
 }
 
 // POST /api/auth/register
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
   try {
     const { email, password, name, company, naicsCodes } = req.body;
 
@@ -134,7 +157,7 @@ router.post("/register", async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
