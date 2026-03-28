@@ -34,7 +34,8 @@ const otpGenerateLimiter = rateLimit({
   max: 3,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `${req.user?.id || req.ip}`,
+  keyGenerator: (req) => req.user?.id || req.ip || "unknown",
+  validate: { xForwardedForHeader: false },
   message: { success: false, error: "Too many OTP requests. Please wait before trying again." }
 });
 
@@ -43,7 +44,8 @@ const otpVerifyLimiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `${req.user?.id || req.ip}`,
+  keyGenerator: (req) => req.user?.id || req.ip || "unknown",
+  validate: { xForwardedForHeader: false },
   message: { success: false, error: "Too many verification attempts. Please wait before trying again." }
 });
 
@@ -52,7 +54,8 @@ const generalMfaLimiter = rateLimit({
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => `${req.user?.id || req.ip}`,
+  keyGenerator: (req) => req.user?.id || req.ip || "unknown",
+  validate: { xForwardedForHeader: false },
   message: { success: false, error: "Too many requests. Please wait before trying again." }
 });
 

@@ -58,12 +58,15 @@ const app = express();
 // ---------------------------------------------------------------------------
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:3000"];
+  : ["http://localhost:5173", "http://localhost:5000"];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // In development, allow all origins (needed for Replit proxy)
+      if (!origin || process.env.NODE_ENV === "development") {
+        callback(null, true);
+      } else if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error(`CORS: origin ${origin} not allowed`));
@@ -176,7 +179,7 @@ connectDB()
     await seedDemoUser();
     startDigestScheduler();
 
-    app.listen(PORT, () => {
+    app.listen(PORT, "0.0.0.0", () => {
       console.log(`[Server] Listening on port ${PORT} (${process.env.NODE_ENV || "development"})`);
     });
   })

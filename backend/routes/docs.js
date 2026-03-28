@@ -11,6 +11,7 @@
 import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
 import fs from "fs";
 import yaml from "js-yaml";
 import rateLimit from "express-rate-limit";
@@ -25,9 +26,13 @@ const openapiPath = path.join(__dirname, "../../docs/openapi.yaml");
 let swaggerSpec = {};
 let specYaml = "";
 
-if (fs.existsSync(openapiPath)) {
-  specYaml = fs.readFileSync(openapiPath, "utf8");
-  swaggerSpec = yaml.load(specYaml);
+try {
+  if (fs.existsSync(openapiPath)) {
+    specYaml = readFileSync(openapiPath, "utf8");
+    swaggerSpec = yaml.load(specYaml);
+  }
+} catch {
+  specYaml = "# OpenAPI spec not found";
 }
 
 // Rate limiter for docs endpoints
@@ -42,28 +47,6 @@ const docsLimiter = rateLimit({
 // ---------------------------------------------------------------------------
 // GET /api-docs — Swagger-style interactive explorer page
 // ---------------------------------------------------------------------------
-import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import fs from "fs";
-
-const router = express.Router();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Path to the OpenAPI spec
-const openapiPath = join(__dirname, "../../docs/openapi.yaml");
-
-// Load OpenAPI spec from YAML file if it exists
-let specYaml = "";
-try {
-  specYaml = readFileSync(openapiPath, "utf8");
-} catch {
-  specYaml = "# OpenAPI spec not found";
-}
-
-// Serve Swagger UI at /api-docs
 router.get("/api-docs", (req, res) => {
   res.setHeader("Content-Type", "text/html");
   res.send(`<!DOCTYPE html>
@@ -78,26 +61,6 @@ router.get("/api-docs", (req, res) => {
     .topbar { background: #1e3a5f !important; }
     .swagger-ui .info .title { color: #1e3a5f; }
     .swagger-ui .btn.authorize { background: #1e3a5f; border-color: #1e3a5f; }
-    #banner {
-      background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
-      color: white;
-      padding: 20px 40px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-    #banner h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
-    #banner p { margin: 4px 0 0; opacity: 0.85; font-size: 0.9rem; }
-    #banner a {
-      color: #93c5fd;
-      text-decoration: none;
-      margin-left: auto;
-      font-size: 0.85rem;
-      border: 1px solid rgba(255,255,255,0.3);
-      padding: 8px 16px;
-      border-radius: 6px;
-    }
-    #banner a:hover { background: rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
@@ -127,15 +90,7 @@ router.get("/api-docs", (req, res) => {
 // ---------------------------------------------------------------------------
 router.get("/api-docs/openapi.yaml", docsLimiter, (req, res) => {
   if (!fs.existsSync(openapiPath)) {
-    return res.status(404).json({ success: false, error: "OpenAPI spec not found." });
-  }
-  res.json({ message: "OpenAPI spec available at /api-docs/openapi.yaml" });
-});
-
-// Serve raw spec as YAML
-router.get("/api-docs/openapi.yaml", (req, res) => {
-  if (!fs.existsSync(openapiPath)) {
-    return res.status(404).send("OpenAPI spec not found.");
+    return res.status(404).send("# OpenAPI spec not found");
   }
   res.type("text/yaml").send(specYaml);
 });
@@ -198,11 +153,11 @@ router.get("/api-reference", (req, res) => {
 <div class="layout">
   <nav class="sidebar">
     <div class="sidebar-logo">
-      <h2>🏛️ GovCon AI Scanner</h2>
+      <h2>GovCon AI Scanner</h2>
       <p>API Reference</p>
     </div>
     <div class="sidebar-section">Resources</div>
-    <a href="/api-docs" class="sidebar-link">Interactive Explorer →</a>
+    <a href="/api-docs" class="sidebar-link">Interactive Explorer</a>
     <a href="/api-docs/openapi.yaml" class="sidebar-link">OpenAPI Spec (YAML)</a>
     <a href="/health" class="sidebar-link">Health Check</a>
   </nav>
@@ -211,8 +166,8 @@ router.get("/api-reference", (req, res) => {
     <h1>GovCon AI Scanner API</h1>
     <p class="hero-subtitle">Production REST API for government contracting intelligence · JWT Authentication</p>
 
-    <a href="/api-docs" class="explorer-link">⚡ Open Interactive Explorer</a>
-    <a href="/api-docs/openapi.yaml" class="explorer-link secondary">📄 Download OpenAPI Spec</a>
+    <a href="/api-docs" class="explorer-link">Open Interactive Explorer</a>
+    <a href="/api-docs/openapi.yaml" class="explorer-link secondary">Download OpenAPI Spec</a>
 
     <h2>Authentication</h2>
     <p>All protected endpoints require a <strong>JWT Bearer token</strong> in the Authorization header.</p>
@@ -229,7 +184,7 @@ router.get("/api-reference", (req, res) => {
       <div class="endpoint-header">
         <span class="method post">POST</span>
         <span class="endpoint-path">/api/opportunities/search</span>
-        <span class="endpoint-desc">Search SAM.gov <span class="badge">🔒 Auth</span></span>
+        <span class="endpoint-desc">Search SAM.gov <span class="badge">Auth</span></span>
       </div>
     </div>
 
@@ -237,14 +192,9 @@ router.get("/api-reference", (req, res) => {
       <div class="endpoint-header">
         <span class="method post">POST</span>
         <span class="endpoint-path">/api/opportunities/analyze</span>
-        <span class="endpoint-desc">AI bid/no-bid analysis <span class="badge">🔒 Auth</span></span>
+        <span class="endpoint-desc">AI bid/no-bid analysis <span class="badge">Auth</span></span>
       </div>
     </div>
-
-    <pre><code>curl -X POST https://govcon-ai-scanner.onrender.com/api/opportunities/search \\
-  -H "Authorization: Bearer YOUR_TOKEN" \\
-  -H "Content-Type: application/json" \\
-  -d '{"naics":"541512","keyword":"cybersecurity"}'</code></pre>
   </main>
 </div>
 </body>
