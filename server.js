@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import fs from "fs";
 import { tracer } from "./tracer.js";
 import rateLimit from "express-rate-limit";
+dotenv.config();
 
 import connectDB from "./backend/config/db.js";
 import authRouter from "./backend/routes/auth.js";
