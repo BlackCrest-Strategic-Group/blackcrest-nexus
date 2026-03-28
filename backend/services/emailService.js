@@ -157,6 +157,46 @@ export async function sendDailyDigest(user) {
   return { messageId: info.messageId };
 }
 
+export async function sendMfaOtpEmail(user, otp) {
+  const transport = createTransport();
+  const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const expiryMinutes = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1"/></head>
+    <body style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f8fafc;">
+      <div style="background:#fff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
+        <div style="margin-bottom:24px;">${EMAIL_LOGO_SVG}</div>
+        <h2 style="color:#1e293b;margin:0 0 8px;">Your Verification Code</h2>
+        <p>Hello ${escapeHtml(user.name || user.email)},</p>
+        <p>Use the code below to complete your sign-in. This code expires in <strong>${expiryMinutes} minutes</strong>.</p>
+        <div style="text-align:center;margin:32px 0;">
+          <div style="display:inline-block;padding:16px 40px;background:#f1f5f9;border:2px solid #14243a;border-radius:12px;font-size:32px;font-weight:bold;letter-spacing:8px;color:#14243a;font-family:monospace;">
+            ${escapeHtml(otp)}
+          </div>
+        </div>
+        <p style="color:#64748b;font-size:13px;">
+          Never share this code with anyone. GovCon AI will never ask for your code.
+        </p>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
+        <p style="color:#94a3b8;font-size:12px;">
+          If you did not request this code, please contact support immediately.
+          <br/>Designed for Non-Classified Use Only.
+        </p>
+      </div>
+    </body>
+    </html>`;
+
+  await transport.sendMail({
+    from: `"GovCon AI Scanner" <${fromAddress}>`,
+    to: user.email,
+    subject: "Your GovCon AI Scanner Verification Code",
+    html
+  });
+}
+
 export async function sendPasswordResetEmail(user, resetToken) {
   const transport = createTransport();
   const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authApi } from "../utils/api.js";
+import { authApi, mfaApi } from "../utils/api.js";
 import { saveAuth } from "../utils/auth.js";
 
 const NAICS_OPTIONS = [
@@ -27,6 +27,166 @@ const FEATURES = [
   { icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", text: "Daily opportunity digest emails" }
 ];
 
+// MFA verification step component
+function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
+  const [otp, setOtp] = useState("");
+  const [activeMethod, setActiveMethod] = useState(mfaState.mfaMethods[0] || "email");
+  const [useBackup, setUseBackup] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState("");
+
+  async function handleVerify(e) {
+    e.preventDefault();
+    setError("");
+    if (!otp.trim()) {
+      setError("Please enter the verification code.");
+      return;
+    }
+    if (!useBackup && !/^\d{6}$/.test(otp)) {
+      setError("Verification code must be exactly 6 digits.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const method = useBackup ? "backup" : activeMethod;
+      const res = await authApi.verifyMfaLogin({
+        mfaToken: mfaState.mfaToken,
+        method,
+        otp: otp.trim()
+      });
+      onSuccess(res.data);
+    } catch (err) {
+      setError(err.response?.data?.error || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleResend() {
+    setResendMsg("");
+    setError("");
+    setResending(true);
+    try {
+      await mfaApi.resendLoginOtp(mfaState.mfaToken, activeMethod);
+      setResendMsg(`New code sent via ${activeMethod === "email" ? "email" : "SMS"}.`);
+    } catch (err) {
+      setError(err.response?.data?.error || "Failed to resend code.");
+    } finally {
+      setResending(false);
+    }
+  }
+
+  const methodLabel = activeMethod === "email" ? "email" : "SMS";
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl font-bold mb-1" style={{ color: "#14243a" }}>Two-Factor Verification</h2>
+        <p className="text-sm" style={{ color: "#5d6b7c" }}>
+          {useBackup
+            ? "Enter one of your backup codes to sign in."
+            : `Enter the 6-digit code sent to your ${methodLabel}.`}
+        </p>
+      </div>
+
+      {error && (
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#fdf2f2", border: "1px solid #f5c6c6", color: "#a63c3c" }}>
+          {error}
+        </div>
+      )}
+
+      {resendMsg && (
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d" }}>
+          {resendMsg}
+        </div>
+      )}
+
+      {/* Method selector if multiple methods */}
+      {!useBackup && mfaState.mfaMethods.length > 1 && (
+        <div className="flex gap-2 mb-4">
+          {mfaState.mfaMethods.map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setActiveMethod(m)}
+              className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
+              style={activeMethod === m
+                ? { background: "#14243a", color: "#ffffff", border: "1px solid #14243a" }
+                : { background: "#f1f5f9", color: "#5d6b7c", border: "1px solid #c8d5e6" }}
+            >
+              {m === "email" ? "📧 Email" : "📱 SMS"}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form onSubmit={handleVerify} className="space-y-4">
+        <div>
+          <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>
+            {useBackup ? "Backup Code" : "Verification Code"}
+          </label>
+          <input
+            className="w-full px-3.5 py-3 rounded-xl text-center text-2xl font-mono tracking-[0.4em]"
+            style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
+            type={useBackup ? "text" : "tel"}
+            placeholder={useBackup ? "XXXXXXXXXX" : "000000"}
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            maxLength={useBackup ? 10 : 6}
+            autoComplete="one-time-code"
+            autoFocus
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 rounded-xl font-bold text-sm text-white"
+          style={{ background: loading ? "#4a6080" : "#14243a", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+        >
+          {loading ? "Verifying…" : "Verify & Sign In"}
+        </button>
+      </form>
+
+      <div className="mt-4 space-y-2 text-center">
+        {!useBackup && (
+          <>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="text-sm"
+              style={{ color: "#5d6b7c", background: "none", border: "none", padding: 0, cursor: resending ? "not-allowed" : "pointer" }}
+            >
+              {resending ? "Resending…" : "Resend code"}
+            </button>
+            <br />
+          </>
+        )}
+        <button
+          type="button"
+          onClick={() => { setUseBackup((b) => !b); setOtp(""); setError(""); setResendMsg(""); }}
+          className="text-sm"
+          style={{ color: "#9a7724", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
+          {useBackup ? "← Use verification code instead" : "Using a backup code?"}
+        </button>
+        <br />
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm"
+          style={{ color: "#5d6b7c", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+        >
+          ← Back to Sign In
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("login");
@@ -41,6 +201,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mfaState, setMfaState] = useState(null); // { mfaToken, mfaMethods } when MFA required
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -86,6 +247,13 @@ export default function LoginPage() {
           naicsCodes: form.naicsCodes
         });
       }
+
+      // Check if MFA verification is required
+      if (res.data.requiresMfa) {
+        setMfaState({ mfaToken: res.data.mfaToken, mfaMethods: res.data.mfaMethods });
+        return;
+      }
+
       saveAuth(res.data, form.rememberMe);
       navigate("/", { replace: true });
     } catch (err) {
@@ -93,6 +261,16 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleMfaSuccess(data) {
+    saveAuth(data, form.rememberMe);
+    navigate("/", { replace: true });
+  }
+
+  function handleMfaBack() {
+    setMfaState(null);
+    setError("");
   }
 
   return (
@@ -159,6 +337,17 @@ export default function LoginPage() {
         {/* Form area */}
         <div className="flex-1 flex items-center justify-center px-6 py-10">
           <div className="w-full max-w-md">
+            {/* MFA verification step */}
+            {mfaState ? (
+              <div className="bg-white rounded-2xl p-8" style={{ border: "1px solid rgba(20,36,58,0.12)", boxShadow: "0 10px 28px rgba(20,36,58,0.08)" }}>
+                <MfaVerifyStep
+                  mfaState={mfaState}
+                  onSuccess={handleMfaSuccess}
+                  onBack={handleMfaBack}
+                />
+              </div>
+            ) : (
+            <>
             {/* Heading */}
             <div className="mb-8">
               <h1 className="text-2xl font-bold" style={{ color: "#14243a" }}>
@@ -433,6 +622,8 @@ export default function LoginPage() {
             <p className="text-center text-xs mt-6" style={{ color: "#5d6b7c" }}>
               Designed for Non-Classified Use Only &bull; GovCon AI Scanner v2.0
             </p>
+            </>
+            )}
           </div>
         </div>
       </div>

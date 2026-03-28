@@ -1,11 +1,12 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import rateLimit from "express-rate-limit";
 import User from "../models/User.js";
 import EmailPreference from "../models/EmailPreference.js";
 import { authenticateToken } from "../middleware/auth.js";
 import crypto from "crypto";
-import { sendPasswordResetEmail } from "../services/emailService.js";
+import { sendPasswordResetEmail, sendMfaOtpEmail } from "../services/emailService.js";
 
 const router = express.Router();
 
@@ -17,6 +18,42 @@ const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, error: "Too many requests. Please wait before trying again." }
 });
+
+// Rate limiter for MFA verification during login (5 attempts per 15 minutes)
+const mfaLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many MFA attempts. Please wait before trying again." }
+});
+
+const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+
+const ALGORITHM = "aes-256-gcm";
+
+function decryptPhone(payload) {
+  const key = process.env.MFA_ENCRYPTION_KEY || process.env.ERP_ENCRYPTION_KEY;
+  if (!key) return null;
+  const [ivHex, tagHex, encHex] = payload.split(":");
+  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(key, "hex"), Buffer.from(ivHex, "hex"));
+  decipher.setAuthTag(Buffer.from(tagHex, "hex"));
+  return Buffer.concat([decipher.update(Buffer.from(encHex, "hex")), decipher.final()]).toString("utf8");
+}
+
+async function sendSmsOtpForLogin(phoneNumber, otp) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_PHONE_NUMBER;
+  if (!sid || !token || !from) return; // graceful: SMS not configured
+  const twilio = (await import("twilio")).default;
+  const client = twilio(sid, token);
+  await client.messages.create({
+    body: `Your GovCon AI Scanner verification code is: ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
+    from,
+    to: phoneNumber
+  });
+}
 
 function generateTokens(userId) {
   const secret = process.env.JWT_SECRET;
@@ -31,6 +68,19 @@ function generateTokens(userId) {
 function sanitizeNaicsCodes(codes) {
   if (!Array.isArray(codes)) return [];
   return codes.filter((c) => typeof c === "string" && /^\d{2,6}$/.test(c.trim()));
+}
+
+function generateMfaLoginToken(userId) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is not configured.");
+  const expiryMinutes = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+  return jwt.sign({ id: userId, purpose: "mfa-login" }, secret, { expiresIn: `${expiryMinutes}m` });
+}
+
+function generateOtpForLogin() {
+  const bytes = crypto.randomBytes(4);
+  const num = bytes.readUInt32BE(0) % 1000000;
+  return String(num).padStart(6, "0");
 }
 
 // POST /api/auth/register
@@ -102,6 +152,40 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ success: false, error: "Invalid credentials." });
     }
 
+    // If MFA is enabled, return a temporary MFA token instead of access tokens
+    if (user.mfaEnabled && user.mfaMethods.length > 0) {
+      const mfaToken = generateMfaLoginToken(user._id.toString());
+
+      // Generate OTP and send via the preferred available method
+      const otp = generateOtpForLogin();
+      const otpHash = await bcrypt.hash(otp, 10);
+      user.mfaOtpHash = otpHash;
+      user.mfaOtpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+      await user.save();
+
+      if (user.mfaMethods.includes("email")) {
+        try {
+          await sendMfaOtpEmail(user, otp);
+        } catch (emailErr) {
+          console.error("MFA OTP email failed:", emailErr.message);
+        }
+      } else if (user.mfaMethods.includes("sms") && user.smsPhoneEnc) {
+        try {
+          const phone = decryptPhone(user.smsPhoneEnc);
+          if (phone) await sendSmsOtpForLogin(phone, otp);
+        } catch (smsErr) {
+          console.error("MFA OTP SMS failed:", smsErr.message);
+        }
+      }
+
+      return res.json({
+        success: true,
+        requiresMfa: true,
+        mfaMethods: user.mfaMethods,
+        mfaToken
+      });
+    }
+
     const { accessToken, refreshToken } = generateTokens(user._id);
     user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
     await user.save();
@@ -115,6 +199,102 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ success: false, error: "Login failed. Please try again." });
+  }
+});
+
+// POST /api/auth/verify-mfa-login
+// Complete login by verifying OTP or backup code
+router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
+  try {
+    const { mfaToken, method, otp } = req.body;
+
+    if (!mfaToken || !method || !otp) {
+      return res.status(400).json({ success: false, error: "mfaToken, method, and otp are required." });
+    }
+
+    if (!["email", "sms", "backup"].includes(method)) {
+      return res.status(400).json({ success: false, error: "Invalid method. Must be 'email', 'sms', or 'backup'." });
+    }
+
+    // Verify MFA login token
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error("JWT_SECRET is not configured.");
+    let decoded;
+    try {
+      decoded = jwt.verify(mfaToken, secret);
+    } catch {
+      return res.status(400).json({ success: false, error: "MFA token is invalid or expired." });
+    }
+
+    if (decoded.purpose !== "mfa-login") {
+      return res.status(400).json({ success: false, error: "Invalid token purpose." });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    if (!user.mfaEnabled) {
+      return res.status(400).json({ success: false, error: "MFA is not enabled for this account." });
+    }
+
+    let verified = false;
+
+    if (method === "backup") {
+      // Verify backup code
+      if (user.mfaBackupCodes.length === 0) {
+        return res.status(400).json({ success: false, error: "No backup codes available." });
+      }
+      const { findMatchingBackupCode } = await import("./mfa.js");
+      const matchIndex = await findMatchingBackupCode(otp, user.mfaBackupCodes);
+      if (matchIndex === -1) {
+        return res.status(401).json({ success: false, error: "Invalid backup code." });
+      }
+      // Remove the used backup code (single-use)
+      user.mfaBackupCodes.splice(matchIndex, 1);
+      verified = true;
+    } else {
+      // Verify OTP
+      if (!user.mfaMethods.includes(method)) {
+        return res.status(400).json({ success: false, error: `${method} MFA is not enabled for this account.` });
+      }
+
+      if (!user.mfaOtpHash || !user.mfaOtpExpiresAt || user.mfaOtpExpiresAt < new Date()) {
+        return res.status(400).json({ success: false, error: "Verification code has expired. Please log in again." });
+      }
+
+      const otpMatch = await bcrypt.compare(otp, user.mfaOtpHash);
+      if (!otpMatch) {
+        return res.status(401).json({ success: false, error: "Invalid verification code." });
+      }
+      verified = true;
+    }
+
+    if (!verified) {
+      return res.status(401).json({ success: false, error: "Verification failed." });
+    }
+
+    // Clear used OTP
+    user.mfaOtpHash = null;
+    user.mfaOtpExpiresAt = null;
+    user.lastMfaVerificationAt = new Date();
+
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    await user.save();
+
+    console.log(`[Auth] MFA login successful for user ${user._id} via ${method}`);
+
+    res.json({
+      success: true,
+      accessToken,
+      refreshToken,
+      user: user.toPublic()
+    });
+  } catch (error) {
+    console.error("MFA login verification error:", error.message);
+    res.status(500).json({ success: false, error: "MFA verification failed. Please try again." });
   }
 });
 

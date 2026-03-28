@@ -26,6 +26,7 @@ import opportunityIntelligenceRoutes from "./backend/routes/opportunityIntellige
 import mobileRoutes from "./backend/routes/mobile.js";
 import opportunityEvaluateRoutes from "./backend/routes/opportunityEvaluate.js";
 import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
+import mfaRoutes from "./backend/routes/mfa.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
 
@@ -81,6 +82,7 @@ app.use(express.urlencoded({ extended: true, limit: "4mb" }));
 // API routes  (must come before static/SPA middleware)
 // ---------------------------------------------------------------------------
 app.use("/api/auth", authRoutes);
+app.use("/api/mfa", mfaRoutes);
 app.use("/api/opportunities", opportunitiesRoutes);
 app.use("/api/email-preferences", emailRoutes);
 app.use("/api/email", emailRoutes);

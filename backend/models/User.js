@@ -53,6 +53,36 @@ const userSchema = new mongoose.Schema(
     isDemo: {
       type: Boolean,
       default: false
+    },
+    // MFA fields
+    mfaEnabled: {
+      type: Boolean,
+      default: false
+    },
+    mfaMethods: {
+      type: [String],
+      enum: ["email", "sms"],
+      default: []
+    },
+    mfaOtpHash: {
+      type: String,
+      default: null
+    },
+    mfaOtpExpiresAt: {
+      type: Date,
+      default: null
+    },
+    smsPhoneEnc: {
+      type: String,
+      default: null
+    },
+    mfaBackupCodes: {
+      type: [String],
+      default: []
+    },
+    lastMfaVerificationAt: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }
@@ -70,7 +100,7 @@ userSchema.methods.comparePassword = async function (plainText) {
   return bcrypt.compare(plainText, this.password);
 };
 
-// Return safe user object (no password, no refresh token)
+// Return safe user object (no password, no refresh token, no MFA secrets)
 userSchema.methods.toPublic = function () {
   return {
     id: this._id,
@@ -80,6 +110,8 @@ userSchema.methods.toPublic = function () {
     naicsCodes: this.naicsCodes,
     role: this.role,
     isDemo: this.isDemo,
+    mfaEnabled: this.mfaEnabled,
+    mfaMethods: this.mfaMethods,
     createdAt: this.createdAt
   };
 };
