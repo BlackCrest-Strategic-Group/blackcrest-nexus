@@ -11,7 +11,6 @@ channel = "stable-25_05"
 PORT = "5000"
 NODE_ENV = "development"
 ALLOWED_ORIGINS = "http://localhost:5173,http://localhost:5000"
-MONGODB_URI = "mongodb+srv://BlackCrestStrategic:DirkDiggler41@blackcreststrategicgrou.oy2lxnl.mongodb.net/?retryWrites=true&w=majority"
 JWT_SECRET = "556146789de850c999cd441b63f922ebc103ebcd4a3d0b361bfd486441c6bb813a7833af7f619399d39329384387c142a1f5140a76c59acb9cc0d1216610d39b"
 JWT_REFRESH_SECRET = "4024e59b9140718baffa1c4fb48dc6ee52eb371c6a853b2b83b29a8ca1c8664f0305ecb474eeea6a941125064f4fcf2372e5d9491133f9cfc11999c9a3bbf32f"
 SAM_API_KEY = "SAM-61f410b2-b8a9-432b-98cb-c0961f329289"
@@ -31,6 +30,7 @@ INTELLIGENCE_DAYS_BACK = "30"
 INTELLIGENCE_MAX_RECORDS = "500"
 STRIPE_PAYMENT_LINK = "https://buy.stripe.com/aFa7sK8peh2l4Up8aVf7i02"
 EMAIL_FROM = "noreply@govconscanner.com"
+MONGODB_URI = "mongodb+srv://BlackCrestStrategic:GovCon2026@blackcreststrategicgrou.oy2lxnl.mongodb.net/?appName=BlackCrestStrategicGroup"
 
 [workflows]
 runButton = "Project"
@@ -59,3 +59,8 @@ outputType = "webview"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["node", "server.js"]
+build = ["bash", "-c", "cd frontend && npm install && npm run build"]
