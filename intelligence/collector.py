@@ -283,8 +283,8 @@ async def _fetch_sam(naics_codes: list[str], days_back: int) -> list[dict]:
         return []
 
     today = datetime.now(timezone.utc)
-    from_date = (today - timedelta(days=days_back)).strftime("%Y-%m-%d")
-    to_date = today.strftime("%Y-%m-%d")
+    from_date = (today - timedelta(days=days_back)).strftime("%m/%d/%Y")
+    to_date = today.strftime("%m/%d/%Y")
 
     results: list[dict] = []
     async with httpx.AsyncClient(timeout=30) as client:
@@ -292,7 +292,7 @@ async def _fetch_sam(naics_codes: list[str], days_back: int) -> list[dict]:
         for naics in naics_codes[:10]:
             try:
                 resp = await client.get(
-                    "https://api.sam.gov/opportunities/v1/search",
+                    "https://api.sam.gov/opportunities/v2/search",
                     params={
                         "api_key": api_key,
                         "postedFrom": from_date,
@@ -335,7 +335,7 @@ async def _fetch_sam(naics_codes: list[str], days_back: int) -> list[dict]:
         if not naics_codes:
             try:
                 resp = await client.get(
-                    "https://api.sam.gov/opportunities/v1/search",
+                    "https://api.sam.gov/opportunities/v2/search",
                     params={
                         "api_key": api_key,
                         "postedFrom": from_date,

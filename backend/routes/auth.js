@@ -1,11 +1,77 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import rateLimit from "express-rate-limit";
 import User from "../models/User.js";
 import EmailPreference from "../models/EmailPreference.js";
 import { authenticateToken } from "../middleware/auth.js";
 import crypto from "crypto";
+import { sendPasswordResetEmail, sendMfaOtpEmail } from "../services/emailService.js";
 
 const router = express.Router();
+
+// Rate limiter for login (10 per 15 minutes per IP)
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many login attempts. Please wait before trying again." }
+});
+
+// Rate limiter for registration (10 per 15 minutes per IP)
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many registration attempts. Please wait before trying again." }
+});
+
+// Rate limiter for MFA verification during login (5 attempts per 15 minutes)
+const mfaLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many MFA attempts. Please wait before trying again." }
+});
+
+// Stricter rate limiter for password-related endpoints (5 requests per 15 minutes)
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
+
+const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+
+const ALGORITHM = "aes-256-gcm";
+
+function decryptPhone(payload) {
+  const key = process.env.MFA_ENCRYPTION_KEY || process.env.ERP_ENCRYPTION_KEY;
+  if (!key) return null;
+  const [ivHex, tagHex, encHex] = payload.split(":");
+  const decipher = crypto.createDecipheriv(ALGORITHM, Buffer.from(key, "hex"), Buffer.from(ivHex, "hex"));
+  decipher.setAuthTag(Buffer.from(tagHex, "hex"));
+  return Buffer.concat([decipher.update(Buffer.from(encHex, "hex")), decipher.final()]).toString("utf8");
+}
+
+async function sendSmsOtpForLogin(phoneNumber, otp) {
+  const sid = process.env.TWILIO_ACCOUNT_SID;
+  const token = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_PHONE_NUMBER;
+  if (!sid || !token || !from) return; // graceful: SMS not configured
+  const twilio = (await import("twilio")).default;
+  const client = twilio(sid, token);
+  await client.messages.create({
+    body: `Your GovCon AI Scanner verification code is: ${otp}. It expires in ${OTP_EXPIRY_MINUTES} minutes.`,
+    from,
+    to: phoneNumber
+  });
+}
 
 function generateTokens(userId) {
   const secret = process.env.JWT_SECRET;
@@ -17,8 +83,31 @@ function generateTokens(userId) {
   return { accessToken, refreshToken };
 }
 
+function sanitizeNaicsCodes(codes) {
+  if (!Array.isArray(codes)) return [];
+  return codes.filter((c) => typeof c === "string" && /^\d{2,6}$/.test(c.trim()));
+}
+
+function generateMfaLoginToken(userId) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is not configured.");
+  const expiryMinutes = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+  return jwt.sign({ id: userId, purpose: "mfa-login" }, secret, { expiresIn: `${expiryMinutes}m` });
+}
+
+function generateOtpForLogin() {
+  // Rejection sampling to avoid modular bias (LIMIT = floor(2^32 / 1,000,000) * 1,000,000)
+  const LIMIT = 4294000000;
+  let num;
+  do {
+    const bytes = crypto.randomBytes(4);
+    num = bytes.readUInt32BE(0);
+  } while (num >= LIMIT);
+  return String(num % 1000000).padStart(6, "0");
+}
+
 // POST /api/auth/register
-router.post("/register", async (req, res) => {
+router.post("/register", registerLimiter, async (req, res) => {
   try {
     const { email, password, name, company, naicsCodes } = req.body;
 
@@ -40,7 +129,7 @@ router.post("/register", async (req, res) => {
       password,
       name: name?.trim() || "",
       company: company?.trim() || "",
-      naicsCodes: Array.isArray(naicsCodes) ? naicsCodes : []
+      naicsCodes: sanitizeNaicsCodes(naicsCodes)
     });
 
     await user.save();
@@ -68,7 +157,7 @@ router.post("/register", async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -86,8 +175,42 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ success: false, error: "Invalid credentials." });
     }
 
+    // If MFA is enabled, return a temporary MFA token instead of access tokens
+    if (user.mfaEnabled && user.mfaMethods.length > 0) {
+      const mfaToken = generateMfaLoginToken(user._id.toString());
+
+      // Generate OTP and send via the preferred available method
+      const otp = generateOtpForLogin();
+      const otpHash = await bcrypt.hash(otp, 10);
+      user.mfaOtpHash = otpHash;
+      user.mfaOtpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+      await user.save();
+
+      if (user.mfaMethods.includes("email")) {
+        try {
+          await sendMfaOtpEmail(user, otp);
+        } catch (emailErr) {
+          console.error("MFA OTP email failed:", emailErr.message);
+        }
+      } else if (user.mfaMethods.includes("sms") && user.smsPhoneEnc) {
+        try {
+          const phone = decryptPhone(user.smsPhoneEnc);
+          if (phone) await sendSmsOtpForLogin(phone, otp);
+        } catch (smsErr) {
+          console.error("MFA OTP SMS failed:", smsErr.message);
+        }
+      }
+
+      return res.json({
+        success: true,
+        requiresMfa: true,
+        mfaMethods: user.mfaMethods,
+        mfaToken
+      });
+    }
+
     const { accessToken, refreshToken } = generateTokens(user._id);
-    user.refreshToken = refreshToken;
+    user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
     await user.save();
 
     res.json({
@@ -99,6 +222,102 @@ router.post("/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error.message);
     res.status(500).json({ success: false, error: "Login failed. Please try again." });
+  }
+});
+
+// POST /api/auth/verify-mfa-login
+// Complete login by verifying OTP or backup code
+router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
+  try {
+    const { mfaToken, method, otp } = req.body;
+
+    if (!mfaToken || !method || !otp) {
+      return res.status(400).json({ success: false, error: "mfaToken, method, and otp are required." });
+    }
+
+    if (!["email", "sms", "backup"].includes(method)) {
+      return res.status(400).json({ success: false, error: "Invalid method. Must be 'email', 'sms', or 'backup'." });
+    }
+
+    // Verify MFA login token
+    const secret = process.env.JWT_SECRET;
+    if (!secret) throw new Error("JWT_SECRET is not configured.");
+    let decoded;
+    try {
+      decoded = jwt.verify(mfaToken, secret);
+    } catch {
+      return res.status(400).json({ success: false, error: "MFA token is invalid or expired." });
+    }
+
+    if (decoded.purpose !== "mfa-login") {
+      return res.status(400).json({ success: false, error: "Invalid token purpose." });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    if (!user.mfaEnabled) {
+      return res.status(400).json({ success: false, error: "MFA is not enabled for this account." });
+    }
+
+    let verified = false;
+
+    if (method === "backup") {
+      // Verify backup code
+      if (user.mfaBackupCodes.length === 0) {
+        return res.status(400).json({ success: false, error: "No backup codes available." });
+      }
+      const { findMatchingBackupCode } = await import("./mfa.js");
+      const matchIndex = await findMatchingBackupCode(otp, user.mfaBackupCodes);
+      if (matchIndex === -1) {
+        return res.status(401).json({ success: false, error: "Invalid backup code." });
+      }
+      // Remove the used backup code (single-use)
+      user.mfaBackupCodes.splice(matchIndex, 1);
+      verified = true;
+    } else {
+      // Verify OTP
+      if (!user.mfaMethods.includes(method)) {
+        return res.status(400).json({ success: false, error: `${method} MFA is not enabled for this account.` });
+      }
+
+      if (!user.mfaOtpHash || !user.mfaOtpExpiresAt || user.mfaOtpExpiresAt < new Date()) {
+        return res.status(400).json({ success: false, error: "Verification code has expired. Please log in again." });
+      }
+
+      const otpMatch = await bcrypt.compare(otp, user.mfaOtpHash);
+      if (!otpMatch) {
+        return res.status(401).json({ success: false, error: "Invalid verification code." });
+      }
+      verified = true;
+    }
+
+    if (!verified) {
+      return res.status(401).json({ success: false, error: "Verification failed." });
+    }
+
+    // Clear used OTP
+    user.mfaOtpHash = null;
+    user.mfaOtpExpiresAt = null;
+    user.lastMfaVerificationAt = new Date();
+
+    const { accessToken, refreshToken } = generateTokens(user._id);
+    user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    await user.save();
+
+    console.log(`[Auth] MFA login successful for user ${user._id} via ${method}`);
+
+    res.json({
+      success: true,
+      accessToken,
+      refreshToken,
+      user: user.toPublic()
+    });
+  } catch (error) {
+    console.error("MFA login verification error:", error.message);
+    res.status(500).json({ success: false, error: "MFA verification failed. Please try again." });
   }
 });
 
@@ -115,12 +334,16 @@ router.post("/refresh", async (req, res) => {
     const decoded = jwt.verify(refreshToken, refreshSecret);
 
     const user = await User.findById(decoded.id);
-    if (!user || user.refreshToken !== refreshToken) {
+    const incomingHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
+    const storedHash = user?.refreshToken || "";
+    const hashesMatch = storedHash.length === incomingHash.length &&
+      crypto.timingSafeEqual(Buffer.from(storedHash), Buffer.from(incomingHash));
+    if (!user || !hashesMatch) {
       return res.status(403).json({ success: false, error: "Invalid refresh token." });
     }
 
     const tokens = generateTokens(user._id);
-    user.refreshToken = tokens.refreshToken;
+    user.refreshToken = crypto.createHash("sha256").update(tokens.refreshToken).digest("hex");
     await user.save();
 
     res.json({ success: true, ...tokens });
@@ -163,7 +386,7 @@ router.patch("/profile", authenticateToken, async (req, res) => {
     const updates = {};
     if (name !== undefined) updates.name = name.trim();
     if (company !== undefined) updates.company = company.trim();
-    if (Array.isArray(naicsCodes)) updates.naicsCodes = naicsCodes;
+    if (Array.isArray(naicsCodes)) updates.naicsCodes = sanitizeNaicsCodes(naicsCodes);
 
     const user = await User.findByIdAndUpdate(req.user.id, updates, { new: true });
     if (!user) {
@@ -172,6 +395,90 @@ router.patch("/profile", authenticateToken, async (req, res) => {
     res.json({ success: true, user: user.toPublic() });
   } catch (error) {
     res.status(500).json({ success: false, error: "Failed to update profile." });
+  }
+});
+
+// POST /api/auth/forgot-password
+router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ success: false, error: "Email is required." });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    // Always respond with success to prevent email enumeration
+    if (!user || !user.isActive) {
+      return res.json({
+        success: true,
+        message: "If that email address is registered, a password reset link has been sent."
+      });
+    }
+
+    // Generate a secure random token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const resetTokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    user.resetPasswordToken = resetTokenHash;
+    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save();
+
+    try {
+      await sendPasswordResetEmail(user, resetToken);
+    } catch (emailErr) {
+      console.error("Password reset email failed:", emailErr.message);
+      // Clear token if email failed so the user can retry
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+      return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again." });
+    }
+
+    res.json({
+      success: true,
+      message: "If that email address is registered, a password reset link has been sent."
+    });
+  } catch (error) {
+    console.error("Forgot password error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to process request. Please try again." });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post("/reset-password", passwordResetLimiter, async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || !password) {
+      return res.status(400).json({ success: false, error: "Token and new password are required." });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({ success: false, error: "Password must be at least 8 characters." });
+    }
+
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      resetPasswordToken: tokenHash,
+      resetPasswordExpires: { $gt: new Date() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ success: false, error: "Password reset token is invalid or has expired." });
+    }
+
+    user.password = password;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    // Invalidate any existing refresh token
+    user.refreshToken = null;
+    await user.save();
+
+    res.json({ success: true, message: "Your password has been reset. You can now sign in." });
+  } catch (error) {
+    console.error("Reset password error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to reset password. Please try again." });
   }
 });
 

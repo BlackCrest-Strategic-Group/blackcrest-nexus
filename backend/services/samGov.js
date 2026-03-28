@@ -2,7 +2,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const SAM_BASE_URL = "https://api.sam.gov/opportunities/v1/search";
+const SAM_BASE_URL = "https://api.sam.gov/opportunities/v2/search";
 
 function cleanParams(params) {
   return Object.fromEntries(
@@ -10,16 +10,15 @@ function cleanParams(params) {
   );
 }
 
-function toIsoDate(value) {
+// SAM.gov v2 API expects dates in MM/DD/YYYY format.
+function toSamDate(value) {
   if (!value) return value;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-  // Accept MM/DD/YYYY and convert to YYYY-MM-DD
-  const parts = value.split("/");
-  if (parts.length === 3) {
-    const [month, day, year] = parts.map((p) => p.trim());
-    if (month && day && year && !isNaN(month) && !isNaN(day) && !isNaN(year)) {
-      return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    }
+  // Already in MM/DD/YYYY — pass through unchanged
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return value;
+  // Accept YYYY-MM-DD and convert to MM/DD/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-");
+    return `${month}/${day}/${year}`;
   }
   throw new Error(`Invalid date format: "${value}". Expected YYYY-MM-DD or MM/DD/YYYY.`);
 }
@@ -51,8 +50,8 @@ export async function searchOpportunities({
 
   const params = cleanParams({
     api_key: process.env.SAM_API_KEY,
-    postedFrom: toIsoDate(postedFrom),
-    postedTo: toIsoDate(postedTo),
+    postedFrom: toSamDate(postedFrom),
+    postedTo: toSamDate(postedTo),
     limit,
     offset,
     keyword,
