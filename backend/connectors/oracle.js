@@ -1,31 +1,40 @@
 /**
  * Oracle ERP Cloud Connector
- * Authenticates via OAuth 2.0 (client_credentials) against Oracle Identity Cloud Service (IDCS)
- * and provides helpers for supply chain, procurement, and financials.
+ *
+ * Authenticates via OAuth 2.0 Resource Owner Password Credentials (ROPC) grant
+ * against Oracle Identity Cloud Service (IDCS). The user's credentials are used
+ * ONCE to obtain a short-lived access token and are NEVER stored by this application.
  */
 
 import axios from "axios";
 
-// Obtain an OAuth 2.0 access token from Oracle IDCS.
-export async function getAccessToken(config) {
-  const { tokenUrl, clientId, clientSecret, scope } = config;
-  if (!tokenUrl || !clientId || !clientSecret) {
-    throw new Error("Oracle ERP: tokenUrl, clientId, and clientSecret are required.");
+/**
+ * Exchange a user's ERP credentials for an access token (ROPC grant).
+ * Credentials are used only for this call and never persisted.
+ */
+export async function getTokenFromCredentials({ tokenUrl, clientId, username, password, scope }) {
+  if (!tokenUrl || !username || !password) {
+    throw new Error("Oracle ERP: tokenUrl, username, and password are required.");
   }
 
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const params = new URLSearchParams({
-    grant_type: "client_credentials",
+    grant_type: "password",
+    username,
+    password,
     ...(scope ? { scope } : {})
   });
 
-  const response = await axios.post(tokenUrl, params.toString(), {
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    timeout: 15000
-  });
+  // Oracle IDCS uses HTTP Basic auth with clientId (if provided) for ROPC
+  const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+  if (clientId) {
+    headers.Authorization = `Basic ${Buffer.from(`${clientId}:`).toString("base64")}`;
+  }
+
+  const response = await axios.post(tokenUrl, params.toString(), { headers, timeout: 15000 });
+
+  if (!response.data.access_token) {
+    throw new Error("Oracle ERP: No access token returned from the token endpoint.");
+  }
 
   return {
     accessToken: response.data.access_token,
@@ -134,8 +143,11 @@ export async function getInventoryPositions(tenantUrl, accessToken, options = {}
   );
 }
 
-// Simple connectivity ping.
-export async function testConnection(config) {
-  const tokenData = await getAccessToken(config);
-  return { ok: true, expiresIn: tokenData.expiresIn };
+/**
+ * Test connectivity using a pre-obtained access token.
+ * Pings the API with the stored token to confirm it is still valid.
+ */
+export async function testConnection(tenantUrl, accessToken) {
+  await erpGet(tenantUrl, "/fscmRestApi/resources/11.13.18.05/suppliers", accessToken, { limit: 1 });
+  return { ok: true };
 }

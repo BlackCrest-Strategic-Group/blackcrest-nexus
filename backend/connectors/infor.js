@@ -1,22 +1,27 @@
 /**
  * Infor SyteLine ERP Connector
- * Authenticates via OAuth 2.0 (client_credentials) against the Infor ION API gateway
- * and provides helpers for procurement / invoicing / supplier data.
+ *
+ * Authenticates via OAuth 2.0 Resource Owner Password Credentials (ROPC) grant
+ * against the Infor ION API gateway. The user's credentials are used ONCE to
+ * obtain a short-lived access token and are NEVER stored by this application.
  */
 
 import axios from "axios";
 
-// Obtain an OAuth 2.0 access token from the Infor ION token endpoint.
-export async function getAccessToken(config) {
-  const { tokenUrl, clientId, clientSecret, scope } = config;
-  if (!tokenUrl || !clientId || !clientSecret) {
-    throw new Error("Infor SyteLine: tokenUrl, clientId, and clientSecret are required.");
+/**
+ * Exchange a user's ERP credentials for an access token (ROPC grant).
+ * Credentials are used only for this call and never persisted.
+ */
+export async function getTokenFromCredentials({ tokenUrl, clientId, username, password, scope }) {
+  if (!tokenUrl || !username || !password) {
+    throw new Error("Infor SyteLine: tokenUrl, username, and password are required.");
   }
 
   const params = new URLSearchParams({
-    grant_type: "client_credentials",
-    client_id: clientId,
-    client_secret: clientSecret,
+    grant_type: "password",
+    username,
+    password,
+    ...(clientId ? { client_id: clientId } : {}),
     ...(scope ? { scope } : {})
   });
 
@@ -24,6 +29,10 @@ export async function getAccessToken(config) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     timeout: 15000
   });
+
+  if (!response.data.access_token) {
+    throw new Error("Infor SyteLine: No access token returned from the token endpoint.");
+  }
 
   return {
     accessToken: response.data.access_token,
@@ -93,8 +102,11 @@ export async function getInvoices(tenantUrl, accessToken, options = {}) {
   });
 }
 
-// Simple connectivity ping – returns true if the token endpoint and tenant are reachable.
-export async function testConnection(config) {
-  const tokenData = await getAccessToken(config);
-  return { ok: true, expiresIn: tokenData.expiresIn };
+/**
+ * Test connectivity using a pre-obtained access token.
+ * Pings the API with the stored token to confirm it is still valid.
+ */
+export async function testConnection(tenantUrl, accessToken) {
+  await ionGet(tenantUrl, "/api/v1/procurement/suppliers", accessToken, { pageSize: 1 });
+  return { ok: true };
 }

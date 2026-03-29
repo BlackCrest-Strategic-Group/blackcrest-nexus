@@ -1,29 +1,39 @@
+/**
+ * ErpConfig Model
+ *
+ * Stores ERP connection metadata and an encrypted short-lived access token.
+ * User credentials (username / password) are NEVER persisted — they are used
+ * once at connect/reconnect time to obtain a token, then immediately discarded.
+ */
 import mongoose from "mongoose";
 import crypto from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 
-function encrypt(text, key) {
+function getKey() {
+  const k = process.env.ERP_ENCRYPTION_KEY;
+  if (!k) throw new Error("ERP_ENCRYPTION_KEY is not configured");
+  return Buffer.from(k, "hex");
+}
+
+function encrypt(text) {
+  const key = getKey();
   const iv = crypto.randomBytes(12);
-  const cipher = crypto.createCipheriv(ALGORITHM, Buffer.from(key, "hex"), iv);
+  const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
   const encrypted = Buffer.concat([cipher.update(text, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
   return iv.toString("hex") + ":" + tag.toString("hex") + ":" + encrypted.toString("hex");
 }
 
-function decrypt(payload, key) {
+function decrypt(payload) {
+  const key = getKey();
   const [ivHex, tagHex, encHex] = payload.split(":");
-  const decipher = crypto.createDecipheriv(
-    ALGORITHM,
-    Buffer.from(key, "hex"),
-    Buffer.from(ivHex, "hex")
-  );
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, Buffer.from(ivHex, "hex"));
   decipher.setAuthTag(Buffer.from(tagHex, "hex"));
-  const decrypted = Buffer.concat([
+  return Buffer.concat([
     decipher.update(Buffer.from(encHex, "hex")),
     decipher.final()
-  ]);
-  return decrypted.toString("utf8");
+  ]).toString("utf8");
 }
 
 const erpConfigSchema = new mongoose.Schema(
@@ -35,14 +45,22 @@ const erpConfigSchema = new mongoose.Schema(
     },
     label: { type: String, trim: true, default: "" },
     tenantUrl: { type: String, trim: true, required: true },
-    // OAuth 2.0 / API key fields stored encrypted
-    clientIdEnc: { type: String, default: "" },
-    clientSecretEnc: { type: String, default: "" },
     tokenUrl: { type: String, trim: true, default: "" },
     scope: { type: String, trim: true, default: "" },
-    // Cached access token (short-lived)
-    accessToken: { type: String, default: null },
+    // Optional public client identifier (not secret — needed for ROPC on some ERP systems)
+    clientId: { type: String, trim: true, default: "" },
+
+    // Encrypted short-lived access token — the ONLY credential stored
+    accessTokenEnc: { type: String, default: null },
+    tokenIssuedAt: { type: Date, default: null },
     tokenExpiresAt: { type: Date, default: null },
+
+    connectionStatus: {
+      type: String,
+      enum: ["connected", "expired", "error", "disconnected"],
+      default: "disconnected"
+    },
+
     isActive: { type: Boolean, default: true },
     lastTestAt: { type: Date, default: null },
     lastTestStatus: { type: String, enum: ["ok", "error", ""], default: "" },
@@ -52,32 +70,35 @@ const erpConfigSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-erpConfigSchema.methods.setClientId = function (plain) {
-  const key = process.env.ERP_ENCRYPTION_KEY;
-  if (!key) throw new Error("ERP_ENCRYPTION_KEY not configured");
-  this.clientIdEnc = encrypt(plain, key);
+// Store an access token securely
+erpConfigSchema.methods.setAccessToken = function (plainToken, expiresInSeconds) {
+  this.accessTokenEnc = encrypt(plainToken);
+  this.tokenIssuedAt = new Date();
+  this.tokenExpiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+  this.connectionStatus = "connected";
 };
 
-erpConfigSchema.methods.getClientId = function () {
-  if (!this.clientIdEnc) return "";
-  const key = process.env.ERP_ENCRYPTION_KEY;
-  if (!key) throw new Error("ERP_ENCRYPTION_KEY not configured");
-  return decrypt(this.clientIdEnc, key);
+// Retrieve the decrypted access token (returns null if not set)
+erpConfigSchema.methods.getAccessToken = function () {
+  if (!this.accessTokenEnc) return null;
+  return decrypt(this.accessTokenEnc);
 };
 
-erpConfigSchema.methods.setClientSecret = function (plain) {
-  const key = process.env.ERP_ENCRYPTION_KEY;
-  if (!key) throw new Error("ERP_ENCRYPTION_KEY not configured");
-  this.clientSecretEnc = encrypt(plain, key);
+// Check whether the stored token is still valid
+erpConfigSchema.methods.isTokenValid = function () {
+  if (!this.accessTokenEnc || !this.tokenExpiresAt) return false;
+  return this.tokenExpiresAt > new Date();
 };
 
-erpConfigSchema.methods.getClientSecret = function () {
-  if (!this.clientSecretEnc) return "";
-  const key = process.env.ERP_ENCRYPTION_KEY;
-  if (!key) throw new Error("ERP_ENCRYPTION_KEY not configured");
-  return decrypt(this.clientSecretEnc, key);
+// Clear the stored token (on disconnect or error)
+erpConfigSchema.methods.clearToken = function () {
+  this.accessTokenEnc = null;
+  this.tokenIssuedAt = null;
+  this.tokenExpiresAt = null;
+  this.connectionStatus = "disconnected";
 };
 
+// Safe public view — never exposes the token itself
 erpConfigSchema.methods.toPublic = function () {
   return {
     id: this._id,
@@ -86,6 +107,10 @@ erpConfigSchema.methods.toPublic = function () {
     tenantUrl: this.tenantUrl,
     tokenUrl: this.tokenUrl,
     scope: this.scope,
+    clientId: this.clientId,
+    connectionStatus: this.connectionStatus,
+    tokenIssuedAt: this.tokenIssuedAt,
+    tokenExpiresAt: this.tokenExpiresAt,
     isActive: this.isActive,
     lastTestAt: this.lastTestAt,
     lastTestStatus: this.lastTestStatus,

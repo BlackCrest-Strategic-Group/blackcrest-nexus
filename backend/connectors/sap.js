@@ -1,31 +1,40 @@
 /**
  * SAP ERP Connector
- * Authenticates via OAuth 2.0 (client_credentials) against the SAP Cloud Platform
- * and provides helpers for procurement, finance, and HR via OData / REST APIs.
+ *
+ * Authenticates via OAuth 2.0 Resource Owner Password Credentials (ROPC) grant
+ * against SAP Cloud Platform. The user's credentials are used ONCE to obtain a
+ * short-lived access token and are NEVER stored by this application.
  */
 
 import axios from "axios";
 
-// Obtain an OAuth 2.0 access token from SAP's token endpoint.
-export async function getAccessToken(config) {
-  const { tokenUrl, clientId, clientSecret, scope } = config;
-  if (!tokenUrl || !clientId || !clientSecret) {
-    throw new Error("SAP ERP: tokenUrl, clientId, and clientSecret are required.");
+/**
+ * Exchange a user's ERP credentials for an access token (ROPC grant).
+ * Credentials are used only for this call and never persisted.
+ */
+export async function getTokenFromCredentials({ tokenUrl, clientId, username, password, scope }) {
+  if (!tokenUrl || !username || !password) {
+    throw new Error("SAP ERP: tokenUrl, username, and password are required.");
   }
 
-  const credentials = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
   const params = new URLSearchParams({
-    grant_type: "client_credentials",
+    grant_type: "password",
+    username,
+    password,
     ...(scope ? { scope } : {})
   });
 
-  const response = await axios.post(tokenUrl, params.toString(), {
-    headers: {
-      Authorization: `Basic ${credentials}`,
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    timeout: 15000
-  });
+  // SAP typically requires clientId via HTTP Basic auth for ROPC
+  const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+  if (clientId) {
+    headers.Authorization = `Basic ${Buffer.from(`${clientId}:`).toString("base64")}`;
+  }
+
+  const response = await axios.post(tokenUrl, params.toString(), { headers, timeout: 15000 });
+
+  if (!response.data.access_token) {
+    throw new Error("SAP ERP: No access token returned from the token endpoint.");
+  }
 
   return {
     accessToken: response.data.access_token,
@@ -87,7 +96,6 @@ export async function createPurchaseOrder(tenantUrl, accessToken, orderData) {
 }
 
 // Sanitize a string for safe inclusion in OData $filter expressions.
-// Escapes single-quotes per the OData string literal spec.
 function sanitizeODataString(val) {
   return String(val).replace(/'/g, "''");
 }
@@ -135,8 +143,16 @@ export async function getProfitCenters(tenantUrl, accessToken, options = {}) {
   );
 }
 
-// Simple connectivity ping.
-export async function testConnection(config) {
-  const tokenData = await getAccessToken(config);
-  return { ok: true, expiresIn: tokenData.expiresIn };
+/**
+ * Test connectivity using a pre-obtained access token.
+ * Pings the API with the stored token to confirm it is still valid.
+ */
+export async function testConnection(tenantUrl, accessToken) {
+  await odataGet(
+    tenantUrl,
+    "/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_Supplier",
+    accessToken,
+    { $top: 1 }
+  );
+  return { ok: true };
 }

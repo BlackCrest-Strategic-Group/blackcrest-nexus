@@ -7,24 +7,50 @@ const ERP_SYSTEMS = [
   { id: "sap", label: "SAP S/4HANA" }
 ];
 
-function StatusBadge({ status }) {
-  if (!status) return null;
+function formatExpiry(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diffMs = d - now;
+  if (diffMs <= 0) return "Expired";
+  const diffH = Math.floor(diffMs / 3600000);
+  const diffM = Math.floor((diffMs % 3600000) / 60000);
+  if (diffH >= 24) return `Expires ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  if (diffH > 0) return `Expires in ${diffH}h ${diffM}m`;
+  return `Expires in ${diffM}m`;
+}
+
+function ConnectionBadge({ status }) {
+  if (!status || status === "disconnected") return null;
+  const map = {
+    connected: "bg-emerald-100 text-emerald-700",
+    expired: "bg-amber-100 text-amber-700",
+    error: "bg-red-100 text-red-700"
+  };
+  const labels = { connected: "Connected", expired: "Token Expired", error: "Error" };
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-      status === "ok" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
-    }`}>
-      {status === "ok" ? "Connected" : "Error"}
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${map[status] ?? "bg-slate-100 text-slate-600"}`}>
+      {labels[status] ?? status}
     </span>
   );
 }
 
+// ── Add Connection Form ──────────────────────────────────────────────────────
+
 function AddErpForm({ onAdd, onCancel }) {
   const [form, setForm] = useState({
-    system: "infor_syteline", label: "", tenantUrl: "",
-    tokenUrl: "", clientId: "", clientSecret: "", scope: ""
+    system: "infor_syteline",
+    label: "",
+    tenantUrl: "",
+    tokenUrl: "",
+    clientId: "",
+    scope: "",
+    erpUsername: "",
+    erpPassword: ""
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -43,9 +69,15 @@ function AddErpForm({ onAdd, onCancel }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
-      <h3 className="font-semibold text-slate-800">Add ERP Connection</h3>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+    <form onSubmit={handleSubmit} className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+      <div>
+        <h3 className="font-semibold text-slate-800">Add ERP Connection</h3>
+        <p className="text-xs text-slate-500 mt-1">
+          Your ERP credentials are used once to obtain a secure session token and are never stored.
+        </p>
+      </div>
+
+      {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
@@ -60,57 +92,222 @@ function AddErpForm({ onAdd, onCancel }) {
           <label className="block text-xs font-medium text-slate-600 mb-1">Label</label>
           <input value={form.label} onChange={set("label")} placeholder="e.g. Production" className="input w-full" />
         </div>
+
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600 mb-1">Tenant URL *</label>
-          <input value={form.tenantUrl} onChange={set("tenantUrl")} required placeholder="https://your-tenant.example.com" className="input w-full" />
+          <input
+            value={form.tenantUrl}
+            onChange={set("tenantUrl")}
+            required
+            placeholder="https://your-tenant.example.com"
+            className="input w-full"
+          />
         </div>
+
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600 mb-1">OAuth 2.0 Token URL</label>
-          <input value={form.tokenUrl} onChange={set("tokenUrl")} placeholder="https://auth.example.com/token" className="input w-full" />
+          <label className="block text-xs font-medium text-slate-600 mb-1">OAuth 2.0 Token URL *</label>
+          <input
+            value={form.tokenUrl}
+            onChange={set("tokenUrl")}
+            required
+            placeholder="https://auth.example.com/oauth/token"
+            className="input w-full"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">
+            Client ID <span className="text-slate-400 font-normal">(if required by your ERP)</span>
+          </label>
+          <input value={form.clientId} onChange={set("clientId")} placeholder="Optional" className="input w-full" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Client ID *</label>
-          <input value={form.clientId} onChange={set("clientId")} required className="input w-full" />
+          <label className="block text-xs font-medium text-slate-600 mb-1">
+            Scope <span className="text-slate-400 font-normal">(optional)</span>
+          </label>
+          <input value={form.scope} onChange={set("scope")} placeholder="e.g. openid profile" className="input w-full" />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Client Secret *</label>
-          <input type="password" value={form.clientSecret} onChange={set("clientSecret")} required className="input w-full" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600 mb-1">Scope (optional)</label>
-          <input value={form.scope} onChange={set("scope")} className="input w-full" />
+      </div>
+
+      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 space-y-3">
+        <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide">Your ERP Login</p>
+        <p className="text-xs text-blue-700">
+          Enter your ERP account credentials below. They are transmitted securely to your ERP's
+          authentication server to obtain a session token, then immediately discarded — they are
+          never saved to this application's database.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">ERP Username *</label>
+            <input
+              value={form.erpUsername}
+              onChange={set("erpUsername")}
+              required
+              autoComplete="username"
+              placeholder="your.erp.username"
+              className="input w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">ERP Password *</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={form.erpPassword}
+                onChange={set("erpPassword")}
+                required
+                autoComplete="current-password"
+                placeholder="••••••••"
+                className="input w-full pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="flex gap-3 justify-end">
         <button type="button" onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
         <button type="submit" disabled={saving} className="btn-primary text-sm">
-          {saving ? "Saving…" : "Save Connection"}
+          {saving ? "Connecting…" : "Connect ERP"}
         </button>
       </div>
     </form>
   );
 }
 
-function ErpCard({ config, onDelete, onTest }) {
+// ── Reconnect Form ────────────────────────────────────────────────────────────
+
+function ReconnectForm({ config, onDone, onCancel }) {
+  const [form, setForm] = useState({ erpUsername: "", erpPassword: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const sysLabel = ERP_SYSTEMS.find((s) => s.id === config.system)?.label ?? config.system;
+
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      const res = await erpApi.reconnect(config.id, form);
+      onDone(res.data.config);
+    } catch (err) {
+      setError(err.response?.data?.error || "Reconnect failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+    <form onSubmit={handleSubmit} className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-4">
+      <div>
+        <p className="font-semibold text-slate-800">Reconnect: {config.label || sysLabel}</p>
+        <p className="text-xs text-slate-500 mt-1">
+          Your session token expired. Re-enter your ERP credentials to get a fresh token.
+          Credentials are never stored.
+        </p>
+      </div>
+
+      {error && <p className="text-sm text-red-600">{error}</p>}
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">ERP Username *</label>
+          <input
+            value={form.erpUsername}
+            onChange={set("erpUsername")}
+            required
+            autoComplete="username"
+            placeholder="your.erp.username"
+            className="input w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">ERP Password *</label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              value={form.erpPassword}
+              onChange={set("erpPassword")}
+              required
+              autoComplete="current-password"
+              placeholder="••••••••"
+              className="input w-full pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-3 justify-end">
+        <button type="button" onClick={onCancel} className="btn-secondary text-sm">Cancel</button>
+        <button type="submit" disabled={saving} className="btn-primary text-sm">
+          {saving ? "Reconnecting…" : "Reconnect"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ── ERP Connection Card ───────────────────────────────────────────────────────
+
+function ErpCard({ config, onDelete, onTest, onReconnect }) {
+  const sysLabel = ERP_SYSTEMS.find((s) => s.id === config.system)?.label ?? config.system;
+  const isExpired = config.connectionStatus === "expired";
+  const expiryLabel = formatExpiry(config.tokenExpiresAt);
+
+  return (
+    <div className={`rounded-xl border bg-white p-5 shadow-sm space-y-3 ${isExpired ? "border-amber-200" : "border-slate-200"}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-slate-800">{config.label || sysLabel}</p>
           <p className="text-xs text-slate-500">{sysLabel} · {config.tenantUrl}</p>
         </div>
-        <StatusBadge status={config.lastTestStatus} />
+        <ConnectionBadge status={config.connectionStatus} />
       </div>
-      {config.lastTestMessage && (
+
+      {expiryLabel && (
+        <p className={`text-xs ${isExpired ? "text-amber-600 font-medium" : "text-slate-400"}`}>
+          {isExpired ? "Session token expired — reconnect to restore access." : expiryLabel}
+        </p>
+      )}
+
+      {config.lastTestMessage && !isExpired && (
         <p className="text-xs text-slate-500 italic">{config.lastTestMessage}</p>
       )}
-      <div className="flex gap-2 pt-1">
-        <button onClick={() => onTest(config.id)} className="btn-secondary text-xs px-3 py-1.5">
-          Test Connection
-        </button>
-        <button onClick={() => onDelete(config.id)} className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors">
+
+      <div className="flex flex-wrap gap-2 pt-1">
+        {isExpired ? (
+          <button
+            onClick={() => onReconnect(config)}
+            className="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors font-medium"
+          >
+            Reconnect
+          </button>
+        ) : (
+          <button onClick={() => onTest(config.id)} className="btn-secondary text-xs px-3 py-1.5">
+            Test Connection
+          </button>
+        )}
+        <button
+          onClick={() => onDelete(config.id)}
+          className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+        >
           Remove
         </button>
       </div>
@@ -118,10 +315,13 @@ function ErpCard({ config, onDelete, onTest }) {
   );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export default function ErpConnector() {
   const [configs, setConfigs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
+  const [reconnectConfig, setReconnectConfig] = useState(null);
   const [testingId, setTestingId] = useState(null);
   const [error, setError] = useState("");
 
@@ -148,25 +348,38 @@ export default function ErpConnector() {
 
   const handleTest = async (id) => {
     setTestingId(id);
+    setError("");
     try {
       const res = await erpApi.test(id);
       setConfigs((c) =>
         c.map((cfg) =>
           cfg.id === id
-            ? { ...cfg, lastTestStatus: "ok", lastTestMessage: res.data.message }
+            ? { ...cfg, lastTestStatus: "ok", lastTestMessage: res.data.message, connectionStatus: "connected" }
             : cfg
         )
       );
     } catch (err) {
-      const msg = err.response?.data?.error || "Connection test failed.";
-      setConfigs((c) =>
-        c.map((cfg) =>
-          cfg.id === id ? { ...cfg, lastTestStatus: "error", lastTestMessage: msg } : cfg
-        )
-      );
+      const data = err.response?.data;
+      if (data?.tokenExpired) {
+        setConfigs((c) =>
+          c.map((cfg) => cfg.id === id ? { ...cfg, connectionStatus: "expired" } : cfg)
+        );
+      } else {
+        const msg = data?.error || "Connection test failed.";
+        setConfigs((c) =>
+          c.map((cfg) =>
+            cfg.id === id ? { ...cfg, lastTestStatus: "error", lastTestMessage: msg } : cfg
+          )
+        );
+      }
     } finally {
       setTestingId(null);
     }
+  };
+
+  const handleReconnectDone = (updatedConfig) => {
+    setConfigs((c) => c.map((cfg) => cfg.id === updatedConfig.id ? updatedConfig : cfg));
+    setReconnectConfig(null);
   };
 
   return (
@@ -174,11 +387,15 @@ export default function ErpConnector() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-800">ERP Connections</h2>
-          <p className="text-sm text-slate-500">Connect Infor SyteLine, Oracle ERP, or SAP via OAuth 2.0</p>
+          <p className="text-sm text-slate-500">
+            Authenticate with your ERP system to get a secure session token — credentials are never stored
+          </p>
         </div>
-        <button onClick={() => setShowAdd(true)} className="btn-primary text-sm">
-          + Add Connection
-        </button>
+        {!showAdd && (
+          <button onClick={() => setShowAdd(true)} className="btn-primary text-sm">
+            + Add Connection
+          </button>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -186,6 +403,14 @@ export default function ErpConnector() {
 
       {showAdd && (
         <AddErpForm onAdd={handleAdd} onCancel={() => setShowAdd(false)} />
+      )}
+
+      {reconnectConfig && (
+        <ReconnectForm
+          config={reconnectConfig}
+          onDone={handleReconnectDone}
+          onCancel={() => setReconnectConfig(null)}
+        />
       )}
 
       {loading ? (
@@ -200,7 +425,13 @@ export default function ErpConnector() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {configs.map((cfg) => (
-            <ErpCard key={cfg.id} config={cfg} onDelete={handleDelete} onTest={handleTest} />
+            <ErpCard
+              key={cfg.id}
+              config={cfg}
+              onDelete={handleDelete}
+              onTest={handleTest}
+              onReconnect={setReconnectConfig}
+            />
           ))}
         </div>
       )}
