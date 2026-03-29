@@ -284,7 +284,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-16 relative">
-          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Sourcing Group – GovCon AI Scanner" style={{ height: 48, width: "auto" }} />
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group – GovCon AI Scanner" style={{ height: 48, width: "auto" }} />
         </div>
 
         {/* Hero text */}
@@ -330,7 +330,7 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col" style={{ background: "#f7fafe" }}>
         {/* Top bar */}
         <header className="flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(20,36,58,0.10)", background: "#ffffff" }}>
-          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Sourcing Group" style={{ height: 36, width: "auto" }} />
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group" style={{ height: 36, width: "auto" }} />
           <img src="/logos/govcon-logo.svg" alt="GovCon AI Scanner" style={{ height: 36, width: "auto" }} />
         </header>
 

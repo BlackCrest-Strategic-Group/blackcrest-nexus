@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="220" height="60" role="img" aria-label="BlackCrest Sourcing Group">
-  <title>BlackCrest Sourcing Group</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="220" height="60" role="img" aria-label="BlackCrest Strategic Group">
+  <title>BlackCrest Strategic Group</title>
   <!-- Shield/crest icon -->
   <g transform="translate(4, 4)">
     <path d="M26 0 L52 8 L52 30 Q52 48 26 56 Q0 48 0 30 L0 8 Z" fill="#c79d3b"/>
@@ -9,5 +9,5 @@
   </g>
   <!-- Company name text -->
   <text x="64" y="22" font-family="Georgia, 'Times New Roman', serif" font-size="14" font-weight="bold" fill="#14243a" letter-spacing="0.5">BlackCrest</text>
-  <text x="64" y="40" font-family="Arial, sans-serif" font-size="10" fill="#9a7724" letter-spacing="1">SOURCING GROUP</text>
+  <text x="64" y="40" font-family="Arial, sans-serif" font-size="10" fill="#9a7724" letter-spacing="1">STRATEGIC GROUP</text>
 </svg>

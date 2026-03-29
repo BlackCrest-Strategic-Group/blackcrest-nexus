@@ -921,7 +921,7 @@ export default function Dashboard() {
       <footer className="border-t border-slate-200 bg-white py-5 px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} BlackCrest Sourcing Group &bull; GovCon AI Scanner
+            &copy; {new Date().getFullYear()} BlackCrest Strategic Group &bull; GovCon AI Scanner
           </p>
           <div className="flex items-center gap-4">
             <span className="text-xs text-slate-400">Non-Classified Use Only</span>
