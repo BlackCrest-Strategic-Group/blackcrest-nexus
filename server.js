@@ -30,6 +30,7 @@ import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
 import mfaRoutes from "./backend/routes/mfa.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
+import { requestMetadata } from "./backend/services/auditLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -81,6 +82,12 @@ app.use(
 // ---------------------------------------------------------------------------
 app.use(express.json({ limit: "4mb" }));
 app.use(express.urlencoded({ extended: true, limit: "4mb" }));
+
+// ---------------------------------------------------------------------------
+// Request metadata — attaches req.startTime and req.clientIp to every request
+// so all routes and audit-log calls have consistent timing and IP data
+// ---------------------------------------------------------------------------
+app.use(requestMetadata);
 
 // ---------------------------------------------------------------------------
 // API routes  (must come before static/SPA middleware)

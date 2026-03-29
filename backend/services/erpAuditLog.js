@@ -5,19 +5,20 @@
  *   NIST SP 800-53 Rev 5 — AU-2 (Event Logging), AU-3 (Content of Audit Records),
  *                           AU-8 (Time Stamps), AU-9 (Protection of Audit Information)
  *
- * Every record includes the minimum fields mandated by AU-3:
- *   - event_type   : what happened
- *   - timestamp    : UTC ISO-8601 (AU-8)
- *   - user_id      : who initiated the action
- *   - source_ip    : origin of the request
- *   - success      : outcome (true/false)
- *   - nist_control : primary NIST control being exercised
+ * All records flow through the centralized audit logger so they appear in
+ * both stdout (Render / Datadog) and the local development log file.
  *
- * Records are written to stdout as newline-delimited JSON so they can be
- * ingested by any SIEM or log-aggregation system.
+ * ERP-specific events that map to central event types:
+ *   ERP_CONNECT_SUCCESS   → EVENT.ERP_TOKEN_CONNECTED
+ *   ERP_RECONNECT_SUCCESS → EVENT.ERP_TOKEN_REFRESH
+ *
+ * All other ERP events are emitted with their original event_type strings
+ * and are still picked up by the central logger.
  */
 
-// Map of event types → primary NIST SP 800-53 control reference
+import { audit, getIp, EVENT } from "./auditLogger.js";
+
+// Map ERP-specific event types → primary NIST SP 800-53 control reference
 const NIST_CONTROL_MAP = {
   ERP_CONNECT_SUCCESS:    "IA-5(1)",   // Authenticator Management: token issued
   ERP_CONNECT_FAILURE:    "AC-7",      // Unsuccessful Logon Attempts
@@ -32,47 +33,45 @@ const NIST_CONTROL_MAP = {
   ERP_CONFIG_DELETED:     "AC-2"       // Account Management: config removed
 };
 
+// Map ERP events → central EVENT constants where a direct mapping exists
+const CENTRAL_EVENT_MAP = {
+  ERP_CONNECT_SUCCESS:   EVENT.ERP_TOKEN_CONNECTED,
+  ERP_RECONNECT_SUCCESS: EVENT.ERP_TOKEN_REFRESH
+};
+
 /**
- * Write a single NIST-compliant audit record to stdout.
+ * Write a NIST-compliant ERP audit record through the central audit logger.
  *
  * @param {string} eventType  - One of the keys in NIST_CONTROL_MAP
  * @param {object} fields     - Contextual fields for the event
  */
 export function erpAudit(eventType, fields = {}) {
-  const record = {
-    audit:        true,
-    nist_control: NIST_CONTROL_MAP[eventType] ?? "AU-2",
-    event_type:   eventType,
-    timestamp:    new Date().toISOString(),          // AU-8: system clock, UTC
-    user_id:      fields.userId    ?? "unknown",
-    user_email:   fields.userEmail ?? "unknown",
-    erp_config_id: fields.configId ?? null,
-    erp_system:   fields.system    ?? null,
-    source_ip:    fields.sourceIp  ?? "unknown",
-    success:      Boolean(fields.success),
-    endpoint:     fields.endpoint  ?? null,
-    failure_reason: fields.failureReason ?? null,
-    token_expires_at: fields.tokenExpiresAt ?? null,
-    attempt_count: fields.attemptCount ?? null
-  };
+  // Use the mapped central event type if one exists, otherwise use the raw ERP type
+  const centralType = CENTRAL_EVENT_MAP[eventType] ?? eventType;
 
-  // Remove null/undefined fields to keep records clean
-  Object.keys(record).forEach((k) => record[k] === null && delete record[k]);
-
-  // Write as JSON — parseable by SIEM / log aggregators
-  console.log(JSON.stringify(record));
+  audit(centralType, {
+    userId:  fields.userId    ?? null,
+    email:   fields.userEmail ?? null,
+    ip:      fields.sourceIp  ?? null,
+    route:   fields.endpoint  ?? null,
+    success: Boolean(fields.success),
+    details: {
+      nist_control:     NIST_CONTROL_MAP[eventType] ?? "AU-2",
+      erp_event_type:   eventType,
+      erp_config_id:    fields.configId      ?? null,
+      erp_system:       fields.system        ?? null,
+      failure_reason:   fields.failureReason ?? null,
+      token_expires_at: fields.tokenExpiresAt ?? null,
+      attempt_count:    fields.attemptCount  ?? null
+    }
+  });
 }
 
 /**
  * Extract the client IP from an Express request, honouring X-Forwarded-For
  * set by trusted reverse proxies (Render, Cloudflare, etc.).
- * Returns "unknown" if no IP can be determined.
+ * Delegates to the central getIp helper for consistency.
  */
 export function getSourceIp(req) {
-  const forwarded = req.headers["x-forwarded-for"];
-  if (forwarded) {
-    // X-Forwarded-For may be a comma-separated list; take the first (client) IP
-    return forwarded.split(",")[0].trim();
-  }
-  return req.socket?.remoteAddress ?? "unknown";
+  return getIp(req);
 }

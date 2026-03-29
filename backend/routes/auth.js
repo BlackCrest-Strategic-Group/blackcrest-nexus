@@ -8,6 +8,7 @@ import { authenticateToken } from "../middleware/auth.js";
 import crypto from "crypto";
 import { sendPasswordResetEmail, sendMfaOtpEmail } from "../services/emailService.js";
 import { verifyTotpCode } from "../services/totpService.js";
+import { audit, getIp, EVENT } from "../services/auditLogger.js";
 
 const router = express.Router();
 
@@ -169,13 +170,40 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user || !user.isActive) {
+      audit(EVENT.LOGIN_FAILURE, {
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { reason: "User not found or inactive", email: email.toLowerCase().trim() }
+      });
       return res.status(401).json({ success: false, error: "Invalid credentials." });
     }
 
     const valid = await user.comparePassword(password);
     if (!valid) {
+      audit(EVENT.LOGIN_FAILURE, {
+        userId:  user._id.toString(),
+        email:   user.email,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { reason: "Invalid password" }
+      });
       return res.status(401).json({ success: false, error: "Invalid credentials." });
     }
+
+    // Credentials verified — log success before issuing MFA challenge
+    audit(EVENT.LOGIN_SUCCESS, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { mfaRequired: true }
+    });
 
     // TOTP MFA is mandatory for all users
     if (user.totpVerified) {
@@ -244,6 +272,15 @@ router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
       }
       const valid = verifyTotpCode(user.totpSecret, otp.trim());
       if (!valid) {
+        audit(EVENT.MFA_FAILURE, {
+          userId:  user._id.toString(),
+          email:   user.email,
+          ip:      req.clientIp ?? getIp(req),
+          route:   req.originalUrl,
+          method:  req.method,
+          success: false,
+          details: { mfaMethod: "totp", reason: "Invalid TOTP code" }
+        });
         return res.status(401).json({ success: false, error: "Invalid authenticator code. Please try again." });
       }
       verified = true;
@@ -255,6 +292,15 @@ router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
       const { findMatchingBackupCode } = await import("./mfa.js");
       const matchIndex = await findMatchingBackupCode(otp, user.mfaBackupCodes);
       if (matchIndex === -1) {
+        audit(EVENT.MFA_FAILURE, {
+          userId:  user._id.toString(),
+          email:   user.email,
+          ip:      req.clientIp ?? getIp(req),
+          route:   req.originalUrl,
+          method:  req.method,
+          success: false,
+          details: { mfaMethod: "backup", reason: "Invalid backup code" }
+        });
         return res.status(401).json({ success: false, error: "Invalid backup code." });
       }
       // Remove the used backup code (single-use)
@@ -272,6 +318,15 @@ router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
 
       const otpMatch = await bcrypt.compare(otp, user.mfaOtpHash);
       if (!otpMatch) {
+        audit(EVENT.MFA_FAILURE, {
+          userId:  user._id.toString(),
+          email:   user.email,
+          ip:      req.clientIp ?? getIp(req),
+          route:   req.originalUrl,
+          method:  req.method,
+          success: false,
+          details: { mfaMethod: method, reason: "Invalid OTP" }
+        });
         return res.status(401).json({ success: false, error: "Invalid verification code." });
       }
       verified = true;
@@ -290,7 +345,15 @@ router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
     user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
     await user.save();
 
-    console.log(`[Auth] MFA login successful for user ${user._id} via ${method}`);
+    audit(EVENT.MFA_SUCCESS, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { mfaMethod: method }
+    });
 
     res.json({
       success: true,

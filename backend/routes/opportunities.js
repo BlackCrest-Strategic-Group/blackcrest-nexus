@@ -5,6 +5,7 @@ import { calculateBidScore, detectClauses } from "../services/bidScoring.js";
 import { parseDocument } from "../services/documentParser.js";
 import { authenticateToken } from "../middleware/auth.js";
 import Opportunity from "../models/Opportunity.js";
+import { audit, getIp, EVENT } from "../services/auditLogger.js";
 
 const router = express.Router();
 
@@ -70,10 +71,24 @@ router.get("/", authenticateToken, async (req, res) => {
 
 // POST /api/opportunities/analyze — Analyze an uploaded document
 router.post("/analyze", authenticateToken, upload.single("file"), async (req, res) => {
+  const startTime = req.startTime ?? Date.now();
   try {
     let text = "";
 
     if (req.file) {
+      // Log the upload before parsing — captures file metadata, never content
+      audit(EVENT.FILE_UPLOAD, {
+        userId:  req.user.id,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: true,
+        details: {
+          fileName:  req.file.originalname,
+          mimeType:  req.file.mimetype,
+          sizeBytes: req.file.size
+        }
+      });
       text = await parseDocument(req.file.buffer, req.file.mimetype, req.file.originalname);
     } else if (req.body.text) {
       text = req.body.text;
@@ -83,6 +98,22 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
 
     const clauses = detectClauses(text);
     const scoreData = calculateBidScore(text);
+
+    // Log the analysis run — text content is never logged
+    audit(EVENT.ANALYSIS_RUN, {
+      userId:     req.user.id,
+      ip:         req.clientIp ?? getIp(req),
+      route:      req.originalUrl,
+      method:     req.method,
+      success:    true,
+      durationMs: Date.now() - startTime,
+      details: {
+        source:        req.file ? "file_upload" : "pasted_text",
+        fileName:      req.file?.originalname ?? null,
+        clausesFound:  clauses.length,
+        bidScore:      scoreData?.score ?? null
+      }
+    });
 
     res.json({
       success: true,
@@ -94,6 +125,15 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
     });
   } catch (error) {
     console.error("Document analysis error:", error.message);
+    audit(EVENT.ANALYSIS_RUN, {
+      userId:     req.user.id,
+      ip:         req.clientIp ?? getIp(req),
+      route:      req.originalUrl,
+      method:     req.method,
+      success:    false,
+      durationMs: Date.now() - startTime,
+      details:    { error: error.message }
+    });
     res.status(500).json({ success: false, error: "Failed to analyze document." });
   }
 });
