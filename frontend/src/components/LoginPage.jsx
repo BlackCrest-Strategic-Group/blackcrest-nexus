@@ -320,8 +320,8 @@ export default function LoginPage() {
               </div>
             ))}
           </div>
-          <p className="text-xs" style={{ color: "#8a9bb0" }}>
-            Trusted by 500+ GovCon professionals &bull; SAM.gov certified integration
+          <p className="text-sm text-gray-400">
+            Built for GovCon professionals &bull; Powered by real-time SAM.gov data
           </p>
         </div>
       </div>
