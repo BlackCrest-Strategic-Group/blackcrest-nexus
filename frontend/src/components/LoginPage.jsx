@@ -38,7 +38,8 @@ function TotpSetupStep({ mfaSetupToken, onSuccess, onBack }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [savedCodes, setSavedCodes] = useState(false);
-  const [showManual, setShowManual] = useState(false);
+  const [addTab, setAddTab] = useState(() => window.innerWidth < 600 ? "key" : "qr");
+  const [keyCopied, setKeyCopied] = useState(false);
 
   useEffect(() => {
     async function initSetup() {
@@ -100,36 +101,84 @@ function TotpSetupStep({ mfaSetupToken, onSuccess, onBack }) {
   if (step === "scan") {
     return (
       <div>
-        <div className="mb-5">
+        <div className="mb-4">
           <h2 className="text-xl font-bold mb-1" style={{ color: "#14243a" }}>Set Up Authenticator App</h2>
           <p className="text-sm" style={{ color: "#5d6b7c" }}>
-            Scan the QR code below with <strong>Microsoft Authenticator</strong> (or any TOTP app).
-            This is required to access your account.
+            Add your account to <strong>Microsoft Authenticator</strong> (or any TOTP app like Google Authenticator or Authy).
           </p>
         </div>
 
-        <div className="flex flex-col items-center mb-5">
-          <div className="rounded-xl p-3 mb-3" style={{ background: "#ffffff", border: "1px solid #c8d5e6", display: "inline-block" }}>
-            <img src={qrCode} alt="Authenticator QR code" style={{ width: 180, height: 180, display: "block" }} />
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowManual((v) => !v)}
-            className="text-xs"
-            style={{ color: "#9a7724", background: "none", border: "none", cursor: "pointer", padding: 0 }}
-          >
-            {showManual ? "Hide manual entry key" : "Can't scan? Enter key manually"}
-          </button>
-          {showManual && (
-            <div className="mt-2 px-4 py-2 rounded-lg text-xs font-mono text-center break-all" style={{ background: "#edf3fb", color: "#14243a", border: "1px solid #c8d5e6", maxWidth: 280 }}>
-              {manualKey}
-            </div>
-          )}
+        {/* Step 1: Install the app */}
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#f0f7ff", border: "1px solid #bfdbfe", color: "#1e40af" }}>
+          <strong>Step 1:</strong> If you don't have it yet, install <strong>Microsoft Authenticator</strong> from the App Store or Google Play on your phone.
         </div>
 
-        <div className="mb-5 px-4 py-3 rounded-lg text-sm" style={{ background: "#f0f7ff", border: "1px solid #bfdbfe", color: "#1e40af" }}>
-          <strong>How to add:</strong> Open Microsoft Authenticator → tap + → Work or school account → Scan QR code.
+        {/* Step 2: Tab selector */}
+        <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Step 2: Add your account</p>
+        <div className="flex rounded-lg p-1 mb-4" style={{ background: "#edf3fb" }}>
+          <button
+            type="button"
+            onClick={() => setAddTab("key")}
+            className="flex-1 py-2 rounded-md text-sm font-medium transition-colors"
+            style={addTab === "key"
+              ? { background: "#ffffff", color: "#14243a", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+              : { color: "#5d6b7c", background: "none", border: "none" }}
+          >
+            📱 On This Phone
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddTab("qr")}
+            className="flex-1 py-2 rounded-md text-sm font-medium transition-colors"
+            style={addTab === "qr"
+              ? { background: "#ffffff", color: "#14243a", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }
+              : { color: "#5d6b7c", background: "none", border: "none" }}
+          >
+            🖥 Scan QR Code
+          </button>
         </div>
+
+        {addTab === "key" && (
+          <div>
+            <p className="text-sm mb-3" style={{ color: "#5d6b7c" }}>
+              Open Microsoft Authenticator → tap <strong>+</strong> → <strong>Other account</strong> → <strong>Enter code manually</strong>, then type in the key below.
+            </p>
+            <div className="rounded-xl p-4 mb-3" style={{ background: "#f8fafc", border: "1px solid #c8d5e6" }}>
+              <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Account Name</p>
+              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>GovCon AI Scanner</p>
+              <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Setup Key</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-mono break-all flex-1" style={{ color: "#14243a", wordBreak: "break-all" }}>
+                  {manualKey}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { navigator.clipboard.writeText(manualKey).catch(() => {}); setKeyCopied(true); setTimeout(() => setKeyCopied(false), 2000); }}
+                  className="text-xs px-3 py-1.5 rounded-lg shrink-0"
+                  style={{ background: keyCopied ? "#166534" : "#14243a", color: "#ffffff", border: "none", cursor: "pointer" }}
+                >
+                  {keyCopied ? "✓ Copied" : "Copy"}
+                </button>
+              </div>
+            </div>
+            <p className="text-xs mb-4" style={{ color: "#5d6b7c" }}>
+              Make sure <strong>Time-based</strong> is selected (not Counter-based) in the authenticator app.
+            </p>
+          </div>
+        )}
+
+        {addTab === "qr" && (
+          <div>
+            <p className="text-sm mb-3" style={{ color: "#5d6b7c" }}>
+              Open Microsoft Authenticator on a <strong>different device</strong> → tap <strong>+</strong> → <strong>Scan QR code</strong> → point the camera at the code below.
+            </p>
+            <div className="flex justify-center mb-4">
+              <div className="rounded-xl p-3" style={{ background: "#ffffff", border: "1px solid #c8d5e6", display: "inline-block" }}>
+                <img src={qrCode} alt="Authenticator QR code" style={{ width: 180, height: 180, display: "block" }} />
+              </div>
+            </div>
+          </div>
+        )}
 
         <button
           type="button"
