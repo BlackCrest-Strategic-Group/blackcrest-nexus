@@ -12,9 +12,12 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import rateLimit from "express-rate-limit";
+import speakeasy from "speakeasy";
+import QRCode from "qrcode";
 import { authenticateToken } from "../middleware/auth.js";
 import User from "../models/User.js";
 import { sendMfaOtpEmail } from "../services/emailService.js";
+import { encryptTotpSecret, decryptTotpSecret, verifyTotpCode } from "../services/totpService.js";
 
 const router = express.Router();
 
@@ -176,6 +179,143 @@ async function sendSmsOtp(phoneNumber, otp) {
     to: phoneNumber
   });
 }
+
+// ---------------------------------------------------------------------------
+// TOTP (Authenticator App) Setup Routes
+// These use a short-lived mfa-setup JWT (generated at login/register)
+// and do NOT require an authenticated session — the user has not yet
+// completed MFA setup, so they have no access token.
+// ---------------------------------------------------------------------------
+
+const totpSetupLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip || "unknown",
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
+  message: { success: false, error: "Too many TOTP setup requests. Please wait." }
+});
+
+function verifyMfaSetupToken(token) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET not configured");
+  const decoded = jwt.verify(token, secret);
+  if (decoded.purpose !== "mfa-setup") throw new Error("Invalid token purpose");
+  return decoded;
+}
+
+// POST /api/mfa/setup/totp
+// Generate a TOTP secret and return a QR code for Microsoft Authenticator.
+// Requires a valid mfa-setup token (issued after successful password verification).
+router.post("/setup/totp", totpSetupLimiter, async (req, res) => {
+  try {
+    const { mfaSetupToken } = req.body;
+    if (!mfaSetupToken) {
+      return res.status(400).json({ success: false, error: "Setup token is required." });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyMfaSetupToken(mfaSetupToken);
+    } catch {
+      return res.status(400).json({ success: false, error: "Invalid or expired setup token." });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    const secret = speakeasy.generateSecret({
+      name: `GovCon AI Scanner (${user.email})`,
+      issuer: "BlackCrest Strategic Group",
+      length: 32
+    });
+
+    user.totpPendingSecret = encryptTotpSecret(secret.base32);
+    await user.save();
+
+    const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+
+    return res.json({
+      success: true,
+      qrCode,
+      manualEntryKey: secret.base32,
+      otpauthUrl: secret.otpauth_url
+    });
+  } catch (error) {
+    console.error("TOTP setup error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to generate TOTP setup. Please try again." });
+  }
+});
+
+// POST /api/mfa/verify-totp-setup
+// Verify the first TOTP code from the authenticator app to confirm setup.
+// On success, promotes pending secret to active and returns session tokens.
+router.post("/verify-totp-setup", totpSetupLimiter, async (req, res) => {
+  try {
+    const { mfaSetupToken, totpCode } = req.body;
+    if (!mfaSetupToken || !totpCode) {
+      return res.status(400).json({ success: false, error: "Setup token and TOTP code are required." });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyMfaSetupToken(mfaSetupToken);
+    } catch {
+      return res.status(400).json({ success: false, error: "Invalid or expired setup token." });
+    }
+
+    const user = await User.findById(decoded.id);
+    if (!user || !user.isActive) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    if (!user.totpPendingSecret) {
+      return res.status(400).json({ success: false, error: "TOTP setup not initiated. Please start again." });
+    }
+
+    const valid = verifyTotpCode(user.totpPendingSecret, totpCode.trim());
+    if (!valid) {
+      return res.status(401).json({ success: false, error: "Invalid code. Please check your authenticator app and try again." });
+    }
+
+    // Promote pending secret → active
+    user.totpSecret = user.totpPendingSecret;
+    user.totpPendingSecret = null;
+    user.totpVerified = true;
+    user.mfaEnabled = true;
+    if (!user.mfaMethods.includes("totp")) {
+      user.mfaMethods.push("totp");
+    }
+
+    // Generate backup codes
+    const plainCodes = generateBackupCodes(BACKUP_CODE_COUNT);
+    user.mfaBackupCodes = await hashBackupCodes(plainCodes);
+    user.lastMfaVerificationAt = new Date();
+
+    // Issue session tokens (TOTP setup completes the login)
+    const jwtSecret = process.env.JWT_SECRET;
+    const jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || jwtSecret;
+    const accessToken = jwt.sign({ id: user._id }, jwtSecret, { expiresIn: "15m" });
+    const refreshToken = jwt.sign({ id: user._id }, jwtRefreshSecret, { expiresIn: "7d" });
+    user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
+
+    await user.save();
+
+    return res.json({
+      success: true,
+      accessToken,
+      refreshToken,
+      user: user.toPublic(),
+      backupCodes: plainCodes
+    });
+  } catch (error) {
+    console.error("TOTP verify-setup error:", error.message);
+    res.status(500).json({ success: false, error: "TOTP verification failed. Please try again." });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Setup token helpers

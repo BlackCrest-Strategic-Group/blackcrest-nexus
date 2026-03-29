@@ -61,8 +61,21 @@ const userSchema = new mongoose.Schema(
     },
     mfaMethods: {
       type: [String],
-      enum: ["email", "sms"],
+      enum: ["email", "sms", "totp"],
       default: []
+    },
+    // TOTP (Authenticator App) fields
+    totpSecret: {
+      type: String,
+      default: null
+    },
+    totpPendingSecret: {
+      type: String,
+      default: null
+    },
+    totpVerified: {
+      type: Boolean,
+      default: false
     },
     mfaOtpHash: {
       type: String,

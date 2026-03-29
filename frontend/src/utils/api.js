@@ -82,7 +82,9 @@ export const mfaApi = {
   disable: (method) => api.post("/api/mfa/disable", { method }),
   generateBackupCodes: () => api.post("/api/mfa/generate-backup-codes"),
   status: () => api.get("/api/mfa/status"),
-  resendLoginOtp: (mfaToken, method) => api.post("/api/mfa/resend-login-otp", { mfaToken, method })
+  resendLoginOtp: (mfaToken, method) => api.post("/api/mfa/resend-login-otp", { mfaToken, method }),
+  setupTotp: (mfaSetupToken) => api.post("/api/mfa/setup/totp", { mfaSetupToken }),
+  verifyTotpSetup: (mfaSetupToken, totpCode) => api.post("/api/mfa/verify-totp-setup", { mfaSetupToken, totpCode })
 };
 
 // Opportunities

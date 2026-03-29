@@ -7,6 +7,7 @@ import EmailPreference from "../models/EmailPreference.js";
 import { authenticateToken } from "../middleware/auth.js";
 import crypto from "crypto";
 import { sendPasswordResetEmail, sendMfaOtpEmail } from "../services/emailService.js";
+import { verifyTotpCode } from "../services/totpService.js";
 
 const router = express.Router();
 
@@ -95,6 +96,12 @@ function generateMfaLoginToken(userId) {
   return jwt.sign({ id: userId, purpose: "mfa-login" }, secret, { expiresIn: `${expiryMinutes}m` });
 }
 
+function generateMfaSetupToken(userId) {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET is not configured.");
+  return jwt.sign({ id: userId, purpose: "mfa-setup" }, secret, { expiresIn: "15m" });
+}
+
 function generateOtpForLogin() {
   // Rejection sampling to avoid modular bias (LIMIT = floor(2^32 / 1,000,000) * 1,000,000)
   const LIMIT = 4294000000;
@@ -137,18 +144,13 @@ router.post("/register", registerLimiter, async (req, res) => {
     // Create default email preferences for the new user
     await EmailPreference.create({ user: user._id });
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
-
-    // Persist refresh token hash in DB rather than the raw token
-    const refreshTokenHash = crypto.createHash("sha256").update(refreshToken).digest("hex");
-    user.refreshToken = refreshTokenHash;
-    await user.save();
+    // TOTP MFA is mandatory — require setup before granting access
+    const mfaSetupToken = generateMfaSetupToken(user._id.toString());
 
     res.status(201).json({
       success: true,
-      accessToken,
-      refreshToken,
-      user: user.toPublic()
+      requiresMfaSetup: true,
+      mfaSetupToken
     });
   } catch (error) {
     console.error("Register error:", error.message);
@@ -175,49 +177,24 @@ router.post("/login", loginLimiter, async (req, res) => {
       return res.status(401).json({ success: false, error: "Invalid credentials." });
     }
 
-    // If MFA is enabled, return a temporary MFA token instead of access tokens
-    if (user.mfaEnabled && user.mfaMethods.length > 0) {
+    // TOTP MFA is mandatory for all users
+    if (user.totpVerified) {
+      // User has TOTP set up — issue a login challenge token
       const mfaToken = generateMfaLoginToken(user._id.toString());
-
-      // Generate OTP and send via the preferred available method
-      const otp = generateOtpForLogin();
-      const otpHash = await bcrypt.hash(otp, 10);
-      user.mfaOtpHash = otpHash;
-      user.mfaOtpExpiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
-      await user.save();
-
-      if (user.mfaMethods.includes("email")) {
-        try {
-          await sendMfaOtpEmail(user, otp);
-        } catch (emailErr) {
-          console.error("MFA OTP email failed:", emailErr.message);
-        }
-      } else if (user.mfaMethods.includes("sms") && user.smsPhoneEnc) {
-        try {
-          const phone = decryptPhone(user.smsPhoneEnc);
-          if (phone) await sendSmsOtpForLogin(phone, otp);
-        } catch (smsErr) {
-          console.error("MFA OTP SMS failed:", smsErr.message);
-        }
-      }
-
       return res.json({
         success: true,
         requiresMfa: true,
-        mfaMethods: user.mfaMethods,
+        mfaMethod: "totp",
         mfaToken
       });
     }
 
-    const { accessToken, refreshToken } = generateTokens(user._id);
-    user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
-    await user.save();
-
-    res.json({
+    // TOTP not yet set up — force setup before granting access
+    const mfaSetupToken = generateMfaSetupToken(user._id.toString());
+    return res.json({
       success: true,
-      accessToken,
-      refreshToken,
-      user: user.toPublic()
+      requiresMfaSetup: true,
+      mfaSetupToken
     });
   } catch (error) {
     console.error("Login error:", error.message);
@@ -235,8 +212,8 @@ router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: "mfaToken, method, and otp are required." });
     }
 
-    if (!["email", "sms", "backup"].includes(method)) {
-      return res.status(400).json({ success: false, error: "Invalid method. Must be 'email', 'sms', or 'backup'." });
+    if (!["email", "sms", "backup", "totp"].includes(method)) {
+      return res.status(400).json({ success: false, error: "Invalid method." });
     }
 
     // Verify MFA login token
@@ -258,13 +235,19 @@ router.post("/verify-mfa-login", mfaLoginLimiter, async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found." });
     }
 
-    if (!user.mfaEnabled) {
-      return res.status(400).json({ success: false, error: "MFA is not enabled for this account." });
-    }
-
     let verified = false;
 
-    if (method === "backup") {
+    if (method === "totp") {
+      // Verify TOTP code from authenticator app
+      if (!user.totpVerified || !user.totpSecret) {
+        return res.status(400).json({ success: false, error: "Authenticator app not configured for this account." });
+      }
+      const valid = verifyTotpCode(user.totpSecret, otp.trim());
+      if (!valid) {
+        return res.status(401).json({ success: false, error: "Invalid authenticator code. Please try again." });
+      }
+      verified = true;
+    } else if (method === "backup") {
       // Verify backup code
       if (user.mfaBackupCodes.length === 0) {
         return res.status(400).json({ success: false, error: "No backup codes available." });

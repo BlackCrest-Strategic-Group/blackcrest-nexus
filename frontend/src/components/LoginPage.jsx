@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authApi, mfaApi } from "../utils/api.js";
 import { saveAuth } from "../utils/auth.js";
@@ -27,15 +27,225 @@ const FEATURES = [
   { icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", text: "Daily opportunity digest emails" }
 ];
 
-// MFA verification step component
+// TOTP setup wizard — shown when a user hasn't configured an authenticator app yet
+function TotpSetupStep({ mfaSetupToken, onSuccess, onBack }) {
+  const [step, setStep] = useState("loading"); // loading | scan | verify | backup-codes
+  const [qrCode, setQrCode] = useState("");
+  const [manualKey, setManualKey] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [sessionData, setSessionData] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [savedCodes, setSavedCodes] = useState(false);
+  const [showManual, setShowManual] = useState(false);
+
+  useEffect(() => {
+    async function initSetup() {
+      try {
+        const res = await mfaApi.setupTotp(mfaSetupToken);
+        setQrCode(res.data.qrCode);
+        setManualKey(res.data.manualEntryKey);
+        setStep("scan");
+      } catch (err) {
+        setError(err.response?.data?.error || "Failed to generate QR code. Please go back and try again.");
+        setStep("error");
+      }
+    }
+    initSetup();
+  }, [mfaSetupToken]);
+
+  async function handleVerify(e) {
+    e.preventDefault();
+    setError("");
+    if (!/^\d{6}$/.test(totpCode.trim())) {
+      setError("Please enter the 6-digit code shown in your authenticator app.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await mfaApi.verifyTotpSetup(mfaSetupToken, totpCode.trim());
+      setBackupCodes(res.data.backupCodes || []);
+      setSessionData(res.data);
+      setStep("backup-codes");
+    } catch (err) {
+      setError(err.response?.data?.error || "Verification failed. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (step === "loading") {
+    return (
+      <div className="text-center py-12">
+        <div className="w-10 h-10 rounded-full border-4 mx-auto mb-4 animate-spin" style={{ borderColor: "#14243a", borderTopColor: "transparent" }} />
+        <p className="text-sm" style={{ color: "#5d6b7c" }}>Generating your authenticator QR code…</p>
+      </div>
+    );
+  }
+
+  if (step === "error") {
+    return (
+      <div>
+        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#fdf2f2", border: "1px solid #f5c6c6", color: "#a63c3c" }}>
+          {error}
+        </div>
+        <button type="button" onClick={onBack} className="text-sm" style={{ color: "#5d6b7c", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+          ← Back to Sign In
+        </button>
+      </div>
+    );
+  }
+
+  if (step === "scan") {
+    return (
+      <div>
+        <div className="mb-5">
+          <h2 className="text-xl font-bold mb-1" style={{ color: "#14243a" }}>Set Up Authenticator App</h2>
+          <p className="text-sm" style={{ color: "#5d6b7c" }}>
+            Scan the QR code below with <strong>Microsoft Authenticator</strong> (or any TOTP app).
+            This is required to access your account.
+          </p>
+        </div>
+
+        <div className="flex flex-col items-center mb-5">
+          <div className="rounded-xl p-3 mb-3" style={{ background: "#ffffff", border: "1px solid #c8d5e6", display: "inline-block" }}>
+            <img src={qrCode} alt="Authenticator QR code" style={{ width: 180, height: 180, display: "block" }} />
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowManual((v) => !v)}
+            className="text-xs"
+            style={{ color: "#9a7724", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+          >
+            {showManual ? "Hide manual entry key" : "Can't scan? Enter key manually"}
+          </button>
+          {showManual && (
+            <div className="mt-2 px-4 py-2 rounded-lg text-xs font-mono text-center break-all" style={{ background: "#edf3fb", color: "#14243a", border: "1px solid #c8d5e6", maxWidth: 280 }}>
+              {manualKey}
+            </div>
+          )}
+        </div>
+
+        <div className="mb-5 px-4 py-3 rounded-lg text-sm" style={{ background: "#f0f7ff", border: "1px solid #bfdbfe", color: "#1e40af" }}>
+          <strong>How to add:</strong> Open Microsoft Authenticator → tap + → Work or school account → Scan QR code.
+        </div>
+
+        <button
+          type="button"
+          onClick={() => { setStep("verify"); setError(""); }}
+          className="w-full py-3 rounded-xl font-bold text-sm text-white"
+          style={{ background: "#14243a", border: "none", cursor: "pointer" }}
+        >
+          I've Added the Account →
+        </button>
+        <div className="mt-3 text-center">
+          <button type="button" onClick={onBack} className="text-sm" style={{ color: "#5d6b7c", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+            ← Back to Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "verify") {
+    return (
+      <div>
+        <div className="mb-5">
+          <h2 className="text-xl font-bold mb-1" style={{ color: "#14243a" }}>Verify Setup</h2>
+          <p className="text-sm" style={{ color: "#5d6b7c" }}>
+            Enter the 6-digit code from your authenticator app to confirm setup.
+          </p>
+        </div>
+
+        {error && (
+          <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#fdf2f2", border: "1px solid #f5c6c6", color: "#a63c3c" }}>
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleVerify} className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold mb-1" style={{ color: "#14243a" }}>Verification Code</label>
+            <input
+              className="w-full px-3.5 py-3 rounded-xl text-center text-2xl font-mono tracking-[0.4em]"
+              style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
+              type="tel"
+              inputMode="numeric"
+              placeholder="000000"
+              value={totpCode}
+              onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              maxLength={6}
+              autoComplete="one-time-code"
+              autoFocus
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 rounded-xl font-bold text-sm text-white"
+            style={{ background: loading ? "#4a6080" : "#14243a", border: "none", cursor: loading ? "not-allowed" : "pointer" }}
+          >
+            {loading ? "Verifying…" : "Confirm & Continue"}
+          </button>
+        </form>
+        <div className="mt-3 text-center">
+          <button type="button" onClick={() => { setStep("scan"); setError(""); }} className="text-sm" style={{ color: "#5d6b7c", background: "none", border: "none", padding: 0, cursor: "pointer" }}>
+            ← Back to QR Code
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "backup-codes") {
+    return (
+      <div>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold mb-1" style={{ color: "#14243a" }}>Save Your Backup Codes</h2>
+          <p className="text-sm" style={{ color: "#5d6b7c" }}>
+            Store these codes in a safe place. Each code can only be used once if you lose access to your authenticator app.
+          </p>
+        </div>
+
+        <div className="rounded-xl p-4 mb-4" style={{ background: "#f8fafc", border: "1px solid #c8d5e6" }}>
+          <div className="grid grid-cols-2 gap-2">
+            {backupCodes.map((code) => (
+              <div key={code} className="text-center font-mono text-sm py-1 px-2 rounded" style={{ background: "#ffffff", border: "1px solid #e2e8f0", color: "#14243a" }}>
+                {code}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <label className="flex items-center gap-2 mb-4 cursor-pointer">
+          <input type="checkbox" checked={savedCodes} onChange={(e) => setSavedCodes(e.target.checked)} className="w-4 h-4 rounded" />
+          <span className="text-sm" style={{ color: "#14243a" }}>I have saved my backup codes in a secure location</span>
+        </label>
+
+        <button
+          type="button"
+          disabled={!savedCodes}
+          onClick={() => onSuccess(sessionData)}
+          className="w-full py-3 rounded-xl font-bold text-sm text-white"
+          style={{ background: savedCodes ? "#14243a" : "#94a3b8", border: "none", cursor: savedCodes ? "pointer" : "not-allowed" }}
+        >
+          Access Dashboard →
+        </button>
+      </div>
+    );
+  }
+
+  return null;
+}
+
+// MFA verification step — shown when TOTP is already configured
 function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
   const [otp, setOtp] = useState("");
-  const [activeMethod, setActiveMethod] = useState(mfaState.mfaMethods[0] || "email");
   const [useBackup, setUseBackup] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [resending, setResending] = useState(false);
-  const [resendMsg, setResendMsg] = useState("");
+  const isTotp = mfaState.mfaMethod === "totp";
 
   async function handleVerify(e) {
     e.preventDefault();
@@ -50,7 +260,7 @@ function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
     }
     setLoading(true);
     try {
-      const method = useBackup ? "backup" : activeMethod;
+      const method = useBackup ? "backup" : (isTotp ? "totp" : "email");
       const res = await authApi.verifyMfaLogin({
         mfaToken: mfaState.mfaToken,
         method,
@@ -64,22 +274,6 @@ function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
     }
   }
 
-  async function handleResend() {
-    setResendMsg("");
-    setError("");
-    setResending(true);
-    try {
-      await mfaApi.resendLoginOtp(mfaState.mfaToken, activeMethod);
-      setResendMsg(`New code sent via ${activeMethod === "email" ? "email" : "SMS"}.`);
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to resend code.");
-    } finally {
-      setResending(false);
-    }
-  }
-
-  const methodLabel = activeMethod === "email" ? "email" : "SMS";
-
   return (
     <div>
       <div className="mb-6">
@@ -87,38 +281,15 @@ function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
         <p className="text-sm" style={{ color: "#5d6b7c" }}>
           {useBackup
             ? "Enter one of your backup codes to sign in."
-            : `Enter the 6-digit code sent to your ${methodLabel}.`}
+            : isTotp
+              ? "Enter the 6-digit code from your authenticator app."
+              : "Enter the 6-digit code sent to your email."}
         </p>
       </div>
 
       {error && (
         <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#fdf2f2", border: "1px solid #f5c6c6", color: "#a63c3c" }}>
           {error}
-        </div>
-      )}
-
-      {resendMsg && (
-        <div className="mb-4 px-4 py-3 rounded-lg text-sm" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d" }}>
-          {resendMsg}
-        </div>
-      )}
-
-      {/* Method selector if multiple methods */}
-      {!useBackup && mfaState.mfaMethods.length > 1 && (
-        <div className="flex gap-2 mb-4">
-          {mfaState.mfaMethods.map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setActiveMethod(m)}
-              className="flex-1 py-2 rounded-lg text-sm font-medium transition-colors"
-              style={activeMethod === m
-                ? { background: "#14243a", color: "#ffffff", border: "1px solid #14243a" }
-                : { background: "#f1f5f9", color: "#5d6b7c", border: "1px solid #c8d5e6" }}
-            >
-              {m === "email" ? "📧 Email" : "📱 SMS"}
-            </button>
-          ))}
         </div>
       )}
 
@@ -131,9 +302,10 @@ function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
             className="w-full px-3.5 py-3 rounded-xl text-center text-2xl font-mono tracking-[0.4em]"
             style={{ border: "1px solid #c8d5e6", background: "#fbfdff", color: "#14243a", outline: "none", boxSizing: "border-box" }}
             type={useBackup ? "text" : "tel"}
+            inputMode={useBackup ? undefined : "numeric"}
             placeholder={useBackup ? "XXXXXXXXXX" : "000000"}
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            onChange={(e) => setOtp(useBackup ? e.target.value : e.target.value.replace(/\D/g, "").slice(0, 6))}
             maxLength={useBackup ? 10 : 6}
             autoComplete="one-time-code"
             autoFocus
@@ -151,27 +323,13 @@ function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
       </form>
 
       <div className="mt-4 space-y-2 text-center">
-        {!useBackup && (
-          <>
-            <button
-              type="button"
-              onClick={handleResend}
-              disabled={resending}
-              className="text-sm"
-              style={{ color: "#5d6b7c", background: "none", border: "none", padding: 0, cursor: resending ? "not-allowed" : "pointer" }}
-            >
-              {resending ? "Resending…" : "Resend code"}
-            </button>
-            <br />
-          </>
-        )}
         <button
           type="button"
-          onClick={() => { setUseBackup((b) => !b); setOtp(""); setError(""); setResendMsg(""); }}
+          onClick={() => { setUseBackup((b) => !b); setOtp(""); setError(""); }}
           className="text-sm"
           style={{ color: "#9a7724", background: "none", border: "none", padding: 0, cursor: "pointer" }}
         >
-          {useBackup ? "← Use verification code instead" : "Using a backup code?"}
+          {useBackup ? "← Use authenticator code instead" : "Using a backup code?"}
         </button>
         <br />
         <button
@@ -201,7 +359,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
-  const [mfaState, setMfaState] = useState(null); // { mfaToken, mfaMethods } when MFA required
+  const [mfaState, setMfaState] = useState(null); // { mfaToken, mfaMethod } when TOTP challenge required
+  const [totpSetupToken, setTotpSetupToken] = useState(null); // when TOTP setup required
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
@@ -248,9 +407,15 @@ export default function LoginPage() {
         });
       }
 
-      // Check if MFA verification is required
+      // TOTP setup required (first-time or new account)
+      if (res.data.requiresMfaSetup) {
+        setTotpSetupToken(res.data.mfaSetupToken);
+        return;
+      }
+
+      // TOTP challenge required (already set up)
       if (res.data.requiresMfa) {
-        setMfaState({ mfaToken: res.data.mfaToken, mfaMethods: res.data.mfaMethods });
+        setMfaState({ mfaToken: res.data.mfaToken, mfaMethod: res.data.mfaMethod });
         return;
       }
 
@@ -270,6 +435,7 @@ export default function LoginPage() {
 
   function handleMfaBack() {
     setMfaState(null);
+    setTotpSetupToken(null);
     setError("");
   }
 
@@ -337,8 +503,16 @@ export default function LoginPage() {
         {/* Form area */}
         <div className="flex-1 flex items-center justify-center px-6 py-10">
           <div className="w-full max-w-md">
-            {/* MFA verification step */}
-            {mfaState ? (
+            {/* TOTP setup wizard — first-time setup */}
+            {totpSetupToken ? (
+              <div className="bg-white rounded-2xl p-8" style={{ border: "1px solid rgba(20,36,58,0.12)", boxShadow: "0 10px 28px rgba(20,36,58,0.08)" }}>
+                <TotpSetupStep
+                  mfaSetupToken={totpSetupToken}
+                  onSuccess={handleMfaSuccess}
+                  onBack={handleMfaBack}
+                />
+              </div>
+            ) : mfaState ? (
               <div className="bg-white rounded-2xl p-8" style={{ border: "1px solid rgba(20,36,58,0.12)", boxShadow: "0 10px 28px rgba(20,36,58,0.08)" }}>
                 <MfaVerifyStep
                   mfaState={mfaState}
