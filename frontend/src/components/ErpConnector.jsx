@@ -23,11 +23,17 @@ function formatExpiry(dateStr) {
 function ConnectionBadge({ status }) {
   if (!status || status === "disconnected") return null;
   const map = {
-    connected: "bg-emerald-100 text-emerald-700",
-    expired: "bg-amber-100 text-amber-700",
-    error: "bg-red-100 text-red-700"
+    connected:  "bg-emerald-100 text-emerald-700",
+    expired:    "bg-amber-100 text-amber-700",
+    locked:     "bg-red-100 text-red-700",
+    error:      "bg-red-100 text-red-700"
   };
-  const labels = { connected: "Connected", expired: "Token Expired", error: "Error" };
+  const labels = {
+    connected:  "Connected",
+    expired:    "Token Expired",
+    locked:     "Locked",
+    error:      "Error"
+  };
   return (
     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${map[status] ?? "bg-slate-100 text-slate-600"}`}>
       {labels[status] ?? status}
@@ -267,12 +273,16 @@ function ReconnectForm({ config, onDone, onCancel }) {
 // ── ERP Connection Card ───────────────────────────────────────────────────────
 
 function ErpCard({ config, onDelete, onTest, onReconnect }) {
-  const sysLabel = ERP_SYSTEMS.find((s) => s.id === config.system)?.label ?? config.system;
+  const sysLabel  = ERP_SYSTEMS.find((s) => s.id === config.system)?.label ?? config.system;
   const isExpired = config.connectionStatus === "expired";
+  const isLocked  = config.connectionStatus === "locked";
+  const needsReconnect = isExpired || isLocked;
   const expiryLabel = formatExpiry(config.tokenExpiresAt);
 
+  const borderColor = isLocked ? "border-red-200" : isExpired ? "border-amber-200" : "border-slate-200";
+
   return (
-    <div className={`rounded-xl border bg-white p-5 shadow-sm space-y-3 ${isExpired ? "border-amber-200" : "border-slate-200"}`}>
+    <div className={`rounded-xl border bg-white p-5 shadow-sm space-y-3 ${borderColor}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-semibold text-slate-800">{config.label || sysLabel}</p>
@@ -281,23 +291,45 @@ function ErpCard({ config, onDelete, onTest, onReconnect }) {
         <ConnectionBadge status={config.connectionStatus} />
       </div>
 
-      {expiryLabel && (
-        <p className={`text-xs ${isExpired ? "text-amber-600 font-medium" : "text-slate-400"}`}>
-          {isExpired ? "Session token expired — reconnect to restore access." : expiryLabel}
+      {isLocked && (
+        <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 space-y-1">
+          <p className="text-xs font-medium text-red-700">
+            Temporarily locked after too many failed attempts (NIST AC-7).
+          </p>
+          {config.failedAuthLockedUntil && (
+            <p className="text-xs text-red-600">
+              Unlocks at {new Date(config.failedAuthLockedUntil).toLocaleTimeString()}.
+            </p>
+          )}
+        </div>
+      )}
+
+      {isExpired && !isLocked && (
+        <p className="text-xs text-amber-600 font-medium">
+          Session token expired — reconnect to restore access.
         </p>
       )}
 
-      {config.lastTestMessage && !isExpired && (
+      {!needsReconnect && expiryLabel && (
+        <p className="text-xs text-slate-400">{expiryLabel}</p>
+      )}
+
+      {config.lastTestMessage && !needsReconnect && (
         <p className="text-xs text-slate-500 italic">{config.lastTestMessage}</p>
       )}
 
       <div className="flex flex-wrap gap-2 pt-1">
-        {isExpired ? (
+        {needsReconnect ? (
           <button
             onClick={() => onReconnect(config)}
-            className="text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-white hover:bg-amber-600 transition-colors font-medium"
+            disabled={isLocked}
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+              isLocked
+                ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                : "bg-amber-500 text-white hover:bg-amber-600"
+            }`}
           >
-            Reconnect
+            {isLocked ? "Locked" : "Reconnect"}
           </button>
         ) : (
           <button onClick={() => onTest(config.id)} className="btn-secondary text-xs px-3 py-1.5">

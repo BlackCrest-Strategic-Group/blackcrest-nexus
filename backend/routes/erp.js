@@ -4,52 +4,100 @@
  * Security model:
  *   - Users provide their ERP username + password ONCE at connect/reconnect time.
  *   - The server immediately exchanges those credentials for a short-lived access token.
- *   - Credentials are NEVER written to the database or any log.
- *   - Only the resulting encrypted access token is persisted.
- *   - When the token expires users must reconnect (re-enter their ERP credentials).
+ *   - Credentials are NEVER written to the database, logs, or any persistent store.
+ *   - Only the resulting AES-256-GCM encrypted token is persisted.
+ *   - When the token expires, users must reconnect (re-enter their ERP credentials).
+ *
+ * NIST SP 800-53 Rev 5 controls applied:
+ *   AC-2   — Account Management (config lifecycle)
+ *   AC-3   — Access Enforcement (token required for data access)
+ *   AC-7   — Unsuccessful Logon Attempts (lockout after N failures)
+ *   AC-12  — Session Termination (token expiry + revocation logging)
+ *   AU-2   — Event Logging (all auth and data-access events logged)
+ *   AU-3   — Content of Audit Records (structured JSON with required fields)
+ *   AU-8   — Time Stamps (UTC ISO-8601)
+ *   IA-5   — Authenticator Management (token lifecycle, no credential storage)
+ *   IA-11  — Re-Authentication (max token age cap, reconnect on expiry)
+ *   SC-28  — Protection of Information at Rest (Cache-Control: no-store)
  */
 
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middleware/auth.js";
-import ErpConfig from "../models/ErpConfig.js";
+import ErpConfig, { MAX_FAILED_AUTH_ATTEMPTS, AUTH_LOCKOUT_MINUTES } from "../models/ErpConfig.js";
 import User from "../models/User.js";
 import * as infor from "../connectors/infor.js";
 import * as oracle from "../connectors/oracle.js";
 import * as sap from "../connectors/sap.js";
+import { erpAudit, getSourceIp } from "../services/erpAuditLog.js";
 
 const router = express.Router();
 
+// ── Rate Limiters ─────────────────────────────────────────────────────────────
+
+// General write limiter for config management
 const erpWriteLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
   message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
+
+// Tighter limiter for authentication endpoints (NIST AC-7)
+const erpAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false, keyGeneratorIpFallback: false },
+  message: {
+    success: false,
+    error: "Too many authentication attempts. Please wait 15 minutes before trying again."
+  }
 });
 
 // Map system identifier → connector module
 const connectors = { infor_syteline: infor, oracle, sap };
 
+// NIST SC-28: Prevent caching of any ERP response (data or auth outcome)
+const noStore = (res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+};
+
+// ── Token resolution ──────────────────────────────────────────────────────────
+
 /**
- * Retrieve the valid stored access token for a config.
- * Returns null (with connectionStatus set to "expired") if the token has expired.
- * No credential exchange happens here — reconnect is handled by a dedicated endpoint.
+ * Return the stored access token if it is still valid.
+ * If expired, mark the config and emit an audit record (NIST AC-12).
+ * Returns null when the caller must redirect the user to reconnect.
  */
-async function resolveToken(cfg) {
+async function resolveToken(cfg, auditCtx = {}) {
   if (cfg.isTokenValid()) {
     return cfg.getAccessToken();
   }
-  // Mark as expired if a token was previously stored
   if (cfg.accessTokenEnc) {
     cfg.connectionStatus = "expired";
     await cfg.save();
+    erpAudit("ERP_TOKEN_EXPIRED", {
+      ...auditCtx,
+      configId: cfg._id,
+      system:   cfg.system,
+      success:  false,
+      failureReason: "Token TTL elapsed — re-authentication required (NIST IA-11)"
+    });
   }
   return null;
 }
 
+// ── MFA guard ─────────────────────────────────────────────────────────────────
+
 /**
- * Middleware: require recent MFA verification if the user has MFA enabled.
+ * Require a recent MFA verification before allowing ERP credential operations.
+ * Protects against a stolen app session being used to access ERP systems.
  */
 async function requireMfaForErp(req, res, next) {
   try {
@@ -77,23 +125,20 @@ async function requireMfaForErp(req, res, next) {
   }
 }
 
-/** Log ERP data access with MFA status (non-blocking) */
-async function logErpAccess(userId, configId, endpoint) {
+// ── User context helper ───────────────────────────────────────────────────────
+
+async function getUserEmail(userId) {
   try {
-    const user = await User.findById(userId).select("mfaEnabled email");
-    const mfaStatus = user?.mfaEnabled ? "mfa-enabled" : "mfa-disabled";
-    console.log(
-      `[ERP Access] user=${userId} email=${user?.email} config=${configId} ` +
-      `endpoint=${endpoint} mfaStatus=${mfaStatus} ts=${new Date().toISOString()}`
-    );
+    const u = await User.findById(userId).select("email").lean();
+    return u?.email ?? "unknown";
   } catch {
-    // Non-blocking
+    return "unknown";
   }
 }
 
 // ── GET /api/erp ──────────────────────────────────────────────────────────────
-// List all ERP configs for the current user
 router.get("/", authenticateToken, async (req, res) => {
+  noStore(res);
   try {
     const configs = await ErpConfig.find({ createdBy: req.user.id }).sort({ createdAt: -1 });
     res.json({ success: true, configs: configs.map((c) => c.toPublic()) });
@@ -104,11 +149,18 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // ── POST /api/erp ─────────────────────────────────────────────────────────────
-// Create a new ERP connection.
-// Accepts the user's ERP username + password, immediately exchanges them for a
-// token, stores ONLY the encrypted token, and discards the credentials.
-router.post("/", erpWriteLimiter, authenticateToken, requireMfaForErp, async (req, res) => {
-  try {
+// Create a new ERP connection by exchanging credentials for a token immediately.
+// Credentials are discarded after the token exchange — never stored.
+router.post(
+  "/",
+  erpAuthLimiter,
+  authenticateToken,
+  requireMfaForErp,
+  async (req, res) => {
+    noStore(res);
+    const sourceIp = getSourceIp(req);
+    const userEmail = await getUserEmail(req.user.id);
+
     const { system, label, tenantUrl, tokenUrl, scope, clientId, erpUsername, erpPassword } =
       req.body;
 
@@ -126,6 +178,7 @@ router.post("/", erpWriteLimiter, authenticateToken, requireMfaForErp, async (re
     }
 
     const connector = connectors[system];
+    const auditBase = { userId: req.user.id, userEmail, system, sourceIp };
 
     // Exchange credentials for token — credentials are NEVER saved after this call
     let tokenData;
@@ -135,9 +188,14 @@ router.post("/", erpWriteLimiter, authenticateToken, requireMfaForErp, async (re
         clientId: clientId || "",
         username: erpUsername,
         password: erpPassword,
-        scope: scope || ""
+        scope:    scope || ""
       });
     } catch (tokenErr) {
+      erpAudit("ERP_CONNECT_FAILURE", {
+        ...auditBase,
+        success: false,
+        failureReason: tokenErr.message
+      });
       return res.status(502).json({
         success: false,
         error: `ERP authentication failed: ${tokenErr.message}`
@@ -147,90 +205,151 @@ router.post("/", erpWriteLimiter, authenticateToken, requireMfaForErp, async (re
     // Persist only the encrypted token — never the credentials
     const cfg = new ErpConfig({
       system,
-      label: label || system,
+      label:    label || system,
       tenantUrl,
       tokenUrl,
-      scope: scope || "",
+      scope:    scope || "",
       clientId: clientId || "",
       createdBy: req.user.id
     });
     cfg.setAccessToken(tokenData.accessToken, tokenData.expiresIn);
     await cfg.save();
 
-    console.log(
-      `[ERP Create] user=${req.user.id} system=${system} config=${cfg._id} ` +
-      `tokenExpiresAt=${cfg.tokenExpiresAt?.toISOString()} ts=${new Date().toISOString()}`
-    );
+    erpAudit("ERP_CONNECT_SUCCESS", {
+      ...auditBase,
+      configId:       cfg._id,
+      success:        true,
+      tokenExpiresAt: cfg.tokenExpiresAt?.toISOString()
+    });
 
     res.status(201).json({ success: true, config: cfg.toPublic() });
-  } catch (err) {
-    console.error("ERP create error:", err.message);
-    res.status(500).json({ success: false, error: "Failed to create ERP configuration." });
   }
-});
+);
 
 // ── POST /api/erp/:id/reconnect ───────────────────────────────────────────────
-// Re-authenticate an existing connection with fresh ERP credentials.
-// Used when a token has expired. Credentials are never stored.
-router.post("/:id/reconnect", erpWriteLimiter, authenticateToken, requireMfaForErp, async (req, res) => {
-  try {
-    const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
-    if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
+// Re-authenticate an expired connection with fresh ERP credentials.
+// NIST IA-11: Re-Authentication required after token expiry.
+// NIST AC-7:  Check lockout status before allowing any auth attempt.
+router.post(
+  "/:id/reconnect",
+  erpAuthLimiter,
+  authenticateToken,
+  requireMfaForErp,
+  async (req, res) => {
+    noStore(res);
+    const sourceIp = getSourceIp(req);
+    const userEmail = await getUserEmail(req.user.id);
 
-    const { erpUsername, erpPassword } = req.body;
-    if (!erpUsername || !erpPassword) {
-      return res.status(400).json({
-        success: false,
-        error: "erpUsername and erpPassword are required to reconnect."
-      });
-    }
-
-    const connector = connectors[cfg.system];
-
-    let tokenData;
     try {
-      tokenData = await connector.getTokenFromCredentials({
-        tokenUrl: cfg.tokenUrl,
-        clientId: cfg.clientId || "",
-        username: erpUsername,
-        password: erpPassword,
-        scope: cfg.scope || ""
-      });
-    } catch (tokenErr) {
-      cfg.connectionStatus = "error";
+      const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
+      if (!cfg) {
+        return res.status(404).json({ success: false, error: "ERP configuration not found." });
+      }
+
+      const auditBase = {
+        userId: req.user.id, userEmail,
+        configId: cfg._id, system: cfg.system, sourceIp
+      };
+
+      // NIST AC-7: Reject if currently locked out
+      if (cfg.isAuthLocked()) {
+        const unlockAt = cfg.failedAuthLockedUntil?.toLocaleTimeString() ?? "soon";
+        erpAudit("ERP_AUTH_LOCKED", {
+          ...auditBase,
+          success: false,
+          failureReason: `Locked after ${MAX_FAILED_AUTH_ATTEMPTS} failed attempts`,
+          attemptCount: cfg.failedAuthAttempts
+        });
+        return res.status(423).json({
+          success: false,
+          error: `This connection is temporarily locked after ${MAX_FAILED_AUTH_ATTEMPTS} failed ` +
+                 `attempts. Try again after ${unlockAt} (${AUTH_LOCKOUT_MINUTES}-minute lockout — NIST AC-7).`,
+          lockedUntil: cfg.failedAuthLockedUntil
+        });
+      }
+
+      const { erpUsername, erpPassword } = req.body;
+      if (!erpUsername || !erpPassword) {
+        return res.status(400).json({
+          success: false,
+          error: "erpUsername and erpPassword are required to reconnect."
+        });
+      }
+
+      const connector = connectors[cfg.system];
+
+      let tokenData;
+      try {
+        tokenData = await connector.getTokenFromCredentials({
+          tokenUrl: cfg.tokenUrl,
+          clientId: cfg.clientId || "",
+          username: erpUsername,
+          password: erpPassword,
+          scope:    cfg.scope || ""
+        });
+      } catch (tokenErr) {
+        // NIST AC-7: Track the failure and potentially lock
+        cfg.recordFailedAuth();
+        await cfg.save();
+
+        erpAudit("ERP_RECONNECT_FAILURE", {
+          ...auditBase,
+          success:       false,
+          failureReason: tokenErr.message,
+          attemptCount:  cfg.failedAuthAttempts
+        });
+
+        const remaining = MAX_FAILED_AUTH_ATTEMPTS - cfg.failedAuthAttempts;
+        const lockMsg = remaining <= 0
+          ? ` Connection locked for ${AUTH_LOCKOUT_MINUTES} minutes (NIST AC-7).`
+          : ` ${remaining} attempt(s) remaining before lockout.`;
+
+        return res.status(502).json({
+          success: false,
+          error: `ERP authentication failed: ${tokenErr.message}.${lockMsg}`,
+          attemptsRemaining: Math.max(0, remaining),
+          lockedUntil: cfg.failedAuthLockedUntil ?? null
+        });
+      }
+
+      // Success — setAccessToken resets failed-attempt counter (AC-7)
+      cfg.setAccessToken(tokenData.accessToken, tokenData.expiresIn);
       cfg.lastTestAt = new Date();
-      cfg.lastTestStatus = "error";
-      cfg.lastTestMessage = `Reconnect failed: ${tokenErr.message}`;
+      cfg.lastTestStatus = "ok";
+      cfg.lastTestMessage = `Reconnected. Token valid until ${cfg.tokenExpiresAt?.toLocaleString()}.`;
       await cfg.save();
-      return res.status(502).json({
-        success: false,
-        error: `ERP authentication failed: ${tokenErr.message}`
+
+      erpAudit("ERP_RECONNECT_SUCCESS", {
+        ...auditBase,
+        success:        true,
+        tokenExpiresAt: cfg.tokenExpiresAt?.toISOString()
       });
+
+      res.json({ success: true, config: cfg.toPublic() });
+    } catch (err) {
+      console.error("ERP reconnect error:", err.message);
+      res.status(500).json({ success: false, error: "Failed to reconnect ERP." });
     }
-
-    cfg.setAccessToken(tokenData.accessToken, tokenData.expiresIn);
-    cfg.lastTestAt = new Date();
-    cfg.lastTestStatus = "ok";
-    cfg.lastTestMessage = `Reconnected. Token valid until ${cfg.tokenExpiresAt?.toLocaleString()}.`;
-    await cfg.save();
-
-    console.log(
-      `[ERP Reconnect] user=${req.user.id} config=${cfg._id} ` +
-      `tokenExpiresAt=${cfg.tokenExpiresAt?.toISOString()} ts=${new Date().toISOString()}`
-    );
-
-    res.json({ success: true, config: cfg.toPublic() });
-  } catch (err) {
-    console.error("ERP reconnect error:", err.message);
-    res.status(500).json({ success: false, error: "Failed to reconnect ERP." });
   }
-});
+);
 
 // ── DELETE /api/erp/:id ───────────────────────────────────────────────────────
+// NIST AC-12: Session/token revocation — logged as a termination event.
 router.delete("/:id", authenticateToken, async (req, res) => {
+  noStore(res);
+  const sourceIp  = getSourceIp(req);
+  const userEmail = await getUserEmail(req.user.id);
+
   try {
     const cfg = await ErpConfig.findOneAndDelete({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
+
+    erpAudit("ERP_CONFIG_DELETED", {
+      userId: req.user.id, userEmail,
+      configId: cfg._id, system: cfg.system, sourceIp,
+      success: true
+    });
+
     res.json({ success: true });
   } catch (err) {
     console.error("ERP delete error:", err.message);
@@ -239,13 +358,23 @@ router.delete("/:id", authenticateToken, async (req, res) => {
 });
 
 // ── POST /api/erp/:id/test ────────────────────────────────────────────────────
-// Test connectivity using the stored access token (no credentials needed).
+// Test connectivity using the stored token — no credentials needed.
 router.post("/:id/test", authenticateToken, async (req, res) => {
+  noStore(res);
+  const sourceIp  = getSourceIp(req);
+  const userEmail = await getUserEmail(req.user.id);
+
   try {
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
-    const token = await resolveToken(cfg);
+    const auditBase = {
+      userId: req.user.id, userEmail,
+      configId: cfg._id, system: cfg.system,
+      sourceIp, endpoint: "test"
+    };
+
+    const token = await resolveToken(cfg, auditBase);
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -257,36 +386,42 @@ router.post("/:id/test", authenticateToken, async (req, res) => {
     const connector = connectors[cfg.system];
     await connector.testConnection(cfg.tenantUrl, token);
 
-    cfg.lastTestAt = new Date();
-    cfg.lastTestStatus = "ok";
+    cfg.lastTestAt      = new Date();
+    cfg.lastTestStatus  = "ok";
     cfg.lastTestMessage = `Connection OK. Token valid until ${cfg.tokenExpiresAt?.toLocaleString()}.`;
     await cfg.save();
 
+    erpAudit("ERP_TEST_SUCCESS", { ...auditBase, success: true });
     res.json({ success: true, message: cfg.lastTestMessage });
   } catch (err) {
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id }).catch(() => null);
     if (cfg) {
-      cfg.lastTestAt = new Date();
-      cfg.lastTestStatus = "error";
+      cfg.lastTestAt      = new Date();
+      cfg.lastTestStatus  = "error";
       cfg.lastTestMessage = err.message;
       await cfg.save().catch(() => {});
+      erpAudit("ERP_TEST_FAILURE", {
+        userId: req.user.id, userEmail, configId: cfg._id, system: cfg.system,
+        sourceIp, endpoint: "test", success: false, failureReason: err.message
+      });
     }
     console.error("ERP test error:", err.message);
     res.status(502).json({ success: false, error: `ERP connection test failed: ${err.message}` });
   }
 });
 
-// Build a normalised pagination options object from query parameters.
+// ── Pagination helper ─────────────────────────────────────────────────────────
+
 function buildPaginationOpts(query) {
   const pageSize = Number(query.pageSize) || 50;
-  const page = Number(query.page) || 1;
-  const skip = (page - 1) * pageSize;
+  const page     = Number(query.page) || 1;
+  const skip     = (page - 1) * pageSize;
   return { page, pageSize, top: pageSize, skip, offset: skip, limit: pageSize };
 }
 
-// Helper: get and validate stored token for data endpoints
-async function getValidToken(cfg, res) {
-  const token = await resolveToken(cfg);
+// Helper: resolve token or send 401 and return null
+async function getValidToken(cfg, res, auditCtx) {
+  const token = await resolveToken(cfg, auditCtx);
   if (!token) {
     res.status(401).json({
       success: false,
@@ -300,20 +435,27 @@ async function getValidToken(cfg, res) {
 
 // ── GET /api/erp/:id/purchase-orders ─────────────────────────────────────────
 router.get("/:id/purchase-orders", authenticateToken, async (req, res) => {
+  noStore(res);
+  const sourceIp  = getSourceIp(req);
+  const userEmail = await getUserEmail(req.user.id);
+
   try {
-    logErpAccess(req.user.id, req.params.id, "purchase-orders");
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
-    const token = await getValidToken(cfg, res);
+    const auditCtx = {
+      userId: req.user.id, userEmail, configId: cfg._id,
+      system: cfg.system, sourceIp, endpoint: "purchase-orders"
+    };
+    const token = await getValidToken(cfg, res, auditCtx);
     if (!token) return;
 
-    const connector = connectors[cfg.system];
-    const data = await connector.getPurchaseOrders(cfg.tenantUrl, token, {
+    const data = await connectors[cfg.system].getPurchaseOrders(cfg.tenantUrl, token, {
       ...buildPaginationOpts(req.query),
       status: req.query.status || undefined
     });
 
+    erpAudit("ERP_DATA_ACCESS", { ...auditCtx, success: true });
     res.json({ success: true, data });
   } catch (err) {
     console.error("ERP purchase-orders error:", err.message);
@@ -323,20 +465,27 @@ router.get("/:id/purchase-orders", authenticateToken, async (req, res) => {
 
 // ── GET /api/erp/:id/suppliers ────────────────────────────────────────────────
 router.get("/:id/suppliers", authenticateToken, async (req, res) => {
+  noStore(res);
+  const sourceIp  = getSourceIp(req);
+  const userEmail = await getUserEmail(req.user.id);
+
   try {
-    logErpAccess(req.user.id, req.params.id, "suppliers");
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
-    const token = await getValidToken(cfg, res);
+    const auditCtx = {
+      userId: req.user.id, userEmail, configId: cfg._id,
+      system: cfg.system, sourceIp, endpoint: "suppliers"
+    };
+    const token = await getValidToken(cfg, res, auditCtx);
     if (!token) return;
 
-    const connector = connectors[cfg.system];
-    const data = await connector.getSuppliers(cfg.tenantUrl, token, {
+    const data = await connectors[cfg.system].getSuppliers(cfg.tenantUrl, token, {
       ...buildPaginationOpts(req.query),
       search: req.query.search || undefined
     });
 
+    erpAudit("ERP_DATA_ACCESS", { ...auditCtx, success: true });
     res.json({ success: true, data });
   } catch (err) {
     console.error("ERP suppliers error:", err.message);
@@ -346,22 +495,29 @@ router.get("/:id/suppliers", authenticateToken, async (req, res) => {
 
 // ── GET /api/erp/:id/invoices ─────────────────────────────────────────────────
 router.get("/:id/invoices", authenticateToken, async (req, res) => {
+  noStore(res);
+  const sourceIp  = getSourceIp(req);
+  const userEmail = await getUserEmail(req.user.id);
+
   try {
-    logErpAccess(req.user.id, req.params.id, "invoices");
     const cfg = await ErpConfig.findOne({ _id: req.params.id, createdBy: req.user.id });
     if (!cfg) return res.status(404).json({ success: false, error: "ERP configuration not found." });
 
-    const token = await getValidToken(cfg, res);
+    const auditCtx = {
+      userId: req.user.id, userEmail, configId: cfg._id,
+      system: cfg.system, sourceIp, endpoint: "invoices"
+    };
+    const token = await getValidToken(cfg, res, auditCtx);
     if (!token) return;
 
-    const connector = connectors[cfg.system];
-    const data = await connector.getInvoices(cfg.tenantUrl, token, {
+    const data = await connectors[cfg.system].getInvoices(cfg.tenantUrl, token, {
       ...buildPaginationOpts(req.query),
-      status: req.query.status || undefined,
+      status:   req.query.status   || undefined,
       fromDate: req.query.fromDate || undefined,
-      toDate: req.query.toDate || undefined
+      toDate:   req.query.toDate   || undefined
     });
 
+    erpAudit("ERP_DATA_ACCESS", { ...auditCtx, success: true });
     res.json({ success: true, data });
   } catch (err) {
     console.error("ERP invoices error:", err.message);
