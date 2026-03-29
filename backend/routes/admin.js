@@ -1,7 +1,13 @@
 /**
  * Admin Routes - /api/admin/*
  *
- * All routes require a valid JWT and admin role (enforced by requireAdmin).
+ * All routes require a valid JWT and admin role.
+ * Guard chain: requireAuth → requireRole("admin") → auditLog
+ *
+ * requireAuth    — verifies the Bearer JWT (401 if missing/invalid)
+ * requireRole    — checks role === "admin"; logs PERMISSION_DENIED and
+ *                  returns 403 for any other role
+ * auditLog       — emits an ADMIN_ACTION record after every response
  *
  * Sections:
  *  1. User Management
@@ -12,8 +18,8 @@
 
 import express from "express";
 import os from "os";
-import { authenticateToken } from "../middleware/auth.js";
-import { requireAdmin, auditLog } from "../middleware/admin.js";
+import { requireAuth, requireRole } from "../middleware/auth.js";
+import { auditLog } from "../middleware/admin.js";
 import User from "../models/User.js";
 import Opportunity from "../models/Opportunity.js";
 import EmailPreference from "../models/EmailPreference.js";
@@ -33,8 +39,11 @@ import {
 
 const router = express.Router();
 
-// Apply admin guard to every route in this file
-router.use(authenticateToken, requireAdmin, auditLog);
+// Apply guard chain to every route in this file:
+//   1. requireAuth        — must have a valid JWT
+//   2. requireRole("admin") — must have role "admin" (logs PERMISSION_DENIED on failure)
+//   3. auditLog           — emits ADMIN_ACTION record after response
+router.use(requireAuth, requireRole("admin"), auditLog);
 
 // ===========================================================================
 // 1. USER MANAGEMENT

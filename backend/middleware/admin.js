@@ -64,8 +64,8 @@ export function auditLog(req, res, next) {
     const { method, originalUrl, body, params, query } = req;
 
     audit(EVENT.ADMIN_ACTION, {
-      userId:     req.adminUser?._id?.toString() ?? req.user?.id,
-      email:      req.adminUser?.email ?? "unknown",
+      userId:     req.authUser?._id?.toString() ?? req.adminUser?._id?.toString() ?? req.user?.id,
+      email:      req.authUser?.email ?? req.adminUser?.email ?? "unknown",
       ip:         req.clientIp ?? getIp(req),
       route:      originalUrl,
       method,

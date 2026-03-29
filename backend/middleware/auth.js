@@ -98,4 +98,14 @@ export function requireRole(...roles) {
   };
 }
 
+/**
+ * requireAuth is the canonical named export for route protection.
+ * It is identical to authenticateToken — exported under both names so
+ * routes can use whichever reads more clearly at the call site:
+ *
+ *   router.get("/me",    requireAuth, handler)
+ *   router.get("/admin", requireAuth, requireRole("admin"), handler)
+ */
+export const requireAuth = authenticateToken;
+
 export default authenticateToken;
