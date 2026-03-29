@@ -619,8 +619,8 @@ export default function LoginPage() {
               )}
             </div>
 
-            <p className="text-center text-xs mt-6" style={{ color: "#5d6b7c" }}>
-              Designed for Non-Classified Use Only &bull; GovCon AI Scanner v2.0
+            <p className="text-sm text-gray-400">
+              Built for GovCon professionals &bull; Powered by real-time SAM.gov data
             </p>
             </>
             )}
