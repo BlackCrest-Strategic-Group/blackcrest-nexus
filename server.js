@@ -4,6 +4,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -55,6 +56,27 @@ if (!process.env.JWT_SECRET) {
 }
 
 const app = express();
+
+// ---------------------------------------------------------------------------
+// Security headers
+// ---------------------------------------------------------------------------
+app.use(helmet({
+  // Allow same-origin framing for the embedded React SPA (dashboard iframes etc.)
+  frameguard: { action: "sameorigin" },
+  // Relaxed CSP: the app loads assets from self; adjust if using a CDN
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", "'unsafe-inline'"],   // React inline scripts
+      styleSrc:    ["'self'", "'unsafe-inline'"],   // inline styles
+      imgSrc:      ["'self'", "data:", "https:"],
+      connectSrc:  ["'self'"],
+      fontSrc:     ["'self'", "https:", "data:"],
+      objectSrc:   ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  }
+}));
 
 // ---------------------------------------------------------------------------
 // CORS

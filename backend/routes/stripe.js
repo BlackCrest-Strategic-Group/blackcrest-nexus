@@ -89,6 +89,10 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
 
   if (!webhookSecret) {
     console.warn("[Stripe webhook] STRIPE_WEBHOOK_SECRET not set — skipping signature verification");
+    // In production, reject all unsigned webhook calls to prevent forgery
+    if (process.env.NODE_ENV === "production") {
+      return res.status(400).send("Webhook Error: STRIPE_WEBHOOK_SECRET is required in production");
+    }
   }
 
   let event;
