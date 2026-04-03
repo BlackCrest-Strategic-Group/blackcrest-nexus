@@ -495,7 +495,7 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
         route:   req.originalUrl,
         method:  req.method,
         success: false,
-        details: { reason: "Email delivery failed", emailError: emailErr.message }
+        details: { reason: "Email delivery failed" }
       });
       return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again later or contact support." });
     }
