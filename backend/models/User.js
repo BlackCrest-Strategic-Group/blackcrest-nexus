@@ -96,6 +96,29 @@ const userSchema = new mongoose.Schema(
     lastMfaVerificationAt: {
       type: Date,
       default: null
+    },
+    // ── Subscription / Billing ────────────────────────────────────────────────
+    plan: {
+      type: String,
+      enum: ["free", "pro", "enterprise"],
+      default: "free"
+    },
+    planStatus: {
+      type: String,
+      enum: ["trialing", "active", "canceled", "past_due", "unpaid"],
+      default: "trialing"
+    },
+    trialEndsAt: {
+      type: Date,
+      default: () => new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
+    },
+    stripeCustomerId: {
+      type: String,
+      default: null
+    },
+    stripeSubscriptionId: {
+      type: String,
+      default: null
     }
   },
   { timestamps: true }
@@ -125,6 +148,9 @@ userSchema.methods.toPublic = function () {
     isDemo: this.isDemo,
     mfaEnabled: this.mfaEnabled,
     mfaMethods: this.mfaMethods,
+    plan: this.plan,
+    planStatus: this.planStatus,
+    trialEndsAt: this.trialEndsAt,
     createdAt: this.createdAt
   };
 };

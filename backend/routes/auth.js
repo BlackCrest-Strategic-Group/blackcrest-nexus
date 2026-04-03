@@ -117,7 +117,7 @@ function generateOtpForLogin() {
 // POST /api/auth/register
 router.post("/register", registerLimiter, async (req, res) => {
   try {
-    const { email, password, name, company, naicsCodes } = req.body;
+    const { email, password, name, company, naicsCodes, plan } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ success: false, error: "Email and password are required." });
@@ -132,12 +132,19 @@ router.post("/register", registerLimiter, async (req, res) => {
       return res.status(409).json({ success: false, error: "An account with this email already exists." });
     }
 
+    // Validate plan selection (default to free)
+    const validPlans = ["free", "pro", "enterprise"];
+    const selectedPlan = validPlans.includes(plan) ? plan : "free";
+
     const user = new User({
       email: email.toLowerCase().trim(),
       password,
       name: name?.trim() || "",
       company: company?.trim() || "",
-      naicsCodes: sanitizeNaicsCodes(naicsCodes)
+      naicsCodes: sanitizeNaicsCodes(naicsCodes),
+      plan: selectedPlan,
+      planStatus: "trialing",
+      trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     });
 
     await user.save();
@@ -151,7 +158,8 @@ router.post("/register", registerLimiter, async (req, res) => {
     res.status(201).json({
       success: true,
       requiresMfaSetup: true,
-      mfaSetupToken
+      mfaSetupToken,
+      plan: selectedPlan
     });
   } catch (error) {
     console.error("Register error:", error.message);
