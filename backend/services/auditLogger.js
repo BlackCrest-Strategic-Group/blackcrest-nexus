@@ -31,16 +31,18 @@ if (IS_DEV) {
 // ── Event type constants ──────────────────────────────────────────────────────
 
 export const EVENT = Object.freeze({
-  LOGIN_SUCCESS:        "LOGIN_SUCCESS",
-  LOGIN_FAILURE:        "LOGIN_FAILURE",
-  MFA_SUCCESS:          "MFA_SUCCESS",
-  MFA_FAILURE:          "MFA_FAILURE",
-  FILE_UPLOAD:          "FILE_UPLOAD",
-  ANALYSIS_RUN:         "ANALYSIS_RUN",
-  ERP_TOKEN_CONNECTED:  "ERP_TOKEN_CONNECTED",
-  ERP_TOKEN_REFRESH:    "ERP_TOKEN_REFRESH",
-  PERMISSION_DENIED:    "PERMISSION_DENIED",
-  ADMIN_ACTION:         "ADMIN_ACTION"
+  LOGIN_SUCCESS:              "LOGIN_SUCCESS",
+  LOGIN_FAILURE:              "LOGIN_FAILURE",
+  MFA_SUCCESS:                "MFA_SUCCESS",
+  MFA_FAILURE:                "MFA_FAILURE",
+  FILE_UPLOAD:                "FILE_UPLOAD",
+  ANALYSIS_RUN:               "ANALYSIS_RUN",
+  ERP_TOKEN_CONNECTED:        "ERP_TOKEN_CONNECTED",
+  ERP_TOKEN_REFRESH:          "ERP_TOKEN_REFRESH",
+  PERMISSION_DENIED:          "PERMISSION_DENIED",
+  ADMIN_ACTION:               "ADMIN_ACTION",
+  PASSWORD_RESET_REQUEST:     "PASSWORD_RESET_REQUEST",
+  PASSWORD_RESET_COMPLETE:    "PASSWORD_RESET_COMPLETE"
 });
 
 // ── Sensitive-field scrubber ──────────────────────────────────────────────────

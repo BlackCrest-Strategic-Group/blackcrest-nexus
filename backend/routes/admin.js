@@ -50,6 +50,16 @@ router.use(requireAuth, requireRole("admin"), auditLog);
 // ===========================================================================
 
 // GET /api/admin/users
+// Allowed sort fields for the admin user list — prevents arbitrary key injection
+const ALLOWED_USER_SORT_FIELDS = new Set([
+  "createdAt", "updatedAt", "email", "name", "company", "role", "isActive", "plan", "planStatus"
+]);
+
+// Escape special regex characters so user search input cannot cause ReDoS
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 router.get("/users", async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -58,13 +68,16 @@ router.get("/users", async (req, res) => {
 
     const filter = {};
     if (req.query.search) {
-      const re = new RegExp(req.query.search.trim(), "i");
+      // Escape user input before building the regex to prevent ReDoS attacks
+      const escaped = escapeRegex(req.query.search.trim());
+      const re = new RegExp(escaped, "i");
       filter.$or = [{ email: re }, { name: re }, { company: re }];
     }
     if (req.query.role) filter.role = req.query.role;
     if (req.query.isActive !== undefined) filter.isActive = req.query.isActive === "true";
 
-    const sortField = req.query.sortBy || "createdAt";
+    // Validate sortBy against an allowlist to prevent arbitrary field injection
+    const sortField = ALLOWED_USER_SORT_FIELDS.has(req.query.sortBy) ? req.query.sortBy : "createdAt";
     const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
 
     const [users, total] = await Promise.all([
