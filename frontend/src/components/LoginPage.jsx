@@ -472,7 +472,7 @@ export default function LoginPage() {
       }
 
       saveAuth(res.data, form.rememberMe);
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong. Please try again.");
     } finally {
@@ -482,7 +482,7 @@ export default function LoginPage() {
 
   function handleMfaSuccess(data) {
     saveAuth(data, form.rememberMe);
-    navigate("/", { replace: true });
+    navigate("/dashboard", { replace: true });
   }
 
   function handleMfaBack() {
