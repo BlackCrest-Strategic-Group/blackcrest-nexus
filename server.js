@@ -29,6 +29,7 @@ import opportunityEvaluateRoutes from "./backend/routes/opportunityEvaluate.js";
 import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
 import mfaRoutes from "./backend/routes/mfa.js";
 import supplierPerformanceRoutes from "./backend/routes/supplierPerformance.js";
+import stripeRoutes from "./backend/routes/stripe.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
 import { requestMetadata } from "./backend/services/auditLogger.js";
@@ -80,7 +81,10 @@ app.use(
 
 // ---------------------------------------------------------------------------
 // Body parsing
+// NOTE: The Stripe webhook route needs the raw body for signature verification.
+// Register it BEFORE the global JSON parser so we can capture the raw buffer.
 // ---------------------------------------------------------------------------
+app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "4mb" }));
 app.use(express.urlencoded({ extended: true, limit: "4mb" }));
 
@@ -110,6 +114,7 @@ app.use("/api/mobile", mobileRoutes);
 app.use("/api/opportunity", opportunityEvaluateRoutes);
 app.use("/api/find-suppliers", findSuppliersRoutes);
 app.use("/api/supplierPerformance", supplierPerformanceRoutes);
+app.use("/api/stripe", stripeRoutes);
 app.use("/", docsRoutes);
 
 // ---------------------------------------------------------------------------

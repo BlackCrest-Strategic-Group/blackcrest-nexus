@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { authApi, mfaApi } from "../utils/api.js";
 import { saveAuth } from "../utils/auth.js";
 
@@ -396,7 +396,10 @@ function MfaVerifyStep({ mfaState, onSuccess, onBack }) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("login");
+  const [searchParams] = useSearchParams();
+  // Support ?mode=register&plan=pro links from the landing page
+  const [mode, setMode] = useState(() => searchParams.get("mode") === "register" ? "register" : "login");
+  const [selectedPlan] = useState(() => searchParams.get("plan") || "free");
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -580,7 +583,7 @@ export default function LoginPage() {
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5d6b7c" }}>
                 {mode === "login" && "Sign in to access your GovCon dashboard"}
-                {mode === "register" && "Start your 14-day free trial — no credit card required"}
+                {mode === "register" && "Start your 30-day free trial — no credit card required"}
                 {mode === "forgotPassword" && "Enter your email and we'll send you a reset link"}
               </p>
             </div>
@@ -837,7 +840,11 @@ export default function LoginPage() {
               {/* Pricing note (register) */}
               {mode === "register" && (
                 <p className="text-center text-xs mt-4" style={{ color: "#8a9bb0" }}>
-                  After trial: $79/month &bull; Cancel anytime &bull; No credit card required to start
+                  {selectedPlan === "pro" && "After 30-day trial: $349/month"}
+                  {selectedPlan === "enterprise" && "After 30-day trial: $595/month"}
+                  {selectedPlan === "free" && "Free plan — upgrade anytime"}
+                  {!["pro", "enterprise", "free"].includes(selectedPlan) && "30-day free trial"}
+                  {" "}&bull; Cancel anytime &bull; No credit card required to start
                 </p>
               )}
             </div>

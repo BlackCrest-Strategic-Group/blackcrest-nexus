@@ -1,6 +1,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../components/LoginPage.jsx";
+import LandingPage from "../components/LandingPage.jsx";
 import Dashboard from "../components/Dashboard.jsx";
 import ResetPasswordPage from "../components/ResetPasswordPage.jsx";
 import MFASetupPage from "../components/MFASetupPage.jsx";
@@ -29,8 +30,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        {/* Protected routes */}
         <Route
           path="/mfa-setup"
           element={
@@ -47,6 +51,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/*"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        {/* Legacy catch-all: redirects unauthenticated users to login */}
         <Route
           path="/*"
           element={
