@@ -6,7 +6,8 @@
     "dev": "nodemon server.js",
     "start": "node server.js",
     "build:frontend": "cd frontend && npm install --include=dev && npm run build",
-    "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\""
+    "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/"
   },
   "keywords": [
     "govcon",
@@ -33,6 +34,7 @@
     "mongodb": "^7.1.0",
     "mongoose": "^8.15.1",
     "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
     "nodemailer": "^7.0.13",
     "openai": "^6.33.0",
     "pdf-parse": "1.1.1",
@@ -43,7 +45,6 @@
   "devDependencies": {
     "concurrently": "^9.1.2",
     "jest": "^30.3.0",
-    "node-cron": "^4.2.1",
     "nodemon": "^3.1.14"
   }
 }
