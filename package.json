@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --testPathPatterns=tests/",
     "build:frontend": "cd frontend && npm install --include=dev && npm run build",
     "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\""
   },
@@ -44,6 +45,10 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
+    "jest": "^30.3.0",
     "nodemon": "^3.1.14"
+  },
+  "jest": {
+    "transform": {}
   }
 }

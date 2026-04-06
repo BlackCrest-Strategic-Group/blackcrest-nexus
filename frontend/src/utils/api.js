@@ -179,6 +179,11 @@ export const opportunityApi = {
   evaluate: (data) => api.post("/api/opportunity/evaluate", data)
 };
 
+// Opportunity Scoring Engine
+export const scoringApi = {
+  score: (data) => api.post("/api/opportunity/score", data)
+};
+
 // Find Suppliers
 export const findSuppliersApi = {
   search: (data) => api.post("/api/find-suppliers", data)
