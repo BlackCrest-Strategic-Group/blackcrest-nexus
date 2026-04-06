@@ -197,10 +197,10 @@ export async function sendMfaOtpEmail(user, otp) {
   });
 }
 
-export async function sendPasswordResetEmail(user, resetToken) {
+export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
   const transport = createTransport();
   const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
-  const appUrl = (process.env.APP_URL || "http://localhost:5173").replace(/\/$/, "");
+  const appUrl = (baseUrl || process.env.APP_URL || "http://localhost:5173").replace(/\/$/, "");
   const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
 
   const html = `
