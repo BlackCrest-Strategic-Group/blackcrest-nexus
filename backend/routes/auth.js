@@ -478,8 +478,20 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
+    // Determine the app base URL for the reset link.
+    // Priority: APP_URL env var (most secure) → validated against ALLOWED_ORIGINS.
+    // Never use raw request headers directly to avoid header-injection attacks.
+    let appBaseUrl = (process.env.APP_URL || "").replace(/\/$/, "");
+    if (!appBaseUrl) {
+      // Fall back to the first entry in ALLOWED_ORIGINS when APP_URL is unset.
+      const allowedOrigins = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+        : [];
+      appBaseUrl = allowedOrigins[0] || "http://localhost:5173";
+    }
+
     try {
-      await sendPasswordResetEmail(user, resetToken);
+      await sendPasswordResetEmail(user, resetToken, appBaseUrl);
     } catch (emailErr) {
       console.error("Password reset email failed:", emailErr.message);
       // Clear token if email failed so the user can retry

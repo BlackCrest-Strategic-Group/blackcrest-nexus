@@ -109,14 +109,26 @@ export const emailApi = {
   sendDailyDigest: () => api.post("/api/email/send-daily-digest")
 };
 
-// Opportunity Intelligence (Python FastAPI service)
-const INTELLIGENCE_BASE = import.meta.env.VITE_INTELLIGENCE_URL || "";
+// Opportunity Intelligence
+// Calls the authenticated Express backend (/api/opportunity-intelligence).
+// If VITE_INTELLIGENCE_URL is set the frontend may still proxy directly to the
+// Python FastAPI service; in that case the base URL is overridden below.
+const INTELLIGENCE_BASE = import.meta.env.VITE_INTELLIGENCE_URL
+  ? import.meta.env.VITE_INTELLIGENCE_URL.replace(/\/$/, "")
+  : null;
 
 export const intelligenceApi = {
+  // Use the authenticated `api` instance when calling the Express backend so
+  // the access-token header is automatically attached.  When a separate
+  // intelligence service URL is configured use plain axios instead.
   get: () =>
-    axios.get(`${INTELLIGENCE_BASE}/opportunity-intelligence`),
-  refresh: () =>
-    axios.post(`${INTELLIGENCE_BASE}/opportunity-intelligence/refresh`)
+    INTELLIGENCE_BASE
+      ? axios.get(`${INTELLIGENCE_BASE}/opportunity-intelligence`)
+      : api.get("/api/opportunity-intelligence"),
+  refresh: (data) =>
+    INTELLIGENCE_BASE
+      ? axios.post(`${INTELLIGENCE_BASE}/opportunity-intelligence/refresh`, data)
+      : api.post("/api/opportunity-intelligence/refresh", data),
 };
 
 // ERP Connectors
