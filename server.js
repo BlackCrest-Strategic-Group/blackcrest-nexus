@@ -8,6 +8,7 @@ import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { randomBytes } from "crypto";
 import rateLimit from "express-rate-limit";
 dotenv.config();
 import { connectDB } from "./backend/config/db.js";
@@ -52,8 +53,18 @@ if (!process.env.MONGODB_URI) {
   process.exit(1);
 }
 if (!process.env.JWT_SECRET) {
-  console.error("[FATAL] JWT_SECRET is not set. Exiting.");
-  process.exit(1);
+  if (process.env.NODE_ENV === "production") {
+    console.error("[FATAL] JWT_SECRET is not set. Exiting.");
+    process.exit(1);
+  } else {
+    // Generate a random secret for this process only so dev tokens cannot be forged
+    // across restarts and the secret is never predictable from source code.
+    process.env.JWT_SECRET = randomBytes(64).toString("hex");
+    console.warn(
+      "[Warning] JWT_SECRET is not set. A temporary random secret has been generated for this " +
+      "session only. Set JWT_SECRET in your .env file before deploying to production."
+    );
+  }
 }
 
 const app = express();

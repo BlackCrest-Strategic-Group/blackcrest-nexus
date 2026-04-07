@@ -36,6 +36,20 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000)
 
+## Required Environment Variables
+
+The following environment variables **must** be set before the server will start in production:
+
+| Variable | Description | How to generate |
+|---|---|---|
+| `MONGODB_URI` | MongoDB connection string | [MongoDB Atlas](https://cloud.mongodb.com) (free tier available) |
+| `JWT_SECRET` | Secret used to sign authentication tokens (min 32 chars) | `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"` |
+
+> **Production:** The server exits immediately with `[FATAL]` if either variable is missing.
+> **Development:** If `JWT_SECRET` is absent, the server falls back to an insecure placeholder and logs a warning. Never deploy with this fallback.
+
+See [`.env.example`](.env.example) for the full list of optional variables and their descriptions.
+
 ## Development
 
 ```bash
