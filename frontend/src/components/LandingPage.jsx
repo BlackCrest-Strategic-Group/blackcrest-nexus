@@ -24,7 +24,7 @@ const TIERS = [
       "Opportunity Intelligence Dashboard",
       "AI Bid Scoring",
     ],
-    cta: "Start Free Trial",
+    cta: "Request a Demo",
     ctaHref: "/login?mode=register&plan=free",
     highlight: false,
   },
@@ -45,7 +45,7 @@ const TIERS = [
       "Supplier KPI Tracking (bid-specific)",
       "Supplier Suggestion Engine",
     ],
-    cta: "Start Free Trial",
+    cta: "Request a Demo",
     ctaHref: "/login?mode=register&plan=pro",
     highlight: true,
   },
@@ -63,7 +63,7 @@ const TIERS = [
       "Priority Support",
       "Custom Onboarding",
     ],
-    cta: "Start Free Trial",
+    cta: "Request a Demo",
     ctaHref: "/login?mode=register&plan=enterprise",
     highlight: false,
   },
@@ -200,9 +200,16 @@ export default function LandingPage() {
           zIndex: 0,
           pointerEvents: "none",
           userSelect: "none",
+          opacity: 0.045,
+          width: 520,
+          height: "auto",
         }}
       >
-        <ShieldLogo size={480} opacity={0.04} />
+        <img
+          src="/logos/blackcrest-logo.svg"
+          alt=""
+          style={{ width: "100%", height: "auto", filter: "grayscale(100%) brightness(0.4)" }}
+        />
       </div>
 
       {/* ── Navbar ──────────────────────────────────────────────────────────── */}
@@ -264,7 +271,7 @@ export default function LandingPage() {
               onMouseEnter={(e) => (e.target.style.opacity = 0.9)}
               onMouseLeave={(e) => (e.target.style.opacity = 1)}
             >
-              Start Free Trial
+              Request a Demo
             </button>
           </div>
         </div>
@@ -310,6 +317,28 @@ export default function LandingPage() {
             <span style={{ color: "#c79d3b" }}>with AI-Powered Intelligence</span>
           </h1>
 
+          {/* Beta badge */}
+          <div style={{ marginBottom: 24 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                background: "rgba(199,157,59,0.15)",
+                border: "1px solid rgba(199,157,59,0.35)",
+                borderRadius: 100,
+                padding: "5px 16px",
+                fontSize: 13,
+                color: "#c79d3b",
+                fontWeight: 600,
+              }}
+            >
+              <span style={{ fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 800 }}>Beta</span>
+              <span style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>·</span>
+              Currently in beta with <strong style={{ color: "#ffffff" }}>50 contractors</strong>
+            </span>
+          </div>
+
           <p
             style={{
               fontSize: "clamp(16px, 2vw, 20px)",
@@ -327,7 +356,7 @@ export default function LandingPage() {
               onClick={() => goToRegister("free")}
               style={heroCTAStyle}
             >
-              Start Free Trial — No Credit Card
+              Request a Demo
             </button>
             <button
               onClick={scrollToFeatures}
@@ -546,6 +575,34 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── FAQ ─────────────────────────────────────────────────────────────── */}
+      <section style={{ background: "#f8f5f0", padding: "80px 24px" }}>
+        <div style={{ maxWidth: 760, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: "#c79d3b", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Security & Compliance</p>
+            <h2 style={{ fontSize: "clamp(24px, 3.5vw, 36px)", fontWeight: 800, color: "#14243a", marginBottom: 14 }}>Frequently Asked Questions</h2>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {[
+              {
+                q: "Is my data secure?",
+                a: "Yes. All data is encrypted in transit (TLS 1.3) and at rest (AES-256). GovCon AI Scanner is built with compliance-minded buyers in mind — we never share, sell, or use your proprietary data to train third-party models. Your RFP documents, ERP data, and bid strategies stay yours, period. We operate on SOC 2-aligned infrastructure and support TOTP multi-factor authentication on every account.",
+              },
+              {
+                q: "Can I use this with my existing ERP system?",
+                a: "Yes. Professional and Enterprise plans include ERP system connections. We support major GovCon ERP platforms and provide secure, read-only API integrations so your financial data can power AI-driven pricing and margin analysis without compromising your systems.",
+              },
+              {
+                q: "Who owns the proposals and analyses generated?",
+                a: "You do. All outputs — including RFP analyses, Bid/No-Bid decisions, and generated proposals — are your intellectual property. We do not retain or use your content after your session.",
+              },
+            ].map(({ q, a }) => (
+              <FAQItem key={q} question={q} answer={a} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Final CTA ───────────────────────────────────────────────────────── */}
       <section style={{ background: "#14243a", padding: "96px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
@@ -557,10 +614,10 @@ export default function LandingPage() {
             Join GovCon teams already using Truth Serum AI to find, evaluate, and win government contracts faster than ever before.
           </p>
           <button onClick={() => goToRegister("free")} style={heroCTAStyle}>
-            Start Your 30-Day Free Trial
+            Request a Demo
           </button>
           <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-            No credit card required &bull; Full access for 30 days &bull; Cancel anytime
+            Schedule a personalized demo &bull; No commitment required &bull; Response within 1 business day
           </p>
         </div>
       </section>
@@ -576,10 +633,10 @@ export default function LandingPage() {
             </div>
           </div>
           <div style={{ display: "flex", gap: 24 }}>
-            {["Features", "Pricing", "Sign In", "Start Free Trial"].map((link) => (
+            {["Features", "Pricing", "Sign In", "Request a Demo"].map((link) => (
               <button
                 key={link}
-                onClick={link === "Sign In" ? goToLogin : link === "Start Free Trial" ? () => goToRegister("free") : link === "Pricing" ? scrollToPricing : scrollToFeatures}
+                onClick={link === "Sign In" ? goToLogin : link === "Request a Demo" ? () => goToRegister("free") : link === "Pricing" ? scrollToPricing : scrollToFeatures}
                 style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: 13, cursor: "pointer", padding: 0, fontFamily: "inherit" }}
               >
                 {link}
@@ -591,6 +648,59 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
+    </div>
+  );
+}
+
+// ─── FAQ item subcomponent ────────────────────────────────────────────────────
+function FAQItem({ question, answer }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div
+      style={{
+        border: "1.5px solid rgba(20,36,58,0.12)",
+        borderRadius: 12,
+        background: "#ffffff",
+        overflow: "hidden",
+        boxShadow: "0 2px 12px rgba(20,36,58,0.05)",
+      }}
+    >
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "20px 24px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          fontFamily: "inherit",
+          textAlign: "left",
+          gap: 16,
+        }}
+      >
+        <span style={{ fontSize: 16, fontWeight: 700, color: "#14243a" }}>{question}</span>
+        <span
+          style={{
+            fontSize: 20,
+            color: "#c79d3b",
+            fontWeight: 400,
+            flexShrink: 0,
+            transition: "transform 0.2s",
+            transform: open ? "rotate(45deg)" : "rotate(0deg)",
+            display: "inline-block",
+          }}
+        >
+          +
+        </span>
+      </button>
+      {open && (
+        <div style={{ padding: "0 24px 20px", borderTop: "1px solid rgba(20,36,58,0.07)" }}>
+          <p style={{ fontSize: 14, color: "#4a6080", lineHeight: 1.7, margin: "16px 0 0" }}>{answer}</p>
+        </div>
+      )}
     </div>
   );
 }
