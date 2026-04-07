@@ -617,7 +617,7 @@ export default function LandingPage() {
             Request a Demo
           </button>
           <p style={{ marginTop: 18, fontSize: 12, color: "rgba(255,255,255,0.35)" }}>
-            No credit card required &bull; Full access for 30 days &bull; Cancel anytime
+            Schedule a personalized demo &bull; No commitment required &bull; Response within 1 business day
           </p>
         </div>
       </section>
