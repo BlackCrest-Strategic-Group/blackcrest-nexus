@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { intelligenceApi } from "../utils/api.js";
+import { intelligenceApi, authApi } from "../utils/api.js";
 
 function ScoreBadge({ score }) {
   const color =
@@ -71,6 +71,27 @@ export default function OpportunityIntelligence() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const [naicsInput, setNaicsInput] = useState("");
+  const [userNaicsCodes, setUserNaicsCodes] = useState([]);
+
+  // Fetch the signed-in user's registered NAICS codes so we can pre-populate
+  // the filter input and ensure the intelligence data is scoped to them.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authApi.profile();
+        if (cancelled) return;
+        const codes = res.data?.user?.naicsCodes || [];
+        setUserNaicsCodes(codes);
+        if (codes.length) {
+          setNaicsInput(codes.join(", "));
+        }
+      } catch {
+        // Non-fatal: user's NAICS codes simply won't be pre-populated.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,6 +121,8 @@ export default function OpportunityIntelligence() {
     setRefreshing(true);
     setError("");
     try {
+      // Parse manually-entered NAICS codes; if the field is empty, the backend
+      // will automatically fall back to the user's registered NAICS codes.
       const naicsCodes = naicsInput
         .split(/[\s,]+/)
         .map((s) => s.trim())
@@ -126,14 +149,21 @@ export default function OpportunityIntelligence() {
               Aggregated insights from SAM.gov, USASpending.gov, SBIR.gov, and Grants.gov.
             </p>
           </div>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
-            <input
-              type="text"
-              value={naicsInput}
-              onChange={(e) => setNaicsInput(e.target.value)}
-              placeholder="NAICS codes (comma-separated, optional)"
-              className="input text-sm w-full sm:w-64"
-            />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
+            <div className="flex flex-col w-full sm:w-64">
+              <input
+                type="text"
+                value={naicsInput}
+                onChange={(e) => setNaicsInput(e.target.value)}
+                placeholder={userNaicsCodes.length ? userNaicsCodes.join(", ") : "NAICS codes (comma-separated, optional)"}
+                className="input text-sm w-full"
+              />
+              {userNaicsCodes.length > 0 && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Your codes: {userNaicsCodes.join(", ")}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleRefresh}
               disabled={refreshing}
@@ -144,9 +174,9 @@ export default function OpportunityIntelligence() {
           </div>
         </div>
 
-        {data?.lastRefreshed && (
+        {(data?.lastRefreshed || data?.last_refreshed) && (
           <p className="text-xs text-slate-400 mt-3">
-            Last refreshed: {new Date(data.lastRefreshed).toLocaleString()}
+            Last refreshed: {new Date(data.lastRefreshed || data.last_refreshed).toLocaleString()}
           </p>
         )}
       </div>

@@ -4,9 +4,11 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { randomBytes } from "crypto";
 import rateLimit from "express-rate-limit";
 dotenv.config();
 import { connectDB } from "./backend/config/db.js";
@@ -26,9 +28,11 @@ import dashboardRoutes from "./backend/routes/dashboard.js";
 import opportunityIntelligenceRoutes from "./backend/routes/opportunityIntelligence.js";
 import mobileRoutes from "./backend/routes/mobile.js";
 import opportunityEvaluateRoutes from "./backend/routes/opportunityEvaluate.js";
+import opportunityScoringRoutes from "./backend/routes/opportunityScoring.js";
 import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
 import mfaRoutes from "./backend/routes/mfa.js";
 import supplierPerformanceRoutes from "./backend/routes/supplierPerformance.js";
+import stripeRoutes from "./backend/routes/stripe.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
 import { requestMetadata } from "./backend/services/auditLogger.js";
@@ -49,11 +53,42 @@ if (!process.env.MONGODB_URI) {
   process.exit(1);
 }
 if (!process.env.JWT_SECRET) {
-  console.error("[FATAL] JWT_SECRET is not set. Exiting.");
-  process.exit(1);
+  if (process.env.NODE_ENV === "production") {
+    console.error("[FATAL] JWT_SECRET is not set. Exiting.");
+    process.exit(1);
+  } else {
+    // Generate a random secret for this process only so dev tokens cannot be forged
+    // across restarts and the secret is never predictable from source code.
+    process.env.JWT_SECRET = randomBytes(64).toString("hex");
+    console.warn(
+      "[Warning] JWT_SECRET is not set. A temporary random secret has been generated for this " +
+      "session only. Set JWT_SECRET in your .env file before deploying to production."
+    );
+  }
 }
 
 const app = express();
+
+// ---------------------------------------------------------------------------
+// Security headers
+// ---------------------------------------------------------------------------
+app.use(helmet({
+  // Allow same-origin framing for the embedded React SPA (dashboard iframes etc.)
+  frameguard: { action: "sameorigin" },
+  // Relaxed CSP: the app loads assets from self; adjust if using a CDN
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc:  ["'self'"],
+      scriptSrc:   ["'self'", "'unsafe-inline'"],   // React inline scripts
+      styleSrc:    ["'self'", "'unsafe-inline'"],   // inline styles
+      imgSrc:      ["'self'", "data:", "https:"],
+      connectSrc:  ["'self'"],
+      fontSrc:     ["'self'", "https:", "data:"],
+      objectSrc:   ["'none'"],
+      upgradeInsecureRequests: []
+    }
+  }
+}));
 
 // ---------------------------------------------------------------------------
 // CORS
@@ -80,7 +115,10 @@ app.use(
 
 // ---------------------------------------------------------------------------
 // Body parsing
+// NOTE: The Stripe webhook route needs the raw body for signature verification.
+// Register it BEFORE the global JSON parser so we can capture the raw buffer.
 // ---------------------------------------------------------------------------
+app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "4mb" }));
 app.use(express.urlencoded({ extended: true, limit: "4mb" }));
 
@@ -108,8 +146,10 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/opportunity-intelligence", opportunityIntelligenceRoutes);
 app.use("/api/mobile", mobileRoutes);
 app.use("/api/opportunity", opportunityEvaluateRoutes);
+app.use("/api/opportunity", opportunityScoringRoutes);
 app.use("/api/find-suppliers", findSuppliersRoutes);
 app.use("/api/supplierPerformance", supplierPerformanceRoutes);
+app.use("/api/stripe", stripeRoutes);
 app.use("/", docsRoutes);
 
 // ---------------------------------------------------------------------------

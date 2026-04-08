@@ -1,0 +1,37 @@
+name: Check Required Environment Variables
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  check-env-vars:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify required secrets are configured
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          MISSING=()
+
+          if [ -z "$JWT_SECRET" ]; then
+            MISSING+=("JWT_SECRET")
+          fi
+
+          if [ -z "$MONGODB_URI" ]; then
+            MISSING+=("MONGODB_URI")
+          fi
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "::error::The following required secrets are not configured in this repository: ${MISSING[*]}"
+            echo "Please add them under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+          echo "All required environment variables are configured."

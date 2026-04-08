@@ -117,7 +117,7 @@ function generateOtpForLogin() {
 // POST /api/auth/register
 router.post("/register", registerLimiter, async (req, res) => {
   try {
-    const { email, password, name, company, naicsCodes } = req.body;
+    const { email, password, name, company, naicsCodes, plan } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ success: false, error: "Email and password are required." });
@@ -132,12 +132,19 @@ router.post("/register", registerLimiter, async (req, res) => {
       return res.status(409).json({ success: false, error: "An account with this email already exists." });
     }
 
+    // Validate plan selection (default to free)
+    const validPlans = ["free", "pro", "enterprise"];
+    const selectedPlan = validPlans.includes(plan) ? plan : "free";
+
     const user = new User({
       email: email.toLowerCase().trim(),
       password,
       name: name?.trim() || "",
       company: company?.trim() || "",
-      naicsCodes: sanitizeNaicsCodes(naicsCodes)
+      naicsCodes: sanitizeNaicsCodes(naicsCodes),
+      plan: selectedPlan,
+      planStatus: "trialing",
+      trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
     });
 
     await user.save();
@@ -151,7 +158,8 @@ router.post("/register", registerLimiter, async (req, res) => {
     res.status(201).json({
       success: true,
       requiresMfaSetup: true,
-      mfaSetupToken
+      mfaSetupToken,
+      plan: selectedPlan
     });
   } catch (error) {
     console.error("Register error:", error.message);
@@ -480,8 +488,20 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
     user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await user.save();
 
+    // Determine the app base URL for the reset link.
+    // Priority: APP_URL env var (most secure) → validated against ALLOWED_ORIGINS.
+    // Never use raw request headers directly to avoid header-injection attacks.
+    let appBaseUrl = (process.env.APP_URL || "").replace(/\/$/, "");
+    if (!appBaseUrl) {
+      // Fall back to the first entry in ALLOWED_ORIGINS when APP_URL is unset.
+      const allowedOrigins = process.env.ALLOWED_ORIGINS
+        ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
+        : [];
+      appBaseUrl = allowedOrigins[0] || "http://localhost:5173";
+    }
+
     try {
-      await sendPasswordResetEmail(user, resetToken);
+      await sendPasswordResetEmail(user, resetToken, appBaseUrl);
     } catch (emailErr) {
       console.error("Password reset email failed:", emailErr.message);
       // Clear token if email failed so the user can retry
@@ -508,6 +528,7 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
       method:  req.method,
       success: true,
       details: { message: "Password reset email sent" }
+      success: true
     });
 
     res.json({
@@ -560,6 +581,7 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
       method:  req.method,
       success: true,
       details: { message: "Password reset completed" }
+      success: true
     });
 
     res.json({ success: true, message: "Your password has been reset. You can now sign in." });
