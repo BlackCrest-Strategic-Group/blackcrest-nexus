@@ -412,7 +412,7 @@ export default function LoginPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [mfaState, setMfaState] = useState(null); // { mfaToken, mfaMethod } when TOTP challenge required
-  const [totpSetupToken, setTotpSetupToken] = useState(null); // when TOTP setup required
+  const [totpSetupToken, setTotpSetupToken] = useState(() => searchParams.get("mfaSetupToken") || null); // when TOTP setup required
 
   function handleChange(e) {
     const { name, value, type, checked } = e.target;
