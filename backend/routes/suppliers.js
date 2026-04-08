@@ -1,13 +1,17 @@
-/**
- * Supplier Scorecard Routes  –  /api/suppliers
- * CRUD for supplier records and KPI-based scoring.
- */
-
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middleware/auth.js";
 import Supplier from "../models/Supplier.js";
 
 const router = express.Router();
+
+const readLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
 
 // ── GET /api/suppliers ────────────────────────────────────────────
 router.get("/", authenticateToken, async (req, res) => {
@@ -164,7 +168,7 @@ router.get("/summary/scoreboard", authenticateToken, async (req, res) => {
 
 // ── GET /api/suppliers/kpis/summary ──────────────────────────────
 // Aggregate KPI averages across all suppliers (sourcing health dashboard)
-router.get("/kpis/summary", authenticateToken, async (req, res) => {
+router.get("/kpis/summary", readLimiter, authenticateToken, async (req, res) => {
   try {
     const [result] = await Supplier.aggregate([
       {

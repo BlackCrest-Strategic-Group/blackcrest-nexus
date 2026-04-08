@@ -65,18 +65,23 @@ router.post("/generate", generateLimiter, authenticateToken, async (req, res) =>
 // ── GET /api/proposals ────────────────────────────────────────────
 router.get("/", generalLimiter, authenticateToken, async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status } = req.query;
+    const pageNum = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+
     const filter = { createdBy: req.user.id };
-    if (status) filter.status = status;
+    if (status && ["draft", "review", "final", "submitted"].includes(status)) {
+      filter.status = status;
+    }
 
     const total = await Proposal.countDocuments(filter);
     const proposals = await Proposal.find(filter)
       .sort({ createdAt: -1 })
-      .skip((Number(page) - 1) * Number(limit))
-      .limit(Number(limit))
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
       .select("-sections -costLineItems"); // lightweight list
 
-    res.json({ success: true, total, page: Number(page), proposals });
+    res.json({ success: true, total, page: pageNum, proposals });
   } catch (err) {
     console.error("Proposal list error:", err.message);
     res.status(500).json({ success: false, error: "Failed to fetch proposals." });
