@@ -180,7 +180,8 @@ export const suppliersApi = {
   get: (id) => api.get(`/api/suppliers/${id}`),
   update: (id, data) => api.patch(`/api/suppliers/${id}`, data),
   remove: (id) => api.delete(`/api/suppliers/${id}`),
-  scoreboard: () => api.get("/api/suppliers/summary/scoreboard")
+  scoreboard: () => api.get("/api/suppliers/summary/scoreboard"),
+  kpiSummary: () => api.get("/api/suppliers/kpis/summary")
 };
 
 // Margin Leakage Analytics
@@ -209,6 +210,16 @@ export const scoringApi = {
 // Find Suppliers
 export const findSuppliersApi = {
   search: (data) => api.post("/api/find-suppliers", data)
+};
+
+// Proposals
+export const proposalsApi = {
+  generate: (data) => api.post("/api/proposals/generate", data),
+  list: (params) => api.get("/api/proposals", { params }),
+  create: (data) => api.post("/api/proposals", data),
+  get: (id) => api.get(`/api/proposals/${id}`),
+  update: (id, data) => api.patch(`/api/proposals/${id}`, data),
+  remove: (id) => api.delete(`/api/proposals/${id}`)
 };
 
 export default api;

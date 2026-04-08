@@ -33,6 +33,7 @@ import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
 import mfaRoutes from "./backend/routes/mfa.js";
 import supplierPerformanceRoutes from "./backend/routes/supplierPerformance.js";
 import stripeRoutes from "./backend/routes/stripe.js";
+import proposalsRoutes from "./backend/routes/proposals.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
 import { requestMetadata } from "./backend/services/auditLogger.js";
@@ -150,6 +151,7 @@ app.use("/api/opportunity", opportunityScoringRoutes);
 app.use("/api/find-suppliers", findSuppliersRoutes);
 app.use("/api/supplierPerformance", supplierPerformanceRoutes);
 app.use("/api/stripe", stripeRoutes);
+app.use("/api/proposals", proposalsRoutes);
 app.use("/", docsRoutes);
 
 // ---------------------------------------------------------------------------

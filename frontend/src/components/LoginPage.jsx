@@ -455,7 +455,8 @@ export default function LoginPage() {
           password: form.password,
           name: form.name,
           company: form.company,
-          naicsCodes: form.naicsCodes
+          naicsCodes: form.naicsCodes,
+          plan: selectedPlan
         });
       }
 

@@ -162,4 +162,59 @@ router.get("/summary/scoreboard", authenticateToken, async (req, res) => {
   }
 });
 
+// ── GET /api/suppliers/kpis/summary ──────────────────────────────
+// Aggregate KPI averages across all suppliers (sourcing health dashboard)
+router.get("/kpis/summary", authenticateToken, async (req, res) => {
+  try {
+    const [result] = await Supplier.aggregate([
+      {
+        $facet: {
+          kpiAverages: [
+            { $unwind: { path: "$kpis", preserveNullAndEmpty: false } },
+            {
+              $group: {
+                _id: "$kpis.category",
+                avgScore: { $avg: "$kpis.score" },
+                minScore: { $min: "$kpis.score" },
+                maxScore: { $max: "$kpis.score" },
+                count: { $sum: 1 }
+              }
+            }
+          ],
+          statusBreakdown: [
+            { $group: { _id: "$status", count: { $sum: 1 }, avgScore: { $avg: "$overallScore" } } }
+          ],
+          tierBreakdown: [
+            { $group: { _id: "$tier", count: { $sum: 1 }, avgScore: { $avg: "$overallScore" } } }
+          ],
+          atRiskSuppliers: [
+            { $match: { overallScore: { $lt: 60 }, status: "active" } },
+            { $sort: { overallScore: 1 } },
+            { $limit: 5 },
+            { $project: { name: 1, overallScore: 1, tier: 1, status: 1 } }
+          ],
+          topPerformers: [
+            { $match: { overallScore: { $gte: 80 } } },
+            { $sort: { overallScore: -1 } },
+            { $limit: 5 },
+            { $project: { name: 1, overallScore: 1, tier: 1, status: 1 } }
+          ]
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      kpiAverages: result?.kpiAverages || [],
+      statusBreakdown: result?.statusBreakdown || [],
+      tierBreakdown: result?.tierBreakdown || [],
+      atRiskSuppliers: result?.atRiskSuppliers || [],
+      topPerformers: result?.topPerformers || []
+    });
+  } catch (err) {
+    console.error("Supplier KPI summary error:", err.message);
+    res.status(500).json({ success: false, error: "Failed to fetch KPI summary." });
+  }
+});
+
 export default router;
