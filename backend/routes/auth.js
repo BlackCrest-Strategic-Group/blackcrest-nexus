@@ -589,7 +589,6 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
       method:  req.method,
       success: true,
       details: { message: "Password reset completed" }
-      success: true
     });
 
     res.json({ success: true, message: "Your password has been reset. You can now sign in." });
