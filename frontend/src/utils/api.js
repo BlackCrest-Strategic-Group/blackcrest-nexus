@@ -24,6 +24,19 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
     if (error.response?.status === 401 && !original._retried) {
+      // Bug fix (MFA code not accepted): Only attempt a token refresh when the
+      // user actually has a refresh token (i.e., they were already logged in).
+      // Pre-authentication endpoints such as /api/auth/verify-mfa-login can
+      // legitimately return 401 for an invalid MFA code; without this guard the
+      // interceptor would silently redirect the user to /login instead of
+      // surfacing the error message to the component's catch block.
+      const refreshToken = getRefreshToken();
+      if (!refreshToken) {
+        // Not logged in — propagate the error so the calling component can
+        // display the correct message (e.g. "Invalid authenticator code").
+        return Promise.reject(error);
+      }
+
       original._retried = true;
 
       if (isRefreshing) {
@@ -37,9 +50,6 @@ api.interceptors.response.use(
 
       isRefreshing = true;
       try {
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) throw new Error("No refresh token");
-
         const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, { refreshToken });
         saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken }, true);
 

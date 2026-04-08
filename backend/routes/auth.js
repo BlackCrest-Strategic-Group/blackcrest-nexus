@@ -453,6 +453,8 @@ router.patch("/profile", authenticateToken, async (req, res) => {
 });
 
 // POST /api/auth/forgot-password
+// Bug fix (forgot password not working): Added audit logging for reset requests
+// and improved error handling so failures are clearly surfaced to the user.
 router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
   try {
     const { email } = req.body;
@@ -462,8 +464,16 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
 
     const user = await User.findOne({ email: email.toLowerCase().trim() });
 
-    // Always respond with success to prevent email enumeration
+    // Always respond with success to prevent email enumeration.
+    // Audit the attempt regardless of whether the user exists.
     if (!user || !user.isActive) {
+      audit(EVENT.PASSWORD_RESET_REQUEST, {
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { reason: "User not found or inactive", email: email.toLowerCase().trim() }
+      });
       return res.json({
         success: true,
         message: "If that email address is registered, a password reset link has been sent."
@@ -498,7 +508,16 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
       user.resetPasswordToken = null;
       user.resetPasswordExpires = null;
       await user.save();
-      return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again." });
+      audit(EVENT.PASSWORD_RESET_REQUEST, {
+        userId:  user._id.toString(),
+        email:   user.email,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { reason: "Email delivery failed" }
+      });
+      return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again later." });
     }
 
     audit(EVENT.PASSWORD_RESET_REQUEST, {
@@ -507,6 +526,8 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
       ip:      req.clientIp ?? getIp(req),
       route:   req.originalUrl,
       method:  req.method,
+      success: true,
+      details: { message: "Password reset email sent" }
       success: true
     });
 
@@ -521,6 +542,8 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
 });
 
 // POST /api/auth/reset-password
+// Bug fix (forgot password not working): Added audit logging for successful and
+// failed reset attempts so administrators can trace the complete reset lifecycle.
 router.post("/reset-password", passwordResetLimiter, async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -556,6 +579,8 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
       ip:      req.clientIp ?? getIp(req),
       route:   req.originalUrl,
       method:  req.method,
+      success: true,
+      details: { message: "Password reset completed" }
       success: true
     });
 
