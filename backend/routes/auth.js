@@ -25,6 +25,15 @@ const LOGIN_LOCKOUT_MINUTES =
 // NIST IA-5(1): Maximum allowed password length (prevents DoS via bcrypt cost).
 const PASSWORD_MAX_LENGTH = 128;
 
+// NIST SP 800-63B §5.1.1: Known commonly-used passwords to reject at registration/reset.
+// Module-level constant so the Set is constructed once, not on every validation call.
+const COMMON_PASSWORDS = new Set([
+  "password", "password1", "password123", "12345678", "123456789",
+  "1234567890", "qwerty123", "qwertyuiop", "iloveyou", "admin1234",
+  "letmein1", "welcome1", "monkey123", "dragon123", "master123",
+  "abc123456", "passw0rd", "p@ssword", "p@ssw0rd", "changeme"
+]);
+
 // Rate limiter for login (10 per 15 minutes per IP)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -67,13 +76,7 @@ function validatePassword(password) {
   if (!password || typeof password !== "string") return "Password is required.";
   if (password.length < 8) return "Password must be at least 8 characters.";
   if (password.length > PASSWORD_MAX_LENGTH) return `Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`;
-  // NIST SP 800-63B §5.1.1: Check against a list of known commonly-used passwords.
-  const COMMON_PASSWORDS = new Set([
-    "password", "password1", "password123", "12345678", "123456789",
-    "1234567890", "qwerty123", "qwertyuiop", "iloveyou", "admin1234",
-    "letmein1", "welcome1", "monkey123", "dragon123", "master123",
-    "abc123456", "passw0rd", "p@ssword", "p@ssw0rd", "changeme"
-  ]);
+  // NIST SP 800-63B §5.1.1: Check against known commonly-used passwords.
   if (COMMON_PASSWORDS.has(password.toLowerCase())) {
     return "Password is too common. Please choose a more unique password.";
   }
@@ -721,7 +724,8 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
 
 // POST /api/auth/change-password
 // NIST IA-5(1): Allow authenticated users to change their own password.
-router.post("/change-password", authenticateToken, passwordResetLimiter, async (req, res) => {
+// Rate limiter applied first to protect against brute-force even without auth.
+router.post("/change-password", passwordResetLimiter, authenticateToken, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
