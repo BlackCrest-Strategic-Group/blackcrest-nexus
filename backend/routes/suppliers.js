@@ -1,13 +1,17 @@
-/**
- * Supplier Scorecard Routes  –  /api/suppliers
- * CRUD for supplier records and KPI-based scoring.
- */
-
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { authenticateToken } from "../middleware/auth.js";
 import Supplier from "../models/Supplier.js";
 
 const router = express.Router();
+
+const readLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please wait before trying again." }
+});
 
 // ── GET /api/suppliers ────────────────────────────────────────────
 router.get("/", authenticateToken, async (req, res) => {
@@ -159,6 +163,61 @@ router.get("/summary/scoreboard", authenticateToken, async (req, res) => {
   } catch (err) {
     console.error("Supplier scoreboard error:", err.message);
     res.status(500).json({ success: false, error: "Failed to fetch supplier scoreboard." });
+  }
+});
+
+// ── GET /api/suppliers/kpis/summary ──────────────────────────────
+// Aggregate KPI averages across all suppliers (sourcing health dashboard)
+router.get("/kpis/summary", readLimiter, authenticateToken, async (req, res) => {
+  try {
+    const [result] = await Supplier.aggregate([
+      {
+        $facet: {
+          kpiAverages: [
+            { $unwind: { path: "$kpis", preserveNullAndEmpty: false } },
+            {
+              $group: {
+                _id: "$kpis.category",
+                avgScore: { $avg: "$kpis.score" },
+                minScore: { $min: "$kpis.score" },
+                maxScore: { $max: "$kpis.score" },
+                count: { $sum: 1 }
+              }
+            }
+          ],
+          statusBreakdown: [
+            { $group: { _id: "$status", count: { $sum: 1 }, avgScore: { $avg: "$overallScore" } } }
+          ],
+          tierBreakdown: [
+            { $group: { _id: "$tier", count: { $sum: 1 }, avgScore: { $avg: "$overallScore" } } }
+          ],
+          atRiskSuppliers: [
+            { $match: { overallScore: { $lt: 60 }, status: "active" } },
+            { $sort: { overallScore: 1 } },
+            { $limit: 5 },
+            { $project: { name: 1, overallScore: 1, tier: 1, status: 1 } }
+          ],
+          topPerformers: [
+            { $match: { overallScore: { $gte: 80 } } },
+            { $sort: { overallScore: -1 } },
+            { $limit: 5 },
+            { $project: { name: 1, overallScore: 1, tier: 1, status: 1 } }
+          ]
+        }
+      }
+    ]);
+
+    res.json({
+      success: true,
+      kpiAverages: result?.kpiAverages || [],
+      statusBreakdown: result?.statusBreakdown || [],
+      tierBreakdown: result?.tierBreakdown || [],
+      atRiskSuppliers: result?.atRiskSuppliers || [],
+      topPerformers: result?.topPerformers || []
+    });
+  } catch (err) {
+    console.error("Supplier KPI summary error:", err.message);
+    res.status(500).json({ success: false, error: "Failed to fetch KPI summary." });
   }
 });
 

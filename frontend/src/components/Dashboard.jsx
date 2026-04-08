@@ -7,6 +7,8 @@ import RoleDashboard from "./RoleDashboard.jsx";
 import ErpConnector from "./ErpConnector.jsx";
 import WorkflowManager from "./WorkflowManager.jsx";
 import SupplierScorecard from "./SupplierScorecard.jsx";
+import SourcingKPIs from "./SourcingKPIs.jsx";
+import ProposalGenerator from "./ProposalGenerator.jsx";
 import MarginLeakage from "./MarginLeakage.jsx";
 import CapacityPlanner from "./CapacityPlanner.jsx";
 import FitCheckModal from "./FitCheckModal.jsx";
@@ -97,9 +99,11 @@ const TABS = [
   { id: "nonclass",    label: "Non-Classified" },
   { id: "intelligence",label: "Intelligence" },
   { id: "saved",       label: "Saved Opportunities" },
+  { id: "proposals",   label: "Proposals" },
   { id: "dashboards",  label: "Role Dashboards" },
   { id: "workflows",   label: "Workflows" },
   { id: "suppliers",   label: "Suppliers" },
+  { id: "sourcing",    label: "Sourcing KPIs" },
   { id: "margins",     label: "Margin Analytics" },
   { id: "capacity",    label: "Capacity" },
   { id: "erp",         label: "ERP Connectors" },
@@ -812,6 +816,12 @@ export default function Dashboard() {
 
         {/* ── Supplier Scorecards ── */}
         {tab === "suppliers" && <SupplierScorecard />}
+
+        {/* ── Sourcing KPIs ── */}
+        {tab === "sourcing" && <SourcingKPIs />}
+
+        {/* ── Proposals ── */}
+        {tab === "proposals" && <ProposalGenerator />}
 
         {/* ── Margin Leakage Analytics ── */}
         {tab === "margins" && <MarginLeakage />}
