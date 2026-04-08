@@ -603,6 +603,76 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── How We Protect Your Data ────────────────────────────────────────── */}
+      <section style={{ background: "#ffffff", padding: "80px 24px", borderTop: "4px solid #c79d3b" }}>
+        <div style={{ maxWidth: 820, margin: "0 auto" }}>
+          {/* Header */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(199,157,59,0.1)", border: "1px solid rgba(199,157,59,0.3)", borderRadius: 100, padding: "6px 18px", marginBottom: 16 }}>
+              <span style={{ fontSize: 18 }}>🔒</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#c79d3b", letterSpacing: 1.5, textTransform: "uppercase" }}>Privacy & Security</span>
+            </div>
+            <h2 style={{ fontSize: "clamp(24px, 3.5vw, 36px)", fontWeight: 800, color: "#14243a", marginBottom: 12 }}>
+              How We Protect Your Data
+            </h2>
+            <p style={{ fontSize: 15, color: "#4a6080", maxWidth: 560, margin: "0 auto" }}>
+              Here's exactly what we do — and don't do — with your information.
+            </p>
+          </div>
+
+          {/* Info box */}
+          <div style={{ background: "#f8f5f0", border: "1px solid rgba(199,157,59,0.25)", borderRadius: 16, padding: "36px 40px", boxShadow: "0 4px 24px rgba(20,36,58,0.07)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {[
+                {
+                  icon: "🗄️",
+                  title: "Minimal Data Storage",
+                  body: "We do not store any of your personal information unless you choose to register and sign in.",
+                },
+                {
+                  icon: "🚫",
+                  title: "No Tracking",
+                  body: "Your activity is not tracked or shared. We only keep the minimum information required for you to use the application.",
+                },
+                {
+                  icon: "⏱️",
+                  title: "Session Privacy",
+                  body: "When you use the app, your information (such as your name or email) is only stored temporarily during your session. Your password is never saved or exposed.",
+                },
+                {
+                  icon: "🔑",
+                  title: '"Remember Me" Optional',
+                  body: 'If you choose "Remember Me" at login, a secure token is saved in your browser to keep you signed in; if not, all session information is removed when you close your browser.',
+                },
+                {
+                  icon: "🎭",
+                  title: "Demo Mode",
+                  body: "You can explore the platform using our demo account — no personal information is required.",
+                },
+              ].map(({ icon, title, body }) => (
+                <div key={title} style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+                  <div style={{ fontSize: 22, lineHeight: 1, marginTop: 2, flexShrink: 0 }}>{icon}</div>
+                  <div>
+                    <span style={{ fontWeight: 700, color: "#14243a", fontSize: 15 }}>{title}: </span>
+                    <span style={{ color: "#4a6080", fontSize: 15, lineHeight: 1.6 }}>{body}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Footer statement */}
+            <div style={{ marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(199,157,59,0.2)", textAlign: "center" }}>
+              <p style={{ fontSize: 15, fontWeight: 700, color: "#14243a", margin: 0 }}>
+                Your privacy and security are our top priorities.{" "}
+                <span style={{ fontWeight: 400, color: "#4a6080" }}>
+                  We never share or sell your data, and we design our system to keep your information safe at all times.
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Final CTA ───────────────────────────────────────────────────────── */}
       <section style={{ background: "#14243a", padding: "96px 24px", textAlign: "center" }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
