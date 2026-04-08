@@ -54,6 +54,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // ── NIST AC-7: Unsuccessful Logon Attempt tracking ───────────────────────
+    failedLoginAttempts: {
+      type: Number,
+      default: 0
+    },
+    accountLockedUntil: {
+      type: Date,
+      default: null
+    },
     // MFA fields
     mfaEnabled: {
       type: Boolean,

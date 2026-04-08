@@ -74,8 +74,14 @@ const app = express();
 // Security headers
 // ---------------------------------------------------------------------------
 app.use(helmet({
-  // Allow same-origin framing for the embedded React SPA (dashboard iframes etc.)
+  // NIST SC-23: Allow same-origin framing for the embedded React SPA (dashboard iframes etc.)
   frameguard: { action: "sameorigin" },
+  // NIST SC-8: Enforce HTTPS for at least 1 year with HSTS preloading enabled
+  hsts: {
+    maxAge: 31536000,           // 1 year in seconds (NIST-recommended minimum)
+    includeSubDomains: true,    // Covers all subdomains
+    preload: true               // Eligible for browser HSTS preload lists
+  },
   // Relaxed CSP: the app loads assets from self; adjust if using a CDN
   contentSecurityPolicy: {
     directives: {

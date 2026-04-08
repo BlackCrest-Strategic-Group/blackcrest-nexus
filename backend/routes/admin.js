@@ -23,6 +23,7 @@ import { auditLog } from "../middleware/admin.js";
 import User from "../models/User.js";
 import Opportunity from "../models/Opportunity.js";
 import EmailPreference from "../models/EmailPreference.js";
+import { audit, getIp, EVENT } from "../services/auditLogger.js";
 import {
   getDashboardMetrics,
   getUsageTrends,
@@ -164,7 +165,9 @@ router.patch("/users/:id", async (req, res) => {
     if (company !== undefined) updates.company = company.trim();
     if (Array.isArray(naicsCodes)) updates.naicsCodes = naicsCodes;
     if (role !== undefined) {
-      if (!["user", "admin"].includes(role)) {
+      // NIST AC-2: Validate role against the full set of defined roles
+      const VALID_ROLES = ["user", "admin", "capture", "procurement", "ops", "exec"];
+      if (!VALID_ROLES.includes(role)) {
         return res.status(400).json({ success: false, error: "Invalid role." });
       }
       updates.role = role;
@@ -179,6 +182,16 @@ router.patch("/users/:id", async (req, res) => {
       .select("-password -refreshToken");
 
     if (!user) return res.status(404).json({ success: false, error: "User not found." });
+
+    // NIST AC-2: Audit account modification by admin
+    audit(EVENT.ACCOUNT_UPDATED, {
+      userId:  req.user.id,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { targetUserId: req.params.id, updatedFields: Object.keys(updates) }
+    });
 
     res.json({ success: true, data: user });
   } catch (error) {
@@ -201,6 +214,16 @@ router.delete("/users/:id", async (req, res) => {
     ).select("-password -refreshToken");
 
     if (!user) return res.status(404).json({ success: false, error: "User not found." });
+
+    // NIST AC-2: Audit account deactivation
+    audit(EVENT.ACCOUNT_DEACTIVATED, {
+      userId:  req.user.id,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { targetUserId: req.params.id, targetEmail: user.email }
+    });
 
     res.json({ success: true, message: "User deactivated.", data: user });
   } catch (error) {
