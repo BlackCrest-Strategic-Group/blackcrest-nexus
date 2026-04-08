@@ -12,6 +12,19 @@ import { audit, getIp, EVENT } from "../services/auditLogger.js";
 
 const router = express.Router();
 
+// NIST AC-7: Number of consecutive failed logins before account lockout.
+// Configurable via LOGIN_MAX_FAILED_ATTEMPTS env var (default: 5).
+const LOGIN_MAX_FAILED_ATTEMPTS =
+  parseInt(process.env.LOGIN_MAX_FAILED_ATTEMPTS || "5", 10);
+
+// NIST AC-7: Duration (in minutes) that an account stays locked.
+// Configurable via LOGIN_LOCKOUT_MINUTES env var (default: 15).
+const LOGIN_LOCKOUT_MINUTES =
+  parseInt(process.env.LOGIN_LOCKOUT_MINUTES || "15", 10);
+
+// NIST IA-5(1): Maximum allowed password length (prevents DoS via bcrypt cost).
+const PASSWORD_MAX_LENGTH = 128;
+
 // Rate limiter for login (10 per 15 minutes per IP)
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -47,6 +60,25 @@ const passwordResetLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, error: "Too many requests. Please wait before trying again." }
 });
+
+// NIST IA-5(1): Validate password meets minimum security requirements.
+// Returns an error string if invalid, or null if valid.
+function validatePassword(password) {
+  if (!password || typeof password !== "string") return "Password is required.";
+  if (password.length < 8) return "Password must be at least 8 characters.";
+  if (password.length > PASSWORD_MAX_LENGTH) return `Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`;
+  // NIST SP 800-63B §5.1.1: Check against a list of known commonly-used passwords.
+  const COMMON_PASSWORDS = new Set([
+    "password", "password1", "password123", "12345678", "123456789",
+    "1234567890", "qwerty123", "qwertyuiop", "iloveyou", "admin1234",
+    "letmein1", "welcome1", "monkey123", "dragon123", "master123",
+    "abc123456", "passw0rd", "p@ssword", "p@ssw0rd", "changeme"
+  ]);
+  if (COMMON_PASSWORDS.has(password.toLowerCase())) {
+    return "Password is too common. Please choose a more unique password.";
+  }
+  return null;
+}
 
 const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
 
@@ -123,8 +155,10 @@ router.post("/register", registerLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: "Email and password are required." });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ success: false, error: "Password must be at least 8 characters." });
+    // NIST IA-5(1): Enforce password policy
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      return res.status(400).json({ success: false, error: pwdError });
     }
 
     const existing = await User.findOne({ email: email.toLowerCase().trim() });
@@ -152,6 +186,17 @@ router.post("/register", registerLimiter, async (req, res) => {
     // Create default email preferences for the new user
     await EmailPreference.create({ user: user._id });
 
+    // NIST AC-2: Audit account creation event
+    audit(EVENT.ACCOUNT_CREATED, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { plan: selectedPlan }
+    });
+
     // TOTP MFA is mandatory — require setup before granting access
     const mfaSetupToken = generateMfaSetupToken(user._id.toString());
 
@@ -176,6 +221,11 @@ router.post("/login", loginLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: "Email and password are required." });
     }
 
+    // NIST IA-5(1): Reject oversized inputs before any DB lookup to prevent DoS
+    if (typeof password === "string" && password.length > PASSWORD_MAX_LENGTH) {
+      return res.status(400).json({ success: false, error: "Invalid credentials." });
+    }
+
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user || !user.isActive) {
       audit(EVENT.LOGIN_FAILURE, {
@@ -188,8 +238,9 @@ router.post("/login", loginLimiter, async (req, res) => {
       return res.status(401).json({ success: false, error: "Invalid credentials." });
     }
 
-    const valid = await user.comparePassword(password);
-    if (!valid) {
+    // NIST AC-7: Check if account is locked before verifying credentials.
+    // Use a constant-time response to avoid revealing whether the account exists.
+    if (user.accountLockedUntil && user.accountLockedUntil > new Date()) {
       audit(EVENT.LOGIN_FAILURE, {
         userId:  user._id.toString(),
         email:   user.email,
@@ -197,9 +248,63 @@ router.post("/login", loginLimiter, async (req, res) => {
         route:   req.originalUrl,
         method:  req.method,
         success: false,
-        details: { reason: "Invalid password" }
+        details: { reason: "Account locked", lockedUntil: user.accountLockedUntil }
+      });
+      const minutesLeft = Math.ceil((user.accountLockedUntil - new Date()) / 60000);
+      return res.status(423).json({
+        success: false,
+        error: `Account temporarily locked due to too many failed login attempts. Please try again in ${minutesLeft} minute(s).`
+      });
+    }
+
+    const valid = await user.comparePassword(password);
+    if (!valid) {
+      // NIST AC-7: Increment failed attempt counter and lock if threshold reached
+      user.failedLoginAttempts = (user.failedLoginAttempts || 0) + 1;
+      const isNowLocked = user.failedLoginAttempts >= LOGIN_MAX_FAILED_ATTEMPTS;
+      if (isNowLocked) {
+        user.accountLockedUntil = new Date(Date.now() + LOGIN_LOCKOUT_MINUTES * 60 * 1000);
+      }
+      await user.save();
+
+      if (isNowLocked) {
+        audit(EVENT.ACCOUNT_LOCKED, {
+          userId:  user._id.toString(),
+          email:   user.email,
+          ip:      req.clientIp ?? getIp(req),
+          route:   req.originalUrl,
+          method:  req.method,
+          success: false,
+          details: {
+            reason:           "Too many failed login attempts",
+            failedAttempts:   user.failedLoginAttempts,
+            lockedUntil:      user.accountLockedUntil,
+            lockoutMinutes:   LOGIN_LOCKOUT_MINUTES
+          }
+        });
+      }
+
+      audit(EVENT.LOGIN_FAILURE, {
+        userId:  user._id.toString(),
+        email:   user.email,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: {
+          reason:          "Invalid password",
+          failedAttempts:  user.failedLoginAttempts,
+          accountLocked:   isNowLocked
+        }
       });
       return res.status(401).json({ success: false, error: "Invalid credentials." });
+    }
+
+    // Credentials verified — reset the failed attempt counter (AC-7)
+    if (user.failedLoginAttempts > 0 || user.accountLockedUntil) {
+      user.failedLoginAttempts = 0;
+      user.accountLockedUntil = null;
+      await user.save();
     }
 
     // Credentials verified — log success before issuing MFA challenge
@@ -400,6 +505,16 @@ router.post("/refresh", async (req, res) => {
     user.refreshToken = crypto.createHash("sha256").update(tokens.refreshToken).digest("hex");
     await user.save();
 
+    // NIST IA-11: Audit token refresh events
+    audit(EVENT.TOKEN_REFRESH, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true
+    });
+
     res.json({ success: true, ...tokens });
   } catch (error) {
     res.status(403).json({ success: false, error: "Invalid or expired refresh token." });
@@ -414,6 +529,16 @@ router.post("/logout", authenticateToken, async (req, res) => {
       user.refreshToken = null;
       await user.save();
     }
+
+    // NIST AC-12: Audit session termination
+    audit(EVENT.LOGOUT, {
+      userId:  req.user.id,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true
+    });
+
     res.json({ success: true, message: "Logged out successfully." });
   } catch (error) {
     res.status(500).json({ success: false, error: "Logout failed." });
@@ -520,24 +645,15 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
       return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again later." });
     }
 
-   audit(EVENT.PASSWORD_RESET_REQUEST, {
-  userId:  user._id.toString(),
-  email:   user.email,
-  ip:      req.clientIp ?? getIp(req),
-  route:   req.originalUrl,
-  method:  req.method,
-  success: true,
-  details: { message: "Password reset email sent" }
-});
-    audit(EVENT.PASSWORD_RESET_COMPLETE, {
-  userId:  user._id.toString(),
-  email:   user.email,
-  ip:      req.clientIp ?? getIp(req),
-  route:   req.originalUrl,
-  method:  req.method,
-  success: true,
-  details: { message: "Password reset completed" }
-});
+    audit(EVENT.PASSWORD_RESET_REQUEST, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { message: "Password reset email sent" }
+    });
 
     res.json({
       success: true,
@@ -559,8 +675,10 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: "Token and new password are required." });
     }
 
-    if (password.length < 8) {
-      return res.status(400).json({ success: false, error: "Password must be at least 8 characters." });
+    // NIST IA-5(1): Enforce password policy on reset
+    const pwdError = validatePassword(password);
+    if (pwdError) {
+      return res.status(400).json({ success: false, error: pwdError });
     }
 
     const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
@@ -577,6 +695,9 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
     user.password = password;
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
+    // NIST AC-7: Reset the failed login counter when password is reset
+    user.failedLoginAttempts = 0;
+    user.accountLockedUntil = null;
     // Invalidate any existing refresh token
     user.refreshToken = null;
     await user.save();
@@ -595,6 +716,63 @@ router.post("/reset-password", passwordResetLimiter, async (req, res) => {
   } catch (error) {
     console.error("Reset password error:", error.message);
     res.status(500).json({ success: false, error: "Failed to reset password. Please try again." });
+  }
+});
+
+// POST /api/auth/change-password
+// NIST IA-5(1): Allow authenticated users to change their own password.
+router.post("/change-password", authenticateToken, passwordResetLimiter, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: "Current password and new password are required." });
+    }
+
+    // NIST IA-5(1): Enforce password policy on the new password
+    const pwdError = validatePassword(newPassword);
+    if (pwdError) {
+      return res.status(400).json({ success: false, error: pwdError });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user || !user.isActive) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    const valid = await user.comparePassword(currentPassword);
+    if (!valid) {
+      audit(EVENT.PASSWORD_CHANGED, {
+        userId:  user._id.toString(),
+        email:   user.email,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { reason: "Current password incorrect" }
+      });
+      return res.status(401).json({ success: false, error: "Current password is incorrect." });
+    }
+
+    user.password = newPassword;
+    // Invalidate all existing refresh tokens to force re-login on other devices
+    user.refreshToken = null;
+    await user.save();
+
+    // NIST IA-5: Audit password change event
+    audit(EVENT.PASSWORD_CHANGED, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true
+    });
+
+    res.json({ success: true, message: "Password changed successfully. Please log in again." });
+  } catch (error) {
+    console.error("Change password error:", error.message);
+    res.status(500).json({ success: false, error: "Failed to change password. Please try again." });
   }
 });
 

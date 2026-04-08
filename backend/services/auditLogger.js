@@ -31,19 +31,32 @@ if (IS_DEV) {
 // ── Event type constants ──────────────────────────────────────────────────────
 
 export const EVENT = Object.freeze({
+  // ── Authentication (NIST IA-2, IA-8) ───────────────────────────────────────
   LOGIN_SUCCESS:           "LOGIN_SUCCESS",
   LOGIN_FAILURE:           "LOGIN_FAILURE",
+  LOGOUT:                  "LOGOUT",            // NIST AC-12
+  TOKEN_REFRESH:           "TOKEN_REFRESH",     // NIST IA-11
+  // ── Multi-Factor Authentication (NIST IA-2(1)) ─────────────────────────────
   MFA_SUCCESS:             "MFA_SUCCESS",
   MFA_FAILURE:             "MFA_FAILURE",
-  // Bug fix (forgot password not working): Added audit events so that password
-  // reset attempts and completions are traceable in the audit log.
+  // ── Account Management (NIST AC-2) ─────────────────────────────────────────
+  ACCOUNT_CREATED:         "ACCOUNT_CREATED",
+  ACCOUNT_UPDATED:         "ACCOUNT_UPDATED",
+  ACCOUNT_DEACTIVATED:     "ACCOUNT_DEACTIVATED",
+  ACCOUNT_LOCKED:          "ACCOUNT_LOCKED",    // NIST AC-7
+  // ── Password / Authenticator Management (NIST IA-5) ────────────────────────
   PASSWORD_RESET_REQUEST:  "PASSWORD_RESET_REQUEST",
   PASSWORD_RESET_COMPLETE: "PASSWORD_RESET_COMPLETE",
+  PASSWORD_CHANGED:        "PASSWORD_CHANGED",
+  // ── Data & System Actions (NIST AU-2) ──────────────────────────────────────
   FILE_UPLOAD:             "FILE_UPLOAD",
   ANALYSIS_RUN:            "ANALYSIS_RUN",
+  // ── ERP Integration (NIST IA-5, IA-11) ────────────────────────────────────
   ERP_TOKEN_CONNECTED:     "ERP_TOKEN_CONNECTED",
   ERP_TOKEN_REFRESH:       "ERP_TOKEN_REFRESH",
+  // ── Authorization (NIST AC-3) ──────────────────────────────────────────────
   PERMISSION_DENIED:       "PERMISSION_DENIED",
+  // ── Administrative Actions (NIST AC-6) ────────────────────────────────────
   ADMIN_ACTION:            "ADMIN_ACTION"
 });
 
