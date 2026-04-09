@@ -47,7 +47,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
         <h2 className="section-title">Funding Assessment</h2>
         <p className="section-subtitle">
           Understand your funding position before contract award.
-          Contract financing is a form of execution support — it helps you mobilise resources on day one.
+          Contract financing is a form of execution support — it helps you mobilize resources on day one.
         </p>
       </div>
 
@@ -130,7 +130,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
                 <div>
                   <p className="text-sm font-semibold text-emerald-800">Fully Funded</p>
                   <p className="text-xs text-emerald-700 mt-0.5">
-                    Your available capital covers the full execution cost. You are ready to mobilise.
+                    Your available capital covers the full execution cost. You are ready to mobilize.
                   </p>
                 </div>
               </div>
@@ -146,7 +146,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
                   </p>
                   <p className="text-xs text-amber-700 mt-0.5">
                     You need an additional {usd(gap)} to cover execution costs.
-                    Contract financing bridges this gap so you can start work on day one.
+                    Contract financing bridges this gap so you can mobilize resources on day one.
                   </p>
                 </div>
               </div>
@@ -168,7 +168,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
               </p>
               <ul className="mt-3 space-y-1 text-xs text-slate-400">
                 {[
-                  "Contract Mobilisation Finance",
+                  "Contract Mobilization Finance",
                   "Invoice Factoring & Receivables Financing",
                   "SBA 8(a) & SBIR Bridge Funding",
                   "Government Purchase Card (GPC) Lines"
