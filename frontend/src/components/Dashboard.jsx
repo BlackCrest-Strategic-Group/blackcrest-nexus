@@ -431,13 +431,13 @@ export default function Dashboard() {
   // Close nav dropdown on outside click
   useEffect(() => {
     function handler(e) {
-      if (navRef.current && !navRef.current.contains(e.target)) {
+      if (navOpen && navRef.current && !navRef.current.contains(e.target)) {
         setNavOpen(false);
       }
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  }, [navOpen]);
 
   // Search state
   const [searchResults, setSearchResults] = useState(null);
@@ -643,8 +643,7 @@ export default function Dashboard() {
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z" clipRule="evenodd" />
                       </svg>
                     )}
-                    {tab !== id && <span className="w-3.5 shrink-0" />}
-                    {label}
+                    <span className={tab !== id ? "pl-5" : ""}>{label}</span>
                   </button>
                 ))}
               </div>
