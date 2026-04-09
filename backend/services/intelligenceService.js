@@ -18,6 +18,41 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Wrapper around `fetch` that aborts after `timeoutMs` milliseconds.
+ *
+ * @param {string|URL} url
+ * @param {RequestInit} [options]
+ * @param {number}      [timeoutMs=20000]
+ * @returns {Promise<Response>}
+ */
+function fetchWithTimeout(url, options = {}, timeoutMs = 20000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
+    clearTimeout(timer)
+  );
+}
+
+/**
+ * Log a non-2xx response from a federal API source and return an empty array.
+ *
+ * @param {string}   source  Human-readable source name (e.g. "USASpending.gov")
+ * @param {Response} resp    The non-ok fetch Response
+ * @returns {Promise<[]>}
+ */
+async function logBadResponse(source, resp) {
+  const body = await resp.text().catch(() => "");
+  console.error(
+    `[intelligence] ${source} HTTP ${resp.status}: ${body.slice(0, 200)}`
+  );
+  return [];
+}
+
+// ---------------------------------------------------------------------------
 // In-memory cache
 // ---------------------------------------------------------------------------
 
@@ -113,74 +148,54 @@ async function fetchSam(naicsCodes, daysBack) {
 
   const results = [];
 
+  const normalizeSam = (item) =>
+    normalize(
+      {
+        ...item,
+        agency: item.fullParentPathName || item.departmentIndAgency,
+        url:
+          item.uiLink ||
+          (item.noticeId ? `https://sam.gov/opp/${item.noticeId}/view` : null),
+      },
+      "sam.gov"
+    );
+
+  const samFetch = (params) =>
+    fetchWithTimeout(
+      `https://api.sam.gov/opportunities/v2/search?` +
+        new URLSearchParams({ api_key: apiKey, ...params }),
+      {},
+      20000
+    )
+      .then((r) => {
+        if (!r.ok)
+          throw new Error(`HTTP ${r.status} ${r.statusText}`);
+        return r.json();
+      })
+      .then((data) => (data.opportunitiesData || []).map(normalizeSam));
+
   // Build the list of fetch tasks (one per NAICS or one broad query)
   const fetchTasks = naicsCodes.length
     ? naicsCodes.slice(0, 10).map((naics) =>
-        fetch(
-          `https://api.sam.gov/opportunities/v2/search?` +
-            new URLSearchParams({
-              api_key: apiKey,
-              postedFrom: fmt(fromDate),
-              postedTo: fmt(today),
-              naics,
-              limit: "100",
-            })
-        )
-          .then((r) => r.json())
-          .then((data) =>
-            (data.opportunitiesData || []).map((item) =>
-              normalize(
-                {
-                  ...item,
-                  agency:
-                    item.fullParentPathName || item.departmentIndAgency,
-                  url:
-                    item.uiLink ||
-                    (item.noticeId
-                      ? `https://sam.gov/opp/${item.noticeId}/view`
-                      : null),
-                },
-                "sam.gov"
-              )
-            )
-          )
-          .catch((err) => {
-            console.error(`[intelligence] SAM.gov NAICS ${naics} error:`, err.message);
-            return [];
-          })
+        samFetch({
+          postedFrom: fmt(fromDate),
+          postedTo: fmt(today),
+          naics,
+          limit: "100",
+        }).catch((err) => {
+          console.error(`[intelligence] SAM.gov NAICS ${naics} error:`, err.message);
+          return [];
+        })
       )
     : [
-        fetch(
-          `https://api.sam.gov/opportunities/v2/search?` +
-            new URLSearchParams({
-              api_key: apiKey,
-              postedFrom: fmt(fromDate),
-              postedTo: fmt(today),
-              limit: "100",
-            })
-        )
-          .then((r) => r.json())
-          .then((data) =>
-            (data.opportunitiesData || []).map((item) =>
-              normalize(
-                {
-                  ...item,
-                  agency:
-                    item.fullParentPathName || item.departmentIndAgency,
-                  url:
-                    item.uiLink ||
-                    (item.noticeId
-                      ? `https://sam.gov/opp/${item.noticeId}/view`
-                      : null),
-                },
-                "sam.gov"
-              )
-            )
-          )
-          .catch((err) => {
-            console.error("[intelligence] SAM.gov broad query error:", err.message);
-            return [];
-          }),
+        samFetch({
+          postedFrom: fmt(fromDate),
+          postedTo: fmt(today),
+          limit: "100",
+        }).catch((err) => {
+          console.error("[intelligence] SAM.gov broad query error:", err.message);
+          return [];
+        }),
       ];
 
   const batches = await Promise.all(fetchTasks);
@@ -208,7 +223,7 @@ async function fetchUSASpending(naicsCodes, daysBack) {
   }
 
   try {
-    const resp = await fetch(
+    const resp = await fetchWithTimeout(
       "https://api.usaspending.gov/api/v2/search/spending_by_award/",
       {
         method: "POST",
@@ -230,8 +245,12 @@ async function fetchUSASpending(naicsCodes, daysBack) {
           sort: "Award Date",
           order: "desc",
         }),
-      }
+      },
+      20000
     );
+    if (!resp.ok) {
+      return logBadResponse("USASpending.gov", resp);
+    }
     const data = await resp.json();
     return (data.results || []).map((item) => {
       const awardId = item["Award ID"] || item.generated_internal_id;
@@ -258,13 +277,24 @@ async function fetchUSASpending(naicsCodes, daysBack) {
 
 async function fetchSBIR(naicsCodes) {
   try {
-    const resp = await fetch(
-      "https://api.sbir.gov/public/api/solicitations?open=true&rows=100&start=0"
+    const resp = await fetchWithTimeout(
+      "https://api.sbir.gov/public/api/solicitations?open=true&rows=100&start=0",
+      {},
+      20000
     );
+    if (!resp.ok) {
+      return logBadResponse("SBIR.gov", resp);
+    }
     const raw = await resp.json();
+    // Handle multiple response shapes the SBIR API may return:
+    //   - plain array
+    //   - { results: [...] }
+    //   - { solicitations: [...] }
+    //   - { data: [...] }
+    //   - { items: [...] }
     const items = Array.isArray(raw)
       ? raw
-      : raw.results ?? raw.solicitations ?? [];
+      : raw.results ?? raw.solicitations ?? raw.data ?? raw.items ?? [];
 
     return items
       .filter((item) => {
@@ -305,17 +335,24 @@ async function fetchSBIR(naicsCodes) {
 
 async function fetchGrants() {
   try {
-    const resp = await fetch("https://api.grants.gov/v1/api/search2", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        keyword: "",
-        oppStatuses: "posted",
-        rows: 100,
-        startRecordNum: 0,
-        sortBy: "openDate|desc",
-      }),
-    });
+    const resp = await fetchWithTimeout(
+      "https://api.grants.gov/v1/api/search2",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keyword: "",
+          oppStatuses: "posted",
+          rows: 100,
+          startRecordNum: 0,
+          sortBy: "openDate|desc",
+        }),
+      },
+      20000
+    );
+    if (!resp.ok) {
+      return logBadResponse("Grants.gov", resp);
+    }
     const data = await resp.json();
     return (data.data?.oppHits || []).map((item) => {
       const oppId = item.id || item.oppNumber;
@@ -476,6 +513,12 @@ export async function collectAndAnalyze(naicsCodes = [], daysBack = 30) {
     fetchSBIR(naicsCodes),
     fetchGrants(),
   ]);
+
+  console.info(
+    `[intelligence] source counts — SAM.gov: ${sam.length}, ` +
+      `USASpending.gov: ${usas.length}, SBIR.gov: ${sbir.length}, ` +
+      `Grants.gov: ${grants.length}`
+  );
 
   // Deduplicate by noticeId
   const seen = new Set();
