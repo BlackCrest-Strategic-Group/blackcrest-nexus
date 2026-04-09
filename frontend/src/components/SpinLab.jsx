@@ -55,6 +55,7 @@ const PAY_TABLE = [
 const BET_SIZES = [10, 25, 50, 100, 250];
 const STARTING_COINS = 1000;
 const LIGHTNING_BASE = 15; // base spins between lightning bonuses
+const LIGHTNING_VARIANCE = 10; // random variance added to the next lightning interval
 
 /* Symbols keyed by id for quick lookup */
 const SYM_MAP = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
@@ -230,7 +231,7 @@ export default function SpinLab() {
   const [lightningMsg, setLightningMsg] = useState("");
   const [spinCount, setSpinCount] = useState(0);
   const [nextLightning, setNextLightning] = useState(
-    LIGHTNING_BASE + Math.floor(Math.random() * 8)
+    LIGHTNING_BASE + Math.floor(Math.random() * LIGHTNING_VARIANCE)
   );
   const [history, setHistory] = useState([]);
   const [showPayTable, setShowPayTable] = useState(false);
@@ -240,12 +241,12 @@ export default function SpinLab() {
   const timeoutRefs = useRef([]);
 
   /* Clear all pending timers */
-  function clearTimers() {
+  const clearTimers = useCallback(() => {
     intervalRefs.current.forEach((id) => id && clearInterval(id));
     intervalRefs.current = [null, null, null];
     timeoutRefs.current.forEach((id) => clearTimeout(id));
     timeoutRefs.current = [];
-  }
+  }, []);
 
   /* Trigger lightning bonus visual + audio */
   const triggerLightningBonus = useCallback((bonusLabel) => {
@@ -318,9 +319,7 @@ export default function SpinLab() {
             const ev = evaluate(finalResults, bet);
             if (isLightningRound) {
               triggerLightningBonus(ev.label ? `⚡ LIGHTNING BONUS! ${ev.label}` : "⚡ LIGHTNING BONUS ⚡");
-              if (nextLightning === newCount) {
-                setNextLightning(newCount + LIGHTNING_BASE + Math.floor(Math.random() * 10));
-              }
+              setNextLightning(newCount + LIGHTNING_BASE + Math.floor(Math.random() * LIGHTNING_VARIANCE));
             }
             if (ev.win > 0) {
               setCoins((c) => c + ev.win);
@@ -341,10 +340,10 @@ export default function SpinLab() {
       }, stopDelays[r]);
       timeoutRefs.current.push(tid);
     });
-  }, [spinning, coins, bet, spinCount, nextLightning, triggerLightningBonus]);
+  }, [spinning, coins, bet, spinCount, nextLightning, triggerLightningBonus, clearTimers]);
 
   /* Cleanup on unmount */
-  useEffect(() => () => clearTimers(), []);
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
   /* ── Render ── */
   const canSpin = !spinning && coins >= bet;
