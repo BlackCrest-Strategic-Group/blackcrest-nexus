@@ -588,21 +588,22 @@ export default function Dashboard() {
 
       {/* ── Main content ── */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
-        {/* Tab navigation */}
-        <div className="flex gap-0 mb-6 overflow-x-auto border-b border-slate-200">
-          {TABS.map(({ id, label }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-150 ${
-                tab === id
-                  ? "border-navy-600 text-navy-700 bg-white"
-                  : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-              }`}
-            >
-              {label}
-            </button>
-          ))}
+        {/* Tab navigation — dropdown */}
+        <div className="relative mb-6 max-w-sm">
+          <label className="sr-only" htmlFor="dashboard-nav">Navigate to section</label>
+          <select
+            id="dashboard-nav"
+            className="select pr-10 font-medium text-slate-700"
+            value={tab}
+            onChange={(e) => setTab(e.target.value)}
+          >
+            {TABS.map(({ id, label }) => (
+              <option key={id} value={id}>{label}</option>
+            ))}
+          </select>
+          <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
         </div>
 
         {/* ── Opportunity Workflow (NEW guided 4-step flow) ── */}
