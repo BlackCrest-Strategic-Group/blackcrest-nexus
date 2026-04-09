@@ -424,7 +424,20 @@ export default function Dashboard() {
   const user = getUser();
   /* NEW: Default to the guided Opportunity Workflow tab */
   const [tab, setTab] = useState("workflow");
+  const [navOpen, setNavOpen] = useState(false);
+  const navRef = useRef(null);
   const [toast, setToast] = useState(null);
+
+  // Close nav dropdown on outside click
+  useEffect(() => {
+    function handler(e) {
+      if (navOpen && navRef.current && !navRef.current.contains(e.target)) {
+        setNavOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [navOpen]);
 
   // Search state
   const [searchResults, setSearchResults] = useState(null);
@@ -588,21 +601,54 @@ export default function Dashboard() {
 
       {/* ── Main content ── */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 py-6">
-        {/* Tab navigation */}
-        <div className="flex gap-0 mb-6 overflow-x-auto border-b border-slate-200">
-          {TABS.map(({ id, label }) => (
+        {/* Navigation dropdown */}
+        <div className="flex justify-end mb-6" ref={navRef}>
+          <div className="relative">
             <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-150 ${
-                tab === id
-                  ? "border-navy-600 text-navy-700 bg-white"
-                  : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"
-              }`}
+              onClick={() => setNavOpen((o) => !o)}
+              aria-expanded={navOpen}
+              aria-haspopup="listbox"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-200 shadow-sm text-sm font-semibold text-navy-700 hover:border-navy-400 hover:shadow-md transition-all duration-150 min-w-[220px] justify-between"
             >
-              {label}
+              <span className="truncate">
+                {TABS.find((t) => t.id === tab)?.label ?? "Select View"}
+              </span>
+              <svg
+                className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200 ${navOpen ? "rotate-180" : ""}`}
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
-          ))}
+
+            {navOpen && (
+              <div
+                role="listbox"
+                className="absolute right-0 mt-1.5 w-64 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-40 animate-fade-in max-h-80 overflow-y-auto"
+              >
+                {TABS.map(({ id, label }) => (
+                  <button
+                    key={id}
+                    role="option"
+                    aria-selected={tab === id}
+                    onClick={() => { setTab(id); setNavOpen(false); }}
+                    className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors text-left ${
+                      tab === id
+                        ? "bg-navy-50 text-navy-700 font-semibold"
+                        : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    {tab === id && (
+                      <svg className="w-3.5 h-3.5 text-navy-600 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                    <span className={tab !== id ? "pl-5" : ""}>{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Opportunity Workflow (NEW guided 4-step flow) ── */}
