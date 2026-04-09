@@ -12,6 +12,7 @@ import ProposalGenerator from "./ProposalGenerator.jsx";
 import MarginLeakage from "./MarginLeakage.jsx";
 import CapacityPlanner from "./CapacityPlanner.jsx";
 import FitCheckModal from "./FitCheckModal.jsx";
+import SpinLab from "./SpinLab.jsx";
 /* NEW: Guided 4-step opportunity workflow */
 import OpportunityWorkflow from "./OpportunityWorkflow.jsx";
 import { opportunitiesApi, emailApi, opportunityApi } from "../utils/api.js";
@@ -111,7 +112,8 @@ const TABS = [
   { id: "margins",     label: "Margin Analytics" },
   { id: "capacity",    label: "Capacity" },
   { id: "erp",         label: "ERP Connectors" },
-  { id: "email",       label: "Email Settings" }
+  { id: "email",       label: "Email Settings" },
+  { id: "spinlab",     label: "🎰 Spin Lab" },
 ];
 
 function OpportunityCard({ opp, onSave, saved }) {
@@ -948,6 +950,9 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+
+        {/* ── Spin Lab ── */}
+        {tab === "spinlab" && <SpinLab />}
       </main>
 
       {/* ── Footer ── */}
