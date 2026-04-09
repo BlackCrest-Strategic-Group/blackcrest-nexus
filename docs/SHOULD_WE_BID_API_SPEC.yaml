@@ -1,0 +1,46 @@
+openapi: 3.0.0
+info:
+  title: GovCon AI Decision API
+  version: 1.0.0
+paths:
+  /api/opportunity/should-we-bid:
+    post:
+      summary: Unified pursue / partner / pass decision
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                solicitation:
+                  type: object
+                companyProfile:
+                  type: object
+      responses:
+        '200':
+          description: Decision result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommendation:
+                    type: string
+                    enum: [PURSUE, PURSUE_WITH_PARTNER, PASS]
+                  winProbability:
+                    type: number
+                  risks:
+                    type: array
+                    items:
+                      type: string
+                  reasons:
+                    type: array
+                    items:
+                      type: string
+                  estimatedEffort:
+                    type: string
+                  marginRange:
+                    type: string
+                  partnerRecommendation:
+                    type: string
