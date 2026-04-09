@@ -12,6 +12,8 @@ import ProposalGenerator from "./ProposalGenerator.jsx";
 import MarginLeakage from "./MarginLeakage.jsx";
 import CapacityPlanner from "./CapacityPlanner.jsx";
 import FitCheckModal from "./FitCheckModal.jsx";
+/* NEW: Guided 4-step opportunity workflow */
+import OpportunityWorkflow from "./OpportunityWorkflow.jsx";
 import { opportunitiesApi, emailApi, opportunityApi } from "../utils/api.js";
 import { getUser } from "../utils/auth.js";
 import { MOCK_COMPANY_PROFILE, MOCK_SUPPLIERS } from "../utils/fitCheckMockData.js";
@@ -93,6 +95,8 @@ function SkeletonCard() {
   );
 }
 const TABS = [
+  /* NEW: Guided workflow tab — placed first so it is the default landing view */
+  { id: "workflow",    label: "🚀 Opportunity Workflow" },
   { id: "search",      label: "SAM.gov Search" },
   { id: "analyze",     label: "Document Analysis" },
   { id: "far",         label: "FAR / DFARS" },
@@ -418,7 +422,8 @@ function NonClassifiedTab({ analysisResult }) {
 
 export default function Dashboard() {
   const user = getUser();
-  const [tab, setTab] = useState("search");
+  /* NEW: Default to the guided Opportunity Workflow tab */
+  const [tab, setTab] = useState("workflow");
   const [toast, setToast] = useState(null);
 
   // Search state
@@ -599,6 +604,9 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        {/* ── Opportunity Workflow (NEW guided 4-step flow) ── */}
+        {tab === "workflow" && <OpportunityWorkflow />}
 
         {/* ── SAM.gov Search ── */}
         {tab === "search" && (
