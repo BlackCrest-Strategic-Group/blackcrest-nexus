@@ -1,4 +1,4 @@
-const TOKEN_KEY = "govcon_access_token";
+export const TOKEN_KEY = "govcon_access_token";
 const REFRESH_KEY = "govcon_refresh_token";
 const USER_KEY = "govcon_user";
 
@@ -20,6 +20,10 @@ export function getUser() {
 }
 
 export function saveAuth({ accessToken, refreshToken, user }, remember = false) {
+  if (!accessToken) {
+    console.warn("saveAuth: accessToken is missing — skipping storage write");
+    return;
+  }
   const store = remember ? localStorage : sessionStorage;
   store.setItem(TOKEN_KEY, accessToken);
   if (refreshToken) store.setItem(REFRESH_KEY, refreshToken);
