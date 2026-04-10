@@ -213,8 +213,7 @@ describe("sendPasswordResetEmail", () => {
 
     // Should have warned with the reset URL
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining("devtoken"),
-      ...(warnSpy.mock.calls[0].slice(1))
+      expect.stringContaining("devtoken")
     );
     // Should NOT have tried to send an actual email
     expect(mockSendMail).not.toHaveBeenCalled();
