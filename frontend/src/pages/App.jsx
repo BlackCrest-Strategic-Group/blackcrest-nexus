@@ -7,6 +7,11 @@ import ResetPasswordPage from "../components/ResetPasswordPage.jsx";
 import MFASetupPage from "../components/MFASetupPage.jsx";
 import MFASettingsPage from "../components/MFASettingsPage.jsx";
 import { getToken } from "../utils/auth.js";
+import HomePage from "../marketing/pages/HomePage.jsx";
+import BlackCrestAIPage from "../marketing/pages/BlackCrestAIPage.jsx";
+import GovConAIPage from "../marketing/pages/GovConAIPage.jsx";
+import TruthSerumAIPage from "../marketing/pages/TruthSerumAIPage.jsx";
+import LabsPage from "../marketing/pages/LabsPage.jsx";
 
 function isTokenExpired(token) {
   if (!token) return true;
@@ -33,8 +38,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<LandingPage />} />
+        {/* ── Marketing site routes ── */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/blackcrest-ai" element={<BlackCrestAIPage />} />
+        <Route path="/blackcrest-ai/govcon-ai" element={<GovConAIPage />} />
+        <Route path="/blackcrest-ai/truth-serum-ai" element={<TruthSerumAIPage />} />
+        <Route path="/labs" element={<LabsPage />} />
+
+        {/* ── Scanner app entry point ── */}
+        <Route path="/app" element={<LandingPage />} />
+
+        {/* ── Auth routes ── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         {/* Protected routes */}
