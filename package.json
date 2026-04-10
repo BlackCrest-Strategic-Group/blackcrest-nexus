@@ -5,10 +5,9 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest --testPathPatterns=tests/",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/",
     "build:frontend": "cd frontend && npm install --include=dev && npm run build",
-    "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/"
+    "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\""
   },
   "keywords": [
     "govcon",
