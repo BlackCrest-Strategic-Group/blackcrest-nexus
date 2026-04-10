@@ -18,6 +18,7 @@ import { authenticateToken } from "../middleware/auth.js";
 import User from "../models/User.js";
 import { sendMfaOtpEmail } from "../services/emailService.js";
 import { encryptTotpSecret, decryptTotpSecret, verifyTotpCode } from "../services/totpService.js";
+import { audit, getIp, EVENT } from "../services/auditLogger.js";
 
 const router = express.Router();
 
@@ -278,6 +279,15 @@ router.post("/verify-totp-setup", totpSetupLimiter, async (req, res) => {
 
     const valid = verifyTotpCode(user.totpPendingSecret, totpCode.trim());
     if (!valid) {
+      audit(EVENT.MFA_FAILURE, {
+        userId:  user._id.toString(),
+        email:   user.email,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { mfaMethod: "totp", reason: "Invalid TOTP code during setup" }
+      });
       return res.status(401).json({ success: false, error: "Invalid code. Please check your authenticator app and try again." });
     }
 
@@ -303,6 +313,25 @@ router.post("/verify-totp-setup", totpSetupLimiter, async (req, res) => {
     user.refreshToken = crypto.createHash("sha256").update(refreshToken).digest("hex");
 
     await user.save();
+
+    audit(EVENT.MFA_SUCCESS, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { mfaMethod: "totp", action: "totp-setup-complete" }
+    });
+    audit(EVENT.ACCOUNT_UPDATED, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { change: "mfa-totp-enabled" }
+    });
 
     return res.json({
       success: true,
@@ -459,6 +488,15 @@ router.post("/verify-setup", otpVerifyLimiter, authenticateToken, async (req, re
     // Verify OTP
     const otpValid = await verifyOtp(otp, user.mfaOtpHash);
     if (!otpValid) {
+      audit(EVENT.MFA_FAILURE, {
+        userId:  user._id.toString(),
+        email:   user.email,
+        ip:      req.clientIp ?? getIp(req),
+        route:   req.originalUrl,
+        method:  req.method,
+        success: false,
+        details: { mfaMethod: decoded.method, reason: "Invalid OTP during setup" }
+      });
       return res.status(400).json({ success: false, error: "Invalid verification code." });
     }
 
@@ -477,6 +515,25 @@ router.post("/verify-setup", otpVerifyLimiter, authenticateToken, async (req, re
     user.mfaBackupCodes = hashedCodes;
 
     await user.save();
+
+    audit(EVENT.MFA_SUCCESS, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { mfaMethod: method, action: "mfa-setup-complete" }
+    });
+    audit(EVENT.ACCOUNT_UPDATED, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { change: `mfa-${method}-enabled` }
+    });
 
     res.json({
       success: true,
@@ -518,6 +575,16 @@ router.post("/disable", generalMfaLimiter, authenticateToken, async (req, res) =
 
     await user.save();
 
+    audit(EVENT.ACCOUNT_UPDATED, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { change: `mfa-${method}-disabled`, mfaEnabled: user.mfaEnabled }
+    });
+
     res.json({
       success: true,
       message: `${method === "email" ? "Email" : "SMS"} MFA has been disabled.`,
@@ -549,6 +616,16 @@ router.post("/generate-backup-codes", generalMfaLimiter, authenticateToken, asyn
     const hashedCodes = await hashBackupCodes(plainCodes);
     user.mfaBackupCodes = hashedCodes;
     await user.save();
+
+    audit(EVENT.ACCOUNT_UPDATED, {
+      userId:  user._id.toString(),
+      email:   user.email,
+      ip:      req.clientIp ?? getIp(req),
+      route:   req.originalUrl,
+      method:  req.method,
+      success: true,
+      details: { change: "mfa-backup-codes-regenerated" }
+    });
 
     res.json({
       success: true,

@@ -24,16 +24,29 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
     if (error.response?.status === 401 && !original._retried) {
-      // Bug fix (MFA code not accepted): Only attempt a token refresh when the
-      // user actually has a refresh token (i.e., they were already logged in).
-      // Pre-authentication endpoints such as /api/auth/verify-mfa-login can
-      // legitimately return 401 for an invalid MFA code; without this guard the
-      // interceptor would silently redirect the user to /login instead of
-      // surfacing the error message to the component's catch block.
+      // Pre-authentication endpoints return 401 for invalid credentials/codes
+      // and must NEVER trigger a token refresh.  A user who previously signed in
+      // with "remember me" may have a stale refresh token in localStorage; if the
+      // interceptor tries to refresh it here and fails, it calls clearAuth() and
+      // redirects to /login — silently kicking the user off the MFA screen instead
+      // of showing them the "Invalid code" error message.
+      const PRE_AUTH_ENDPOINTS = [
+        "/api/auth/verify-mfa-login",
+        "/api/mfa/verify-totp-setup",
+      ];
+      const isPreAuth = PRE_AUTH_ENDPOINTS.some((p) => {
+        const url = original.url || "";
+        return url === p || url.startsWith(p + "?") || url.startsWith(p + "/");
+      });
+      if (isPreAuth) {
+        return Promise.reject(error);
+      }
+
+      // Only attempt a silent token refresh when the user is actually logged in
+      // (i.e., they have a refresh token).  Unauthenticated callers should just
+      // receive the original error so the UI can display the correct message.
       const refreshToken = getRefreshToken();
       if (!refreshToken) {
-        // Not logged in — propagate the error so the calling component can
-        // display the correct message (e.g. "Invalid authenticator code").
         return Promise.reject(error);
       }
 
