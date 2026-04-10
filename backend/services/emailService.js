@@ -198,10 +198,26 @@ export async function sendMfaOtpEmail(user, otp) {
 }
 
 export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
-  const transport = createTransport();
-  const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
   const appUrl = (baseUrl || process.env.APP_URL || "http://localhost:5173").replace(/\/$/, "");
   const resetUrl = `${appUrl}/reset-password?token=${encodeURIComponent(resetToken)}`;
+
+  // In non-production environments, fall back to console output when email transport
+  // is not configured so developers can still exercise the full reset flow.
+  let transport;
+  try {
+    transport = createTransport();
+  } catch (configErr) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(
+        "[EmailService] Password reset email not sent — email transport is not configured.\n" +
+        `[EmailService] Reset URL for ${user.email}: ${resetUrl}`
+      );
+      return; // treat as success in non-production to unblock the flow
+    }
+    throw configErr; // re-throw in production so the caller can handle it
+  }
+
+  const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
 
   const html = `
     <!DOCTYPE html>
