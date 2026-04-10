@@ -49,6 +49,26 @@ console.log("[Server] NODE_ENV:", process.env.NODE_ENV);
 console.log("[Server] MONGODB_URI:", process.env.MONGODB_URI ? "✓ set" : "✗ MISSING");
 console.log("[Server] JWT_SECRET:", process.env.JWT_SECRET ? "✓ set" : "✗ MISSING");
 
+// Check email transport configuration and warn early so the issue is visible
+// in server logs long before a user attempts a password reset.
+const emailConfigured = !!(process.env.SENDGRID_API_KEY ||
+  (process.env.GMAIL_USER && process.env.GMAIL_PASSWORD));
+if (!emailConfigured) {
+  const msg =
+    "Email transport is not configured (SENDGRID_API_KEY or GMAIL_USER+GMAIL_PASSWORD are missing). " +
+    "Password reset emails and MFA OTP emails will not be delivered. " +
+    (process.env.NODE_ENV !== "production"
+      ? "In non-production mode, password reset URLs will be logged to the console instead."
+      : "Set the required environment variables to restore email functionality.");
+  // Log at error level in production so it is clearly visible in server logs,
+  // but do not exit — the rest of the application should continue serving traffic.
+  if (process.env.NODE_ENV === "production") {
+    console.error("[Server] [ERROR] " + msg);
+  } else {
+    console.warn("[Warning] " + msg);
+  }
+}
+
 if (!process.env.MONGODB_URI) {
   console.error("[FATAL] MONGODB_URI is not set. Exiting.");
   process.exit(1);

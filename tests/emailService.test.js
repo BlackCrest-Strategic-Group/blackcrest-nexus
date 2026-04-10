@@ -45,7 +45,7 @@ jest.unstable_mockModule("../backend/models/Opportunity.js", () => ({
 }));
 
 // Load the module under test AFTER mocks are set up
-const { sendDailyDigest } = await import("../backend/services/emailService.js");
+const { sendDailyDigest, sendPasswordResetEmail } = await import("../backend/services/emailService.js");
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -156,6 +156,78 @@ describe("sendDailyDigest", () => {
     delete process.env.SENDGRID_API_KEY;
 
     await expect(sendDailyDigest(makeUser())).rejects.toThrow(
+      "Email not configured"
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// sendPasswordResetEmail tests
+// ---------------------------------------------------------------------------
+describe("sendPasswordResetEmail", () => {
+  const originalNodeEnv = process.env.NODE_ENV;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    process.env.GMAIL_USER = "test@gmail.com";
+    process.env.GMAIL_PASSWORD = "secret";
+  });
+
+  afterEach(() => {
+    delete process.env.GMAIL_USER;
+    delete process.env.GMAIL_PASSWORD;
+    delete process.env.SENDGRID_API_KEY;
+    process.env.NODE_ENV = originalNodeEnv;
+  });
+
+  test("sends a password reset email when transport is configured", async () => {
+    const user = makeUser();
+    await sendPasswordResetEmail(user, "myresettoken", "http://localhost:5173");
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    const callArgs = mockSendMail.mock.calls[0][0];
+    expect(callArgs.to).toBe(user.email);
+    expect(callArgs.subject).toContain("Password");
+    expect(callArgs.html).toContain("myresettoken");
+  });
+
+  test("includes the reset URL in the email HTML", async () => {
+    const user = makeUser();
+    await sendPasswordResetEmail(user, "tok123", "https://app.example.com");
+
+    const html = mockSendMail.mock.calls[0][0].html;
+    expect(html).toContain("https://app.example.com/reset-password?token=tok123");
+  });
+
+  test("in non-production mode, logs reset URL instead of throwing when email is not configured", async () => {
+    delete process.env.GMAIL_USER;
+    delete process.env.GMAIL_PASSWORD;
+    delete process.env.SENDGRID_API_KEY;
+    process.env.NODE_ENV = "development";
+
+    const warnSpy = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const user = makeUser();
+
+    // Should not throw in dev mode
+    await expect(sendPasswordResetEmail(user, "devtoken", "http://localhost:5173")).resolves.toBeUndefined();
+
+    // Should have warned with the reset URL
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("devtoken")
+    );
+    // Should NOT have tried to send an actual email
+    expect(mockSendMail).not.toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
+  test("in production mode, throws when email transport is not configured", async () => {
+    delete process.env.GMAIL_USER;
+    delete process.env.GMAIL_PASSWORD;
+    delete process.env.SENDGRID_API_KEY;
+    process.env.NODE_ENV = "production";
+
+    await expect(sendPasswordResetEmail(makeUser(), "tok", "http://example.com")).rejects.toThrow(
       "Email not configured"
     );
   });

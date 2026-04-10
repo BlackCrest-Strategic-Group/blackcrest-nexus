@@ -631,7 +631,16 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
     try {
       await sendPasswordResetEmail(user, resetToken, appBaseUrl);
     } catch (emailErr) {
-      console.error("Password reset email failed:", emailErr.message);
+      // Log the specific error with full details to help administrators diagnose
+      // SMTP configuration problems, credential failures, or service outages.
+      console.error("[ForgotPassword] Email delivery failed:", {
+        userId:          user._id.toString(),
+        email:           user.email,
+        errorType:       emailErr.constructor?.name ?? "Error",
+        errorMessage:    emailErr.message,
+        smtpResponseCode: emailErr.responseCode ?? null,
+        smtpCommand:     emailErr.command ?? null,
+      });
       // Clear token if email failed so the user can retry
       user.resetPasswordToken = null;
       user.resetPasswordExpires = null;
@@ -643,7 +652,7 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
         route:   req.originalUrl,
         method:  req.method,
         success: false,
-        details: { reason: "Email delivery failed" }
+        details: { reason: "Email delivery failed", errorMessage: emailErr.message }
       });
       return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again later." });
     }
