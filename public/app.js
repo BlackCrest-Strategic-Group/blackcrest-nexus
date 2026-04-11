@@ -303,10 +303,17 @@ function toIsoDate(value) {
 
   return value;
 }
+const rawPostedFrom = document.getElementById("postedFrom")?.value || "";
+const rawPostedTo = document.getElementById("postedTo")?.value || "";
+
+console.log("raw postedFrom:", rawPostedFrom);
+console.log("raw postedTo:", rawPostedTo);
+console.log("iso postedFrom:", toIsoDate(rawPostedFrom));
+console.log("iso postedTo:", toIsoDate(rawPostedTo));
 
 const params = new URLSearchParams({
-  postedFrom: toIsoDate(document.getElementById("postedFrom").value),
-  postedTo: toIsoDate(document.getElementById("postedTo").value),
+  postedFrom: toIsoDate(rawPostedFrom),
+  postedTo: toIsoDate(rawPostedTo),
   keyword: document.getElementById("keyword").value.trim(),
   naics: document.getElementById("naics").value.trim(),
   psc: document.getElementById("psc").value.trim(),
