@@ -1,89 +1,87 @@
 import express from "express";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import rateLimit from "express-rate-limit";
-import User from "../models/User.js";
-import EmailPreference from "../models/EmailPreference.js";
-import { authenticateToken } from "../middleware/auth.js";
-import crypto from "crypto";
-import { sendPasswordResetEmail, sendMfaOtpEmail } from "../services/emailService.js";
-import { verifyTotpCode } from "../services/totpService.js";
-import { audit, getIp, EVENT } from "../services/auditLogger.js";
 
 const router = express.Router();
 
-// NIST AC-7: Number of consecutive failed logins before account lockout.
-// Configurable via LOGIN_MAX_FAILED_ATTEMPTS env var (default: 5).
-const LOGIN_MAX_FAILED_ATTEMPTS =
-  parseInt(process.env.LOGIN_MAX_FAILED_ATTEMPTS || "5", 10);
+/**
+ * Demo login route
+ * Replace with real auth/database validation later
+ */
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body || {};
 
-// NIST AC-7: Duration (in minutes) that an account stays locked.
-// Configurable via LOGIN_LOCKOUT_MINUTES env var (default: 15).
-const LOGIN_LOCKOUT_MINUTES =
-  parseInt(process.env.LOGIN_LOCKOUT_MINUTES || "15", 10);
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Email and password are required"
+      });
+    }
 
-// NIST IA-5(1): Maximum allowed password length (prevents DoS via bcrypt cost).
-const PASSWORD_MAX_LENGTH = 128;
+    // Temporary demo credentials
+    if (email === "demo@govconscanner.com" && password === "password123") {
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        token: "demo-token-123",
+        user: {
+          id: "demo-user",
+          name: "Demo User",
+          email: "demo@govconscanner.com",
+          companyName: "BlackCrest Demo"
+        }
+      });
+    }
 
-// NIST SP 800-63B §5.1.1: Known commonly-used passwords to reject at registration/reset.
-// Module-level constant so the Set is constructed once, not on every validation call.
-const COMMON_PASSWORDS = new Set([
-  "password", "password1", "password123", "12345678", "123456789",
-  "1234567890", "qwerty123", "qwertyuiop", "iloveyou", "admin1234",
-  "letmein1", "welcome1", "monkey123", "dragon123", "master123",
-  "abc123456", "passw0rd", "p@ssword", "p@ssw0rd", "changeme"
-]);
-
-// Rate limiter for login (10 per 15 minutes per IP)
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: "Too many login attempts. Please wait before trying again." }
-});
-
-// Rate limiter for registration (10 per 15 minutes per IP)
-const registerLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: "Too many registration attempts. Please wait before trying again." }
-});
-
-// Rate limiter for MFA verification during login (5 attempts per 15 minutes)
-const mfaLoginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: "Too many MFA attempts. Please wait before trying again." }
-});
-
-// Stricter rate limiter for password-related endpoints (5 requests per 15 minutes)
-const passwordResetLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 5,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: "Too many requests. Please wait before trying again." }
-});
-
-// NIST IA-5(1): Validate password meets minimum security requirements.
-// Returns an error string if invalid, or null if valid.
-function validatePassword(password) {
-  if (!password || typeof password !== "string") return "Password is required.";
-  if (password.length < 8) return "Password must be at least 8 characters.";
-  if (password.length > PASSWORD_MAX_LENGTH) return `Password must not exceed ${PASSWORD_MAX_LENGTH} characters.`;
-  // NIST SP 800-63B §5.1.1: Check against known commonly-used passwords.
-  if (COMMON_PASSWORDS.has(password.toLowerCase())) {
-    return "Password is too common. Please choose a more unique password.";
+    return res.status(401).json({
+      success: false,
+      error: "Invalid email or password"
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Server error during login"
+    });
   }
-  return null;
-}
+});
 
-const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password, companyName } = req.body || {};
+
+    if (!email || !password || !companyName) {
+      return res.status(400).json({
+        success: false,
+        error: "Email, password, and company name are required"
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      message: "Registration successful",
+      user: {
+        id: "new-user",
+        email,
+        companyName
+      }
+    });
+  } catch (error) {
+    console.error("Register error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Server error during registration"
+    });
+  }
+});
+
+router.get("/health", (req, res) => {
+  res.json({
+    success: true,
+    service: "auth"
+  });
+});
+
+export default router;const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
 
 const ALGORITHM = "aes-256-gcm";
 
