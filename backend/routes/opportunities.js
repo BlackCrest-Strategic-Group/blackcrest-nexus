@@ -252,5 +252,6 @@ router.post("/save", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Save opportunity error:", error.message);
     return res.status(500).json({ success: false, error: "Failed to save opportunity." });
+    export default router;
   }
 });
