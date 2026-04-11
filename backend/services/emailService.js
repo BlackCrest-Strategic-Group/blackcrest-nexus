@@ -3,8 +3,8 @@ import Opportunity from "../models/Opportunity.js";
 import EmailPreference from "../models/EmailPreference.js";
 
 // Inline SVG logo used in email templates (safe for all email clients)
-const EMAIL_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="176" height="48" role="img" aria-label="GovCon AI Scanner">
-  <title>GovCon AI Scanner</title>
+const EMAIL_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="176" height="48" role="img" aria-label="GovCon AI (Powered by Truth Serum)">
+  <title>GovCon AI (Powered by Truth Serum)</title>
   <g transform="translate(4,4)">
     <circle cx="23" cy="23" r="19" fill="#14243a" stroke="#1e3553" stroke-width="2"/>
     <text x="23" y="29" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="#ffffff">G</text>
@@ -141,9 +141,9 @@ export async function sendDailyDigest(user) {
     </html>`;
 
   const info = await transport.sendMail({
-    from: `"GovCon AI Scanner" <${fromAddress}>`,
+    from: `"GovCon AI (Powered by Truth Serum)" <${fromAddress}>`,
     to: user.email,
-    subject: `GovCon AI Daily Digest — ${new Date().toLocaleDateString()}`,
+    subject: `GovCon AI + Truth Serum Daily Digest — ${new Date().toLocaleDateString()}`,
     html
   });
 
@@ -190,9 +190,9 @@ export async function sendMfaOtpEmail(user, otp) {
     </html>`;
 
   await transport.sendMail({
-    from: `"GovCon AI Scanner" <${fromAddress}>`,
+    from: `"GovCon AI (Powered by Truth Serum)" <${fromAddress}>`,
     to: user.email,
-    subject: "Your GovCon AI Scanner Verification Code",
+    subject: "Your GovCon AI (Powered by Truth Serum) Verification Code",
     html
   });
 }
@@ -228,7 +228,7 @@ export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
         <div style="margin-bottom:24px;">${EMAIL_LOGO_SVG}</div>
         <h2 style="color:#1e293b;margin:0 0 8px;">Password Reset Request</h2>
         <p>Hello ${escapeHtml(user.name || user.email)},</p>
-        <p>We received a request to reset your GovCon AI Scanner password. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
+        <p>We received a request to reset your GovCon AI (Powered by Truth Serum) password. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
         <div style="text-align:center;margin:32px 0;">
           <a href="${resetUrl}"
              style="display:inline-block;padding:14px 32px;background:#14243a;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:bold;font-size:15px;">
@@ -249,9 +249,9 @@ export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
     </html>`;
 
   await transport.sendMail({
-    from: `"GovCon AI Scanner" <${fromAddress}>`,
+    from: `"GovCon AI (Powered by Truth Serum)" <${fromAddress}>`,
     to: user.email,
-    subject: "Reset Your GovCon AI Scanner Password",
+    subject: "Reset Your GovCon AI (Powered by Truth Serum) Password",
     html
   });
 }

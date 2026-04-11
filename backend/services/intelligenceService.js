@@ -133,8 +133,18 @@ function normalize(raw, source) {
 // Source: SAM.gov
 // ---------------------------------------------------------------------------
 
+function getSamApiKey() {
+  const keys = [process.env.SAM_API_KEY, process.env.SAM_GOV_API_KEY, process.env.SAMGOV_API_KEY];
+  for (const key of keys) {
+    if (typeof key === "string" && key.trim()) {
+      return key.trim().replace(/^['"]|['"]$/g, "");
+    }
+  }
+  return "";
+}
+
 async function fetchSam(naicsCodes, daysBack) {
-  const apiKey = process.env.SAM_API_KEY;
+  const apiKey = getSamApiKey();
   if (!apiKey) {
     console.warn("[intelligence] SAM_API_KEY not set — skipping SAM.gov");
     return [];
