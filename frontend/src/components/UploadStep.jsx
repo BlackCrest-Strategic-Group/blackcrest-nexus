@@ -1,7 +1,7 @@
 /**
  * UploadStep.jsx
  * Step 1 of the Opportunity Workflow.
- * Lets users upload a solicitation document (PDF / DOCX / TXT) or paste raw text,
+ * Lets users upload a solicitation document (PDF / TXT) or paste raw text,
  * then triggers AI analysis via the existing opportunitiesApi.analyze / analyzeText
  * backend endpoints. On success it calls onComplete(analysisResult) so the
  * parent workflow can advance to Step 2.
@@ -110,7 +110,7 @@ export default function UploadStep({ onComplete }) {
         {mode === "file" ? (
           <form onSubmit={handleSubmitFile} className="space-y-4">
             <div>
-              <label className="label">Choose Document (PDF, DOCX, or TXT)</label>
+              <label className="label">Choose Document (PDF or TXT)</label>
               <div
                 className={`upload-zone ${dragOver ? "upload-zone-active" : ""}`}
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -131,11 +131,11 @@ export default function UploadStep({ onComplete }) {
                     d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
                 <p className="text-sm font-semibold text-slate-700">Drop your document here</p>
-                <p className="text-xs text-slate-500 mt-1">or click to browse — PDF, DOCX, TXT supported</p>
+                <p className="text-xs text-slate-500 mt-1">or click to browse — PDF and TXT supported</p>
                 <input
                   ref={fileRef}
                   type="file"
-                  accept=".pdf,.docx,.txt"
+                  accept=".pdf,.txt"
                   className="hidden"
                   onChange={() => {}}
                 />

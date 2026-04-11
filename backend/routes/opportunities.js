@@ -11,10 +11,27 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
+  limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-// POST /api/opportunities/search — Search SAM.gov by NAICS / keyword
+function handleAnalyzeUpload(req, res, next) {
+  upload.single("file")(req, res, (err) => {
+    if (!err) return next();
+
+    if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        error: "File is too large. Maximum upload size is 10 MB."
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: err.message || "Invalid upload request."
+    });
+  });
+}
+
 router.post("/search", authenticateToken, async (req, res) => {
   try {
     const { postedFrom, postedTo, keyword, naics, psc, setAside, noticeType, page, limit } = req.body;
@@ -39,7 +56,7 @@ router.post("/search", authenticateToken, async (req, res) => {
       ? data.opportunitiesData.map(normalizeOpportunity)
       : [];
 
-    res.json({
+    return res.json({
       success: true,
       totalRecords: data.totalRecords ?? opportunities.length,
       page: page ? Number(page) : 1,
@@ -47,7 +64,17 @@ router.post("/search", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("SAM search error:", error.message);
-    res.status(error?.code === "MISSING_API_KEY" ? 400 : 500).json({
+    const isSamInvalidJson = typeof error?.message === "string" && error.message.includes("SAM returned invalid JSON");
+    if (isSamInvalidJson) {
+      return res.status(502).json({
+        success: false,
+        errorCode: "SAM_BAD_RESPONSE",
+        error: process.env.NODE_ENV === "production"
+          ? "SAM.gov returned an unexpected response. Please verify your API key permissions and try again."
+          : error.message
+      });
+    }
+    return res.status(error?.code === "MISSING_API_KEY" ? 400 : 500).json({
       success: false,
       errorCode: error?.code || null,
       error: error?.message || "Failed to fetch opportunities."
@@ -55,37 +82,34 @@ router.post("/search", authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/opportunities — Get user's saved opportunities
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const opportunities = await Opportunity.find({ savedBy: req.user.id })
       .sort({ postedDate: -1 })
       .limit(100);
 
-    res.json({ success: true, opportunities });
+    return res.json({ success: true, opportunities });
   } catch (error) {
     console.error("Get opportunities error:", error.message);
-    res.status(500).json({ success: false, error: "Failed to fetch saved opportunities." });
+    return res.status(500).json({ success: false, error: "Failed to fetch saved opportunities." });
   }
 });
 
-// POST /api/opportunities/analyze — Analyze an uploaded document
-router.post("/analyze", authenticateToken, upload.single("file"), async (req, res) => {
+router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res) => {
   const startTime = req.startTime ?? Date.now();
   try {
     let text = "";
 
     if (req.file) {
-      // Log the upload before parsing — captures file metadata, never content
       audit(EVENT.FILE_UPLOAD, {
-        userId:  req.user.id,
-        ip:      req.clientIp ?? getIp(req),
-        route:   req.originalUrl,
-        method:  req.method,
+        userId: req.user.id,
+        ip: req.clientIp ?? getIp(req),
+        route: req.originalUrl,
+        method: req.method,
         success: true,
         details: {
-          fileName:  req.file.originalname,
-          mimeType:  req.file.mimetype,
+          fileName: req.file.originalname,
+          mimeType: req.file.mimetype,
           sizeBytes: req.file.size
         }
       });
@@ -96,26 +120,32 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
       return res.status(400).json({ success: false, error: "Provide a file or text for analysis." });
     }
 
+    if (!text || text.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: "No readable solicitation text was detected. Please upload a text-based PDF/TXT or paste the solicitation text."
+      });
+    }
+
     const clauses = detectClauses(text);
     const scoreData = calculateBidScore(text);
 
-    // Log the analysis run — text content is never logged
     audit(EVENT.ANALYSIS_RUN, {
-      userId:     req.user.id,
-      ip:         req.clientIp ?? getIp(req),
-      route:      req.originalUrl,
-      method:     req.method,
-      success:    true,
+      userId: req.user.id,
+      ip: req.clientIp ?? getIp(req),
+      route: req.originalUrl,
+      method: req.method,
+      success: true,
       durationMs: Date.now() - startTime,
       details: {
-        source:        req.file ? "file_upload" : "pasted_text",
-        fileName:      req.file?.originalname ?? null,
-        clausesFound:  clauses.length,
-        bidScore:      scoreData?.score ?? null
+        source: req.file ? "file_upload" : "pasted_text",
+        fileName: req.file?.originalname ?? null,
+        clausesFound: clauses.length,
+        bidScore: scoreData?.score ?? null
       }
     });
 
-    res.json({
+    return res.json({
       success: true,
       fileName: req.file?.originalname || "pasted-text",
       extractedTextPreview: text.slice(0, 3000),
@@ -126,23 +156,38 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
   } catch (error) {
     console.error("Document analysis error:", error.message);
     audit(EVENT.ANALYSIS_RUN, {
-      userId:     req.user.id,
-      ip:         req.clientIp ?? getIp(req),
-      route:      req.originalUrl,
-      method:     req.method,
-      success:    false,
+      userId: req.user.id,
+      ip: req.clientIp ?? getIp(req),
+      route: req.originalUrl,
+      method: req.method,
+      success: false,
       durationMs: Date.now() - startTime,
-      details:    { error: error.message }
+      details: { error: error.message }
     });
-    res.status(500).json({ success: false, error: "Failed to analyze document." });
+
+    const isUnsupportedType = error.message?.startsWith("Unsupported file type:");
+    const isDocxDependencyIssue = error.message?.includes("requires the 'mammoth' package");
+    const isDocxParseError = error.message?.startsWith("Failed to parse DOCX file:");
+
+    if (isUnsupportedType || isDocxDependencyIssue || isDocxParseError) {
+      const productionMessage = isUnsupportedType
+        ? "Unsupported file type. Upload a PDF or TXT file."
+        : "DOCX uploads are currently unavailable in production. Please upload PDF or TXT.";
+
+      return res.status(400).json({
+        success: false,
+        error: process.env.NODE_ENV === "production" ? productionMessage : error.message
+      });
+    }
+
+    return res.status(500).json({ success: false, error: "Failed to analyze document." });
   }
 });
 
-// POST /api/opportunities/save — Save an opportunity to the user's list
 router.post("/save", authenticateToken, async (req, res) => {
   try {
     const { opportunity } = req.body;
-    if (!opportunity?.noticeId) {
+    if (!opportunity || !opportunity.noticeId) {
       return res.status(400).json({ success: false, error: "Valid opportunity data is required." });
     }
 
@@ -155,20 +200,25 @@ router.post("/save", authenticateToken, async (req, res) => {
       { upsert: true, new: true }
     );
 
-    res.json({ success: true, opportunity: saved });
+    return res.json({ success: true, opportunity: saved });
   } catch (error) {
     console.error("Save opportunity error:", error.message);
-    res.status(500).json({ success: false, error: "Failed to save opportunity." });
+    return res.status(500).json({ success: false, error: "Failed to save opportunity." });
   }
 });
 
-// GET /api/opportunities/debug — Validate SAM API connectivity
 router.get("/debug", authenticateToken, async (req, res) => {
-  if (!process.env.SAM_API_KEY) {
+  if (
+    !(
+      (typeof process.env.SAM_API_KEY === "string" && process.env.SAM_API_KEY.trim()) ||
+      (typeof process.env.SAM_GOV_API_KEY === "string" && process.env.SAM_GOV_API_KEY.trim()) ||
+      (typeof process.env.SAMGOV_API_KEY === "string" && process.env.SAMGOV_API_KEY.trim())
+    )
+  ) {
     return res.status(400).json({
       success: false,
       errorCode: "MISSING_API_KEY",
-      error: "SAM_API_KEY is not configured. Add it to your .env file and restart."
+      error: "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
     });
   }
 
@@ -181,9 +231,9 @@ router.get("/debug", authenticateToken, async (req, res) => {
 
   try {
     const data = await searchOpportunities({ postedFrom: fmt(weekAgo), postedTo: fmt(today), limit: 1 });
-    res.json({ success: true, message: "SAM API connectivity confirmed.", totalRecords: data.totalRecords ?? null });
+    return res.json({ success: true, message: "SAM API connectivity confirmed.", totalRecords: data.totalRecords ?? null });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message || "SAM connectivity check failed." });
+    return res.status(500).json({ success: false, error: error.message || "SAM connectivity check failed." });
   }
 });
 
