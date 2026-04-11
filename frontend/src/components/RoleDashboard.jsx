@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { dashboardApi } from "../utils/api.js";
+import { dashboardApi, adminApi } from "../utils/api.js";
 
 const ROLES = [
   { id: "capture", label: "Capture" },
   { id: "procurement", label: "Procurement" },
   { id: "ops", label: "Operations" },
-  { id: "exec", label: "Executive" }
+  { id: "exec", label: "Executive" },
+  { id: "system", label: "System Status" }
 ];
 
 function KpiCard({ label, value, sub, accent = "blue" }) {
@@ -157,6 +158,62 @@ function ExecDash({ data }) {
   );
 }
 
+
+function StatusChip({ ok, label }) {
+  return (
+    <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${ok ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}>
+      {label}
+    </span>
+  );
+}
+
+function SystemStatusDash({ data }) {
+  const integrations = data?.integrations || {};
+  const mongoHealthy = integrations.mongodb?.status === "healthy";
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <KpiCard label="System Status" value={data?.status || "unknown"} accent={data?.status === "healthy" ? "green" : "amber"} />
+        <KpiCard label="Uptime" value={data?.uptime?.human || "—"} accent="blue" />
+        <KpiCard label="Node" value={data?.nodeVersion || "—"} accent="purple" />
+        <KpiCard label="Environment" value={data?.env || "—"} accent="amber" />
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-700 mb-4">Integrations</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+          <div className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+            <span>MongoDB</span>
+            <div className="flex items-center gap-2">
+              {mongoHealthy && integrations.mongodb?.latencyMs != null && (
+                <span className="text-xs text-slate-500">{integrations.mongodb.latencyMs}ms</span>
+              )}
+              <StatusChip ok={mongoHealthy} label={mongoHealthy ? "Healthy" : "Issue"} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+            <span>SAM.gov API Key</span>
+            <StatusChip ok={!!integrations.samApi?.configured} label={integrations.samApi?.configured ? "Configured" : "Missing"} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+            <span>Email Delivery</span>
+            <StatusChip ok={!!integrations.email?.configured} label={integrations.email?.configured ? "Configured" : "Missing"} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+            <span>Email Sender (EMAIL_FROM)</span>
+            <StatusChip ok={!!integrations.email?.senderConfigured} label={integrations.email?.senderConfigured ? "Configured" : "Missing"} />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2">
+            <span>Stripe</span>
+            <StatusChip ok={!!integrations.stripe?.configured} label={integrations.stripe?.configured ? "Configured" : "Missing"} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function RoleDashboard() {
   const [activeRole, setActiveRole] = useState("capture");
   const [data, setData] = useState(null);
@@ -167,9 +224,20 @@ export default function RoleDashboard() {
     setLoading(true);
     setError(null);
     setData(null);
-    dashboardApi[activeRole]()
+    const request = activeRole === "system"
+      ? adminApi.systemHealth()
+      : dashboardApi[activeRole]();
+
+    request
       .then((res) => setData(res.data))
-      .catch((err) => setError(err.response?.data?.error || "Failed to load dashboard."))
+      .catch((err) => {
+        const status = err.response?.status;
+        if (activeRole === "system" && status === 403) {
+          setError("System Status is admin-only. Ask an admin account to view this panel.");
+          return;
+        }
+        setError(err.response?.data?.error || "Failed to load dashboard.");
+      })
       .finally(() => setLoading(false));
   }, [activeRole]);
 
@@ -213,6 +281,7 @@ export default function RoleDashboard() {
           {activeRole === "procurement" && <ProcurementDash data={data} />}
           {activeRole === "ops" && <OpsDash data={data} />}
           {activeRole === "exec" && <ExecDash data={data} />}
+          {activeRole === "system" && <SystemStatusDash data={data} />}
         </>
       )}
     </div>
