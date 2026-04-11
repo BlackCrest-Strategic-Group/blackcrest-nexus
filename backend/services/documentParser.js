@@ -12,7 +12,7 @@ export async function parseDocument(buffer, mimetype = "", filename = "") {
 
   // PDF
   if (type === "application/pdf" || name.endsWith(".pdf")) {
-    const pdfParse = require("pdf-parse");
+    import pdfParse from "pdf-parse";
     const data = await pdfParse(buffer);
     return data.text || "";
   }
