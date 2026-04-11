@@ -22,12 +22,29 @@ export function getUser() {
 export function saveAuth({ accessToken, refreshToken, user }, remember = false) {
   if (!accessToken) {
     console.warn("saveAuth: accessToken is missing — skipping storage write");
-    return;
+    return false;
   }
-  const store = remember ? localStorage : sessionStorage;
-  store.setItem(TOKEN_KEY, accessToken);
-  if (refreshToken) store.setItem(REFRESH_KEY, refreshToken);
-  if (user) store.setItem(USER_KEY, JSON.stringify(user));
+
+  const preferredStore = remember ? localStorage : sessionStorage;
+  const fallbackStore = remember ? sessionStorage : localStorage;
+
+  try {
+    preferredStore.setItem(TOKEN_KEY, accessToken);
+    if (refreshToken) preferredStore.setItem(REFRESH_KEY, refreshToken);
+    if (user) preferredStore.setItem(USER_KEY, JSON.stringify(user));
+    return true;
+  } catch (err) {
+    console.warn("saveAuth: preferred storage unavailable, trying fallback storage", err);
+    try {
+      fallbackStore.setItem(TOKEN_KEY, accessToken);
+      if (refreshToken) fallbackStore.setItem(REFRESH_KEY, refreshToken);
+      if (user) fallbackStore.setItem(USER_KEY, JSON.stringify(user));
+      return true;
+    } catch (fallbackErr) {
+      console.error("saveAuth: failed to persist auth state", fallbackErr);
+      return false;
+    }
+  }
 }
 
 export function clearAuth() {

@@ -190,6 +190,12 @@ export const dashboardApi = {
   exec: () => api.get("/api/dashboard/exec")
 };
 
+// Admin system status
+export const adminApi = {
+  systemHealth: () => api.get("/api/admin/health/system"),
+  integrationHealth: () => api.get("/api/admin/health/integrations")
+};
+
 // Suppliers
 export const suppliersApi = {
   list: (params) => api.get("/api/suppliers", { params }),

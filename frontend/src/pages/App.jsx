@@ -13,22 +13,9 @@ import GovConAIPage from "../marketing/pages/GovConAIPage.jsx";
 import TruthSerumAIPage from "../marketing/pages/TruthSerumAIPage.jsx";
 import LabsPage from "../marketing/pages/LabsPage.jsx";
 
-function isTokenExpired(token) {
-  if (!token) return true;
-  try {
-    // JWT uses Base64URL encoding; convert to standard Base64 before calling atob()
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(base64));
-    return payload.exp * 1000 < Date.now();
-  } catch {
-    return true;
-  }
-}
-
 function ProtectedRoute({ children }) {
   const token = getToken();
-  if (!token || isTokenExpired(token)) {
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
   return children;
