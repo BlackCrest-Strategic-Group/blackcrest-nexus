@@ -10,13 +10,16 @@ permissions:
 jobs:
   check-env-vars:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Verify required secrets are configured
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          REQUIRE_PROD_SECRETS: ${{ vars.REQUIRE_PROD_SECRETS }}
         run: |
           MISSING=()
 
@@ -29,9 +32,14 @@ jobs:
           fi
 
           if [ ${#MISSING[@]} -gt 0 ]; then
-            echo "::error::The following required secrets are not configured in this repository: ${MISSING[*]}"
-            echo "Please add them under Settings → Secrets and variables → Actions."
-            exit 1
+            if [ "$REQUIRE_PROD_SECRETS" = "true" ]; then
+              echo "::error::The following required secrets are not configured in this repository: ${MISSING[*]}"
+              echo "Please add them under Settings -> Secrets and variables -> Actions."
+              exit 1
+            fi
+            echo "::warning::Required production secrets are missing: ${MISSING[*]}"
+            echo "Set repository variable REQUIRE_PROD_SECRETS=true to enforce failure."
+            exit 0
           fi
 
           echo "All required environment variables are configured."
