@@ -1,275 +1,224 @@
-import "./tracer.js";
-import dotenv from "dotenv";
-dotenv.config();
-
 import express from "express";
-import cors from "cors";
-import helmet from "helmet";
+import multer from "multer";
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
+import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from "url";
-import fs from "fs";
-import { randomBytes } from "crypto";
-import rateLimit from "express-rate-limit";
-dotenv.config();
-import { connectDB } from "./backend/config/db.js";
-
-// Backend route handlers
-import authRoutes from "./backend/routes/auth.js";
-import opportunitiesRoutes from "./backend/routes/opportunities.js";
-import emailRoutes from "./backend/routes/email.js";
-import adminRoutes from "./backend/routes/admin.js";
-import docsRoutes from "./backend/routes/docs.js";
-import erpRoutes from "./backend/routes/erp.js";
-import workflowsRoutes from "./backend/routes/workflows.js";
-import suppliersRoutes from "./backend/routes/suppliers.js";
-import marginsRoutes from "./backend/routes/margins.js";
-import capacityRoutes from "./backend/routes/capacity.js";
-import dashboardRoutes from "./backend/routes/dashboard.js";
-import opportunityIntelligenceRoutes from "./backend/routes/opportunityIntelligence.js";
-import mobileRoutes from "./backend/routes/mobile.js";
-import opportunityEvaluateRoutes from "./backend/routes/opportunityEvaluate.js";
-import opportunityScoringRoutes from "./backend/routes/opportunityScoring.js";
-import findSuppliersRoutes from "./backend/routes/findSuppliers.js";
-import mfaRoutes from "./backend/routes/mfa.js";
-import supplierPerformanceRoutes from "./backend/routes/supplierPerformance.js";
-import stripeRoutes from "./backend/routes/stripe.js";
-import proposalsRoutes from "./backend/routes/proposals.js";
-import { startDigestScheduler } from "./backend/services/digestScheduler.js";
-import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
-import { seedAdminUser } from "./backend/scripts/seedAdminUser.js";
-import { requestMetadata } from "./backend/services/auditLogger.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// ---------------------------------------------------------------------------
-// Startup validation
-// ---------------------------------------------------------------------------
-console.log("[Server] Starting up...");
-console.log("[Server] NODE_ENV:", process.env.NODE_ENV);
-console.log("[Server] MONGODB_URI:", process.env.MONGODB_URI ? "✓ set" : "✗ MISSING");
-console.log("[Server] JWT_SECRET:", process.env.JWT_SECRET ? "✓ set" : "✗ MISSING");
-const samKeyConfigured = !!((process.env.SAM_API_KEY && process.env.SAM_API_KEY.trim()) ||
-  (process.env.SAM_GOV_API_KEY && process.env.SAM_GOV_API_KEY.trim()) ||
-  (process.env.SAMGOV_API_KEY && process.env.SAMGOV_API_KEY.trim()));
-console.log("[Server] SAM_API_KEY:", samKeyConfigured ? "✓ set" : "✗ MISSING");
-
-// Check email transport configuration and warn early so the issue is visible
-// in server logs long before a user attempts a password reset.
-const emailConfigured = !!(process.env.SENDGRID_API_KEY ||
-  (process.env.GMAIL_USER && process.env.GMAIL_PASSWORD));
-if (!emailConfigured) {
-  const msg =
-    "Email transport is not configured (SENDGRID_API_KEY or GMAIL_USER+GMAIL_PASSWORD are missing). " +
-    "Password reset emails and MFA OTP emails will not be delivered. " +
-    (process.env.NODE_ENV !== "production"
-      ? "In non-production mode, password reset URLs will be logged to the console instead."
-      : "Set the required environment variables to restore email functionality.");
-  // Log at error level in production so it is clearly visible in server logs,
-  // but do not exit — the rest of the application should continue serving traffic.
-  if (process.env.NODE_ENV === "production") {
-    console.error("[Server] [ERROR] " + msg);
-  } else {
-    console.warn("[Warning] " + msg);
-  }
-}
-
-if (!process.env.MONGODB_URI) {
-  console.error("[FATAL] MONGODB_URI is not set. Exiting.");
-  process.exit(1);
-}
-if (!process.env.JWT_SECRET) {
-  if (process.env.NODE_ENV === "production") {
-    console.error("[FATAL] JWT_SECRET is not set. Exiting.");
-    process.exit(1);
-  } else {
-    // Generate a random secret for this process only so dev tokens cannot be forged
-    // across restarts and the secret is never predictable from source code.
-    process.env.JWT_SECRET = randomBytes(64).toString("hex");
-    console.warn(
-      "[Warning] JWT_SECRET is not set. A temporary random secret has been generated for this " +
-      "session only. Set JWT_SECRET in your .env file before deploying to production."
-    );
-  }
-}
-
+import opportunitiesRouter from "./routes/opportunities.js";
 const app = express();
-
-// ---------------------------------------------------------------------------
-// Security headers
-// ---------------------------------------------------------------------------
-app.use(helmet({
-  // NIST SC-23: Allow same-origin framing for the embedded React SPA (dashboard iframes etc.)
-  frameguard: { action: "sameorigin" },
-  // NIST SC-8: Enforce HTTPS for at least 1 year with HSTS preloading enabled
-  hsts: {
-    maxAge: 31536000,           // 1 year in seconds (NIST-recommended minimum)
-    includeSubDomains: true,    // Covers all subdomains
-    preload: true               // Eligible for browser HSTS preload lists
-  },
-  // Relaxed CSP: the app loads assets from self; adjust if using a CDN
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "'unsafe-inline'"],   // React inline scripts
-      styleSrc:    ["'self'", "'unsafe-inline'"],   // inline styles
-      imgSrc:      ["'self'", "data:", "https:"],
-      connectSrc:  ["'self'"],
-      fontSrc:     ["'self'", "https:", "data:"],
-      objectSrc:   ["'none'"],
-      upgradeInsecureRequests: []
-    }
-  }
-}));
-
-// ---------------------------------------------------------------------------
-// CORS
-// ---------------------------------------------------------------------------
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-  ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-  : ["http://localhost:5173", "http://localhost:5000"];
-
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // In development, allow all origins (needed for Replit proxy)
-      if (!origin || process.env.NODE_ENV === "development") {
-        callback(null, true);
-      } else if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: origin ${origin} not allowed`));
-      }
-    },
-    credentials: true,
-  })
-);
-
-// ---------------------------------------------------------------------------
-// Body parsing
-// NOTE: The Stripe webhook route needs the raw body for signature verification.
-// Register it BEFORE the global JSON parser so we can capture the raw buffer.
-// ---------------------------------------------------------------------------
-app.use("/api/stripe/webhook", express.raw({ type: "application/json" }));
 app.use(express.json({ limit: "4mb" }));
-app.use(express.urlencoded({ extended: true, limit: "4mb" }));
+app.use(express.static(".")); // serves index.html and assets
+app.use("/api/opportunities", opportunitiesRouter);
 
-// ---------------------------------------------------------------------------
-// Request metadata — attaches req.startTime and req.clientIp to every request
-// so all routes and audit-log calls have consistent timing and IP data
-// ---------------------------------------------------------------------------
-app.use(requestMetadata);
+const upload = multer({
+  dest: "uploads/",
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = [".pdf", ".docx", ".txt"];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowed.includes(ext)) {
+      return cb(new Error("Only PDF, DOCX, and TXT files are allowed."));
+    }
+    cb(null, true);
+  }
+});
 
-// ---------------------------------------------------------------------------
-// API routes  (must come before static/SPA middleware)
-// ---------------------------------------------------------------------------
-app.use("/api/auth", authRoutes);
-app.use("/api/mfa", mfaRoutes);
-app.use("/api/opportunities", opportunitiesRoutes);
-app.use("/api/email-preferences", emailRoutes);
-app.use("/api/email", emailRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/erp", erpRoutes);
-app.use("/api/workflows", workflowsRoutes);
-app.use("/api/suppliers", suppliersRoutes);
-app.use("/api/margins", marginsRoutes);
-app.use("/api/capacity", capacityRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/opportunity-intelligence", opportunityIntelligenceRoutes);
-app.use("/api/mobile", mobileRoutes);
-app.use("/api/opportunity", opportunityEvaluateRoutes);
-app.use("/api/opportunity", opportunityScoringRoutes);
-app.use("/api/find-suppliers", findSuppliersRoutes);
-app.use("/api/supplierPerformance", supplierPerformanceRoutes);
-app.use("/api/stripe", stripeRoutes);
-app.use("/api/proposals", proposalsRoutes);
-app.use("/", docsRoutes);
+// --- GOVCON PROPOSAL INTELLIGENCE PROMPT ---
+const BASE_SYSTEM_PROMPT = `
+You are an expert Government Contracting Proposal Intelligence Analyst specializing in FAR, DFARS, proposal compliance, solicitation review, and subcontract risk for U.S. defense contractors.
 
-// ---------------------------------------------------------------------------
-// Static assets from public/ (login.html, styles.css, etc.)
-// ---------------------------------------------------------------------------
-app.use(express.static(path.join(__dirname, "public")));
+Your task is to analyze user-provided RFP, RFQ, SOW, PWS, subcontract, supplier, or procurement text and produce a structured review that helps proposal teams understand what they are getting into before they bid.
 
-// ---------------------------------------------------------------------------
-// Serve built React app
-// ---------------------------------------------------------------------------
-const distDir = path.join(__dirname, "frontend", "dist");
-const distExists = fs.existsSync(distDir);
-console.log("[Server] Frontend dist directory exists:", distExists ? "✓ yes" : "✗ no");
+Focus especially on:
+- bid requirements
+- evaluation factors
+- FAR / DFARS indicators
+- flowdown obligations
+- execution and pricing risk
+- questions that should be resolved before bid submission
 
-if (distExists) {
-  app.use(express.static(distDir));
+Do NOT invent clauses or requirements not visible in the text.
+If information is incomplete, say so clearly.
+
+OUTPUT FORMAT (use these exact sections):
+
+---
+
+OPPORTUNITY SNAPSHOT
+Summarize what the opportunity appears to be, who is likely buying, and what the contractor would likely be expected to deliver.
+
+---
+
+BID REQUIREMENTS & SUBMISSION DRIVERS
+Identify visible proposal or response requirements, submission expectations, deliverables, schedule indicators, reporting obligations, or compliance representations.
+
+---
+
+EVALUATION FACTORS & WIN THEMES
+Identify visible or likely evaluation factors. If formal evaluation criteria are not visible, make cautious practical inferences and label them accordingly.
+
+---
+
+CLAUSE / FLOWDOWN WATCHLIST
+Identify visible FAR / DFARS / flowdown / ITAR / EAR / cybersecurity / quality / small business / Ts&Cs indicators. If not evident, say "Not evident from provided text."
+
+---
+
+BID & EXECUTION RISK FLAGS
+For each risk include:
+- Risk Level (High / Medium / Low)
+- What the issue is
+- Why it matters
+- Recommended action
+
+---
+
+QUESTIONS TO RESOLVE BEFORE BID
+Provide the key questions the proposal or contracts team should answer before proceeding.
+
+---
+
+RECOMMENDED NEXT ACTIONS
+Provide a short, prioritized action list.
+
+---
+
+CONFIDENCE & LIMITATIONS
+State that the review is based only on the provided text and is an AI-assisted review, not legal advice.
+
+---
+
+STYLE GUIDELINES:
+- Write like a senior GovCon proposal strategist.
+- Be practical, direct, and operational.
+- Prioritize what matters before bid submission.
+`;
+
+function buildSystemPrompt(reviewType, contractType) {
+  const focusMap = {
+    proposal: "Emphasize proposal-readiness, submission requirements, evaluation factors, and pre-bid clarity.",
+    biddecision: "Emphasize pursuit attractiveness, hidden burden, execution risk, margin risk, and whether this looks dangerous to pursue.",
+    compliance: "Emphasize FAR / DFARS indicators, visible representations, certifications, and compliance burden that may affect the bid.",
+    flowdown: "Emphasize subcontract flowdowns, clauses, Ts&Cs incorporation, and obligations passed to lower tiers.",
+    price: "Emphasize pricing ambiguity, cost drivers, assumptions, and anything that could hurt profitability or price realism.",
+    export: "Emphasize ITAR / EAR indicators, controlled technical data, and export control handling obligations.",
+    general: "Provide a balanced proposal intelligence review covering requirements, clauses, and bid risks."
+  };
+
+  const focus = focusMap[reviewType] || focusMap.proposal;
+
+  const contractNote = contractType
+    ? `\n\nContext from user: The contract type may be ${contractType}. Consider how that affects pricing, execution, and compliance risk.`
+    : "";
+
+  return `${BASE_SYSTEM_PROMPT}\n\nFOCUS FOR THIS REVIEW: ${focus}${contractNote}`;
 }
 
-// ---------------------------------------------------------------------------
-// SPA catch-all: serve index.html for any non-API route so React Router works
-// ---------------------------------------------------------------------------
-const spaLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-app.get("*", spaLimiter, (req, res, next) => {
-  if (req.path.startsWith("/api/")) return next();
-  
-  const indexPath = path.join(distDir, "index.html");
-  
-  // Check if React build exists
-  if (!fs.existsSync(indexPath)) {
-    console.warn("[Server] React build not found at", indexPath, "- serving fallback login.html");
-    return res.sendFile(path.join(__dirname, "public", "login.html"), (err) => {
-      if (err) {
-        console.error("[Server] Error serving login.html:", err.message);
-        res.status(500).json({ success: false, error: "Internal server error." });
-      }
-    });
+async function runAnalysis(text, reviewType, contractType) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("Server missing OPENAI_API_KEY env var.");
   }
-  
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      console.warn("[Server] Error serving index.html:", err.message);
-      res.sendFile(path.join(__dirname, "public", "login.html"));
+
+  const systemPrompt = buildSystemPrompt(reviewType, contractType);
+
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "gpt-4o-mini",
+      temperature: 0.15,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Please analyze the following government contracting text:\n\n${text}` }
+      ]
+    })
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(`OpenAI error: ${errText}`);
+  }
+
+  const data = await resp.json();
+  return data?.choices?.[0]?.message?.content ?? "No response content.";
+}
+
+async function extractTextFromFile(filePath, originalName) {
+  const ext = path.extname(originalName).toLowerCase();
+
+  if (ext === ".pdf") {
+    const fileBuffer = await fs.readFile(filePath);
+    const parsed = await pdfParse(fileBuffer);
+    return parsed.text || "";
+  }
+
+  if (ext === ".docx") {
+    const result = await mammoth.extractRawText({ path: filePath });
+    return result.value || "";
+  }
+
+  if (ext === ".txt") {
+    return await fs.readFile(filePath, "utf8");
+  }
+
+  throw new Error("Unsupported file type.");
+}
+
+app.post("/api/analyze", async (req, res) => {
+  try {
+    const { text, reviewType = "proposal", contractType } = req.body || {};
+    if (!text || typeof text !== "string" || !text.trim()) {
+      return res.status(400).json({ error: "Missing 'text'." });
     }
-  });
+
+    const result = await runAnalysis(text, reviewType, contractType);
+    res.json({ result });
+  } catch (e) {
+    res.status(500).json({ error: e?.message || "Unknown server error" });
+  }
 });
 
-// ---------------------------------------------------------------------------
-// Global error handler
-// ---------------------------------------------------------------------------
-// eslint-disable-next-line no-unused-vars
-app.use((err, req, res, next) => {
-  if (err.code === 11000) {
-    const field = err.keyValue ? Object.keys(err.keyValue)[0] : "field";
-    return res.status(409).json({ success: false, error: `Duplicate value for ${field}.` });
-  }
-  if (err.name === "ValidationError") {
-    return res.status(400).json({ success: false, error: err.message });
-  }
-  console.error("[Error]", err.message);
-  res.status(500).json({ success: false, error: "Internal server error." });
-});
+app.post("/api/analyze-upload", upload.single("document"), async (req, res) => {
+  let uploadedFilePath = null;
 
-// ---------------------------------------------------------------------------
-// Start
-// ---------------------------------------------------------------------------
-const PORT = process.env.PORT || 3000;
+  try {
+    const { reviewType = "proposal", contractType } = req.body || {};
 
-connectDB()
-  .then(async () => {
-    await seedDemoUser();
-await seedAdminUser();
-    startDigestScheduler();
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded." });
+    }
 
-app.listen(PORT, () => {
-  console.log(`GovCon AI Scanner running on port ${PORT}`);
-  });
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`[Server] Listening on port ${PORT} (${process.env.NODE_ENV || "development"})`);
+    uploadedFilePath = req.file.path;
+
+    const extractedText = await extractTextFromFile(uploadedFilePath, req.file.originalname);
+
+    if (!extractedText || !extractedText.trim()) {
+      return res.status(400).json({ error: "No readable text was found in the uploaded document." });
+    }
+
+    const result = await runAnalysis(extractedText, reviewType, contractType);
+
+    res.json({
+      fileName: req.file.originalname,
+      extractedCharCount: extractedText.length,
+      result
     });
-  })
-  .catch((err) => {
-    console.error("[FATAL] Could not connect to MongoDB:", err.message);
-    process.exit(1);
-  });
+  } catch (e) {
+    res.status(500).json({ error: e?.message || "Unknown server error" });
+  } finally {
+    if (uploadedFilePath) {
+      try {
+        await fs.unlink(uploadedFilePath);
+      } catch {
+        // ignore cleanup failure
+      }
+    }
+  }
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
