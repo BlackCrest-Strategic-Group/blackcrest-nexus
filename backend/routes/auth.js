@@ -77,11 +77,7 @@ router.post("/register", async (req, res) => {
 router.get("/health", (req, res) => {
   res.json({
     success: true,
-    service: "auth"
-  });
-});
-
-export default router;const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+    ;const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
 
 const ALGORITHM = "aes-256-gcm";
 
@@ -786,4 +782,6 @@ router.post("/change-password", passwordResetLimiter, authenticateToken, async (
     res.status(500).json({ success: false, error: "Failed to change password. Please try again." });
   }
 });
+export default router;
+
 
