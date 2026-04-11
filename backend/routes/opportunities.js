@@ -220,6 +220,13 @@ router.post("/save", authenticateToken, async (req, res) => {
 });
 
 router.get("/debug", authenticateToken, async (req, res) => {
+  if (
+    !(
+      (typeof process.env.SAM_API_KEY === "string" && process.env.SAM_API_KEY.trim()) ||
+      (typeof process.env.SAM_GOV_API_KEY === "string" && process.env.SAM_GOV_API_KEY.trim()) ||
+      (typeof process.env.SAMGOV_API_KEY === "string" && process.env.SAMGOV_API_KEY.trim())
+    )
+  ) {
   const samKeyForDebug = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
   if (!samKeyForDebug || !String(samKeyForDebug).trim()) {
   const configuredSamKey = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
