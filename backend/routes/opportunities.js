@@ -234,5 +234,4 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
 // POST /api/opportunities/save — Save an opportunity
 router.post("/save", authenticateToken, async (req, res) => {
   try {
-    const { opportunity } = req*
-
+   const { opportunity } = req.body;
