@@ -3,16 +3,15 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-  "dev": "nodemon server.js",
-  "prestart": "npm run check:syntax",
-  "start": "node server.js",
-  "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/",
-  "build:frontend": "cd frontend && npm install --include=dev && npm run build",
-  "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
-  "check:syntax": "bash -lc 'node --check server.js && rg --files backend routes -g \"*.js\" | xargs -n1 node --check'",
-  "verify": "npm run check:syntax && npm test -- --runInBand",
-  "postinstall": "patch-package"
-},
+    "dev": "nodemon server.js",
+    "prestart": "npm run check:syntax",
+    "start": "node server.js",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/",
+    "build:frontend": "cd frontend && npm install --include=dev && npm run build",
+    "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
+    "check:syntax": "bash -lc 'node --check server.js && rg --files backend routes -g \"*.js\" | xargs -n1 node --check'",
+    "verify": "npm run check:syntax && npm test -- --runInBand",
+    "postinstall": "patch-package"
   },
   "keywords": [
     "govcon",
@@ -53,9 +52,10 @@
   "devDependencies": {
     "concurrently": "^9.1.2",
     "jest": "^30.3.0",
-    "nodemon": "^3.1.14"
+    "nodemon": "^3.1.14",
+    "patch-package": "^8.0.1"
   },
   "jest": {
     "transform": {}
   }
-
+}
