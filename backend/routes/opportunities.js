@@ -173,6 +173,13 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
         success: false,
         error: process.env.NODE_ENV === "production" ? productionMessage : error.message
       });
+    const userInputError =
+      error.message?.startsWith("Unsupported file type:") ||
+      error.message?.includes("requires the 'mammoth' package") ||
+      error.message?.startsWith("Failed to parse DOCX file:");
+
+    if (userInputError) {
+      return res.status(400).json({ success: false, error: error.message });
     }
 
     res.status(500).json({ success: false, error: "Failed to analyze document." });
