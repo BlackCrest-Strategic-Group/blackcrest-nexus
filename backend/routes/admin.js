@@ -200,6 +200,51 @@ router.patch("/users/:id", async (req, res) => {
   }
 });
 
+
+// POST /api/admin/users/:id/reset-mfa
+// Emergency recovery action when a user loses authenticator access.
+router.post("/users/:id/reset-mfa", async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("email mfaEnabled mfaMethods");
+    if (!user) return res.status(404).json({ success: false, error: "User not found." });
+
+    user.mfaEnabled = false;
+    user.mfaMethods = [];
+    user.totpSecret = null;
+    user.totpPendingSecret = null;
+    user.totpVerified = false;
+    user.mfaOtpHash = null;
+    user.mfaOtpExpiresAt = null;
+    user.smsPhoneEnc = null;
+    user.mfaBackupCodes = [];
+    user.lastMfaVerificationAt = null;
+    user.refreshToken = null;
+    await user.save();
+
+    audit(EVENT.ACCOUNT_UPDATED, {
+      userId: req.user.id,
+      ip: req.clientIp ?? getIp(req),
+      route: req.originalUrl,
+      method: req.method,
+      success: true,
+      details: {
+        targetUserId: req.params.id,
+        targetEmail: user.email,
+        change: "mfa-reset"
+      }
+    });
+
+    return res.json({
+      success: true,
+      message: "MFA has been reset. User can sign in with password and complete MFA setup again.",
+      data: { userId: req.params.id, email: user.email }
+    });
+  } catch (error) {
+    console.error("Admin reset MFA error:", error.message);
+    return res.status(500).json({ success: false, error: "Failed to reset MFA." });
+  }
+});
+
 // DELETE /api/admin/users/:id
 router.delete("/users/:id", async (req, res) => {
   try {

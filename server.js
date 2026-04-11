@@ -36,6 +36,7 @@ import stripeRoutes from "./backend/routes/stripe.js";
 import proposalsRoutes from "./backend/routes/proposals.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
+import { seedAdminUser } from "./backend/scripts/seedAdminUser.js";
 import { requestMetadata } from "./backend/services/auditLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -48,6 +49,10 @@ console.log("[Server] Starting up...");
 console.log("[Server] NODE_ENV:", process.env.NODE_ENV);
 console.log("[Server] MONGODB_URI:", process.env.MONGODB_URI ? "✓ set" : "✗ MISSING");
 console.log("[Server] JWT_SECRET:", process.env.JWT_SECRET ? "✓ set" : "✗ MISSING");
+const samKeyConfigured = !!((process.env.SAM_API_KEY && process.env.SAM_API_KEY.trim()) ||
+  (process.env.SAM_GOV_API_KEY && process.env.SAM_GOV_API_KEY.trim()) ||
+  (process.env.SAMGOV_API_KEY && process.env.SAMGOV_API_KEY.trim()));
+console.log("[Server] SAM_API_KEY:", samKeyConfigured ? "✓ set" : "✗ MISSING");
 
 // Check email transport configuration and warn early so the issue is visible
 // in server logs long before a user attempts a password reset.
@@ -254,6 +259,7 @@ const PORT = process.env.PORT || 3000;
 connectDB()
   .then(async () => {
     await seedDemoUser();
+await seedAdminUser();
     startDigestScheduler();
 
     app.listen(PORT, "0.0.0.0", () => {
