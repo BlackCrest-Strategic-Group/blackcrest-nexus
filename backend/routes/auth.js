@@ -787,4 +787,3 @@ router.post("/change-password", passwordResetLimiter, authenticateToken, async (
   }
 });
 
-export default router;
