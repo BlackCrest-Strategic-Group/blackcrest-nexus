@@ -32,6 +32,7 @@ function handleAnalyzeUpload(req, res, next) {
   });
 }
 
+// POST /api/opportunities/search — Search SAM.gov by NAICS / keyword
 router.post("/search", authenticateToken, async (req, res) => {
   try {
     const { postedFrom, postedTo, keyword, naics, psc, setAside, noticeType, page, limit } = req.body;
@@ -95,6 +96,7 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/opportunities/analyze — Analyze an uploaded document
 router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res) => {
   const startTime = req.startTime ?? Date.now();
   try {
@@ -181,6 +183,16 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
     }
 
     return res.status(500).json({ success: false, error: "Failed to analyze document." });
+    const userInputError =
+      error.message?.startsWith("Unsupported file type:") ||
+      error.message?.includes("requires the 'mammoth' package") ||
+      error.message?.startsWith("Failed to parse DOCX file:");
+
+    if (userInputError) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+
+    res.status(500).json({ success: false, error: "Failed to analyze document." });
   }
 });
 
@@ -210,6 +222,18 @@ router.post("/save", authenticateToken, async (req, res) => {
 router.get("/debug", authenticateToken, async (req, res) => {
   const configuredSamKey = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
 
+  if (
+    !(
+      (typeof process.env.SAM_API_KEY === "string" && process.env.SAM_API_KEY.trim()) ||
+      (typeof process.env.SAM_GOV_API_KEY === "string" && process.env.SAM_GOV_API_KEY.trim()) ||
+      (typeof process.env.SAMGOV_API_KEY === "string" && process.env.SAMGOV_API_KEY.trim())
+    )
+  ) {
+  const samKeyForDebug = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
+  if (!samKeyForDebug || !String(samKeyForDebug).trim()) {
+  const configuredSamKey = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
+  const configuredSamKey =
+    process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
   if (!configuredSamKey || !String(configuredSamKey).trim()) {
     return res.status(400).json({
       success: false,
