@@ -83,51 +83,48 @@ router.post("/search", authenticateToken, async (req, res) => {
   }
 });
 
-router.get("/", authenticateToken, async (req, res) => {
-  try {
-    const opportunities = await Opportunity.find({ savedBy: req.user.id })
-      .sort({ postedDate: -1 })
-      .limit(100);
+router.get("/debug", authenticateToken, async (req, res) => {
+  const configuredSamKey =
+    process.env.SAM_API_KEY ||
+    process.env.SAM_GOV_API_KEY ||
+    process.env.SAMGOV_API_KEY;
 
-    return res.json({ success: true, opportunities });
+  if (!configuredSamKey || !String(configuredSamKey).trim()) {
+    return res.status(400).json({
+      success: false,
+      errorCode: "MISSING_API_KEY",
+      error:
+        "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
+    });
+  }
+
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+
+  const fmt = d =>
+    `${String(d.getMonth() + 1).padStart(2, "0")}/${String(
+      d.getDate()
+    ).padStart(2, "0")}/${d.getFullYear()}`;
+
+  try {
+    const data = await searchOpportunities({
+      postedFrom: fmt(weekAgo),
+      postedTo: fmt(today),
+      limit: 1
+    });
+    return res.json({
+      success: true,
+      message: "SAM API connectivity confirmed.",
+      totalRecords: data.totalRecords ?? null
+    });
   } catch (error) {
-    console.error("Get opportunities error:", error.message);
-    return res.status(500).json({ success: false, error: "Failed to fetch saved opportunities." });
+    return res.status(500).json({
+      success: false,
+      error: error.message || "SAM connectivity check failed."
+    });
   }
 });
-
-// POST /api/opportunities/analyze — Analyze an uploaded document
-router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res) => {
-  const startTime = req.startTime ?? Date.now();
-  try {
-    let text = "";
-
-    if (req.file) {
-      audit(EVENT.FILE_UPLOAD, {
-        userId: req.user.id,
-        ip: req.clientIp ?? getIp(req),
-        route: req.originalUrl,
-        method: req.method,
-        success: true,
-        details: {
-          fileName: req.file.originalname,
-          mimeType: req.file.mimetype,
-          sizeBytes: req.file.size
-        }
-      });
-      text = await parseDocument(req.file.buffer, req.file.mimetype, req.file.originalname);
-    } else if (req.body.text) {
-      text = req.body.text;
-    } else {
-      return res.status(400).json({ success: false, error: "Provide a file or text for analysis." });
-    }
-
-    if (!text || text.trim().length < 50) {
-      return res.status(400).json({
-        success: false,
-        error: "No readable solicitation text was detected. Please upload a text-based PDF/TXT or paste the solicitation text."
-      });
-    }
 
     const clauses = detectClauses(text);
     const scoreData = calculateBidScore(text);
