@@ -472,7 +472,11 @@ export default function LoginPage() {
         return;
       }
 
-      saveAuth(res.data, form.rememberMe);
+      const persisted = saveAuth(res.data, form.rememberMe);
+      if (!persisted) {
+        setError("Signed in, but your browser blocked secure storage. Please disable private mode or strict privacy settings and try again.");
+        return;
+      }
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong. Please try again.");
@@ -482,7 +486,11 @@ export default function LoginPage() {
   }
 
   function handleMfaSuccess(data) {
-    saveAuth(data, form.rememberMe);
+    const persisted = saveAuth(data, form.rememberMe);
+    if (!persisted) {
+      setError("Signed in, but your browser blocked secure storage. Please disable private mode or strict privacy settings and try again.");
+      return;
+    }
     navigate("/dashboard", { replace: true });
   }
 
