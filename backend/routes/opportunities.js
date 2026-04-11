@@ -234,5 +234,23 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
 // POST /api/opportunities/save — Save an opportunity
 router.post("/save", authenticateToken, async (req, res) => {
   try {
-   const { opportunity } = req.body;
+    const { opportunity } = req.body;
+    if (!opportunity || !opportunity.noticeId) {
+      return res.status(400).json({ success: false, error: "Valid opportunity data is required." });
+    }
+
+    const saved = await Opportunity.findOneAndUpdate(
+      { noticeId: opportunity.noticeId },
+      {
+        $set: { ...opportunity, cachedAt: new Date() },
+        $addToSet: { savedBy: req.user.id }
+      },
+      { upsert: true, new: true }
+    );
+
+    return res.json({ success: true, opportunity: saved });
+  } catch (error) {
+    console.error("Save opportunity error:", error.message);
+    return res.status(500).json({ success: false, error: "Failed to save opportunity." });
   }
+});
