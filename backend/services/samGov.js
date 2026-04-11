@@ -86,14 +86,24 @@ export async function searchOpportunities({
   const safeUrl = url.replace(/api_key=[^&]+(&|$)/, "api_key=***REDACTED***$1");
   console.log("SAM request:", safeUrl);
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "GovCon-AI-Scanner/2.0"
+    }
+  });
 
   const text = await response.text();
   let data;
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error("SAM returned invalid JSON: " + text.slice(0, 200));
+    const contentType = response.headers.get("content-type") || "unknown";
+    const snippet = text.replace(/\s+/g, " ").slice(0, 160);
+    throw new Error(
+      `SAM returned invalid JSON (HTTP ${response.status}, content-type: ${contentType}). ` +
+      `This usually means the key is invalid/restricted or SAM returned HTML. Response preview: ${snippet || "<empty>"}`
+    );
   }
 
   if (!response.ok) {

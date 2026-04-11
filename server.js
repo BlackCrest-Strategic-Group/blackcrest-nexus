@@ -36,6 +36,7 @@ import stripeRoutes from "./backend/routes/stripe.js";
 import proposalsRoutes from "./backend/routes/proposals.js";
 import { startDigestScheduler } from "./backend/services/digestScheduler.js";
 import { seedDemoUser } from "./backend/scripts/seedDemoUser.js";
+import { seedAdminUser } from "./backend/scripts/seedAdminUser.js";
 import { requestMetadata } from "./backend/services/auditLogger.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -258,6 +259,7 @@ const PORT = process.env.PORT || 3000;
 connectDB()
   .then(async () => {
     await seedDemoUser();
+await seedAdminUser();
     startDigestScheduler();
 
     app.listen(PORT, "0.0.0.0", () => {
