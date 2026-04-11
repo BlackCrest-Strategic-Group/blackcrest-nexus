@@ -83,6 +83,7 @@ router.post("/search", authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/opportunities/debug — Check SAM API key presence and connectivity
 router.get("/debug", authenticateToken, async (req, res) => {
   const configuredSamKey =
     process.env.SAM_API_KEY ||
@@ -125,6 +126,53 @@ router.get("/debug", authenticateToken, async (req, res) => {
     });
   }
 });
+
+// GET /api/opportunities — Get user's saved opportunities
+router.get("/", authenticateToken, async (req, res) => {
+  try {
+    const opportunities = await Opportunity.find({ savedBy: req.user.id })
+      .sort({ postedDate: -1 })
+      .limit(100);
+
+    return res.json({ success: true, opportunities });
+  } catch (error) {
+    console.error("Get opportunities error:", error.message);
+    return res.status(500).json({ success: false, error: "Failed to fetch saved opportunities." });
+  }
+});
+
+// POST /api/opportunities/analyze — Analyze an uploaded document or pasted text
+router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res) => {
+  const startTime = req.startTime ?? Date.now();
+  try {
+    let text = "";
+
+    if (req.file) {
+      audit(EVENT.FILE_UPLOAD, {
+        userId: req.user.id,
+        ip: req.clientIp ?? getIp(req),
+        route: req.originalUrl,
+        method: req.method,
+        success: true,
+        details: {
+          fileName: req.file.originalname,
+          mimeType: req.file.mimetype,
+          sizeBytes: req.file.size
+        }
+      });
+      text = await parseDocument(req.file.buffer, req.file.mimetype, req.file.originalname);
+    } else if (req.body.text) {
+      text = req.body.text;
+    } else {
+      return res.status(400).json({ success: false, error: "Provide a file or text for analysis." });
+    }
+
+    if (!text || text.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: "No readable solicitation text was detected. Please upload a text-based PDF/TXT or paste the solicitation text."
+      });
+    }
 
     const clauses = detectClauses(text);
     const scoreData = calculateBidScore(text);
@@ -180,78 +228,11 @@ router.get("/debug", authenticateToken, async (req, res) => {
     }
 
     return res.status(500).json({ success: false, error: "Failed to analyze document." });
-    const userInputError =
-      error.message?.startsWith("Unsupported file type:") ||
-      error.message?.includes("requires the 'mammoth' package") ||
-      error.message?.startsWith("Failed to parse DOCX file:");
-
-    if (userInputError) {
-      return res.status(400).json({ success: false, error: error.message });
-    }
-
-    res.status(500).json({ success: false, error: "Failed to analyze document." });
   }
 });
 
+// POST /api/opportunities/save — Save an opportunity
 router.post("/save", authenticateToken, async (req, res) => {
   try {
-    const { opportunity } = req.body;
-    if (!opportunity || !opportunity.noticeId) {
-      return res.status(400).json({ success: false, error: "Valid opportunity data is required." });
-    }
-
-    const saved = await Opportunity.findOneAndUpdate(
-      { noticeId: opportunity.noticeId },
-      {
-        $set: { ...opportunity, cachedAt: new Date() },
-        $addToSet: { savedBy: req.user.id }
-      },
-      { upsert: true, new: true }
-    );
-
-    return res.json({ success: true, opportunity: saved });
-  } catch (error) {
-    console.error("Save opportunity error:", error.message);
-    return res.status(500).json({ success: false, error: "Failed to save opportunity." });
-  }
-});
-
-router.get("/debug", authenticateToken, async (req, res) => {
-  const configuredSamKey = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
-
-  if (
-    !(
-      (typeof process.env.SAM_API_KEY === "string" && process.env.SAM_API_KEY.trim()) ||
-      (typeof process.env.SAM_GOV_API_KEY === "string" && process.env.SAM_GOV_API_KEY.trim()) ||
-      (typeof process.env.SAMGOV_API_KEY === "string" && process.env.SAMGOV_API_KEY.trim())
-    )
-  ) {
-  const samKeyForDebug = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
-  if (!samKeyForDebug || !String(samKeyForDebug).trim()) {
-  const configuredSamKey = process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
-  const configuredSamKey =
-    process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
-  if (!configuredSamKey || !String(configuredSamKey).trim()) {
-    return res.status(400).json({
-      success: false,
-      errorCode: "MISSING_API_KEY",
-      error: "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
-    });
-  }
-
-  const today = new Date();
-  const weekAgo = new Date(today);
-  weekAgo.setDate(today.getDate() - 7);
-
-  const fmt = (d) =>
-    `${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}/${d.getFullYear()}`;
-
-  try {
-    const data = await searchOpportunities({ postedFrom: fmt(weekAgo), postedTo: fmt(today), limit: 1 });
-    return res.json({ success: true, message: "SAM API connectivity confirmed.", totalRecords: data.totalRecords ?? null });
-  } catch (error) {
-    return res.status(500).json({ success: false, error: error.message || "SAM connectivity check failed." });
-  }
-});
-
-export default router;
+    const { opportunity } = req*
+
