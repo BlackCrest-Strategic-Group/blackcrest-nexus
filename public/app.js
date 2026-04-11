@@ -313,6 +313,24 @@ pasteForm.addEventListener("submit", (e) => {
   const postedFromEl = document.getElementById("postedFrom");
   const postedToEl = document.getElementById("postedTo");
 
+  return value;
+}
+const rawPostedFrom = document.getElementById("postedFrom")?.value || "";
+const rawPostedTo = document.getElementById("postedTo")?.value || "";
+
+console.log("raw postedFrom:", rawPostedFrom);
+console.log("raw postedTo:", rawPostedTo);
+console.log("iso postedFrom:", toIsoDate(rawPostedFrom));
+console.log("iso postedTo:", toIsoDate(rawPostedTo));
+
+const params = new URLSearchParams({
+  postedFrom: toIsoDate(rawPostedFrom),
+  postedTo: toIsoDate(rawPostedTo),
+  keyword: document.getElementById("keyword").value.trim(),
+  naics: document.getElementById("naics").value.trim(),
+  psc: document.getElementById("psc").value.trim(),
+  setAside: document.getElementById("setAside").value.trim()
+});
   if (postedFromEl && !postedFromEl.value) postedFromEl.value = toHtmlDateValue(thirtyDaysAgo);
   if (postedToEl && !postedToEl.value) postedToEl.value = toHtmlDateValue(today);
 })();

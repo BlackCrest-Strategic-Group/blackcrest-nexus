@@ -262,6 +262,9 @@ connectDB()
 await seedAdminUser();
     startDigestScheduler();
 
+app.listen(PORT, () => {
+  console.log(`GovCon AI Scanner running on port ${PORT}`);
+  });
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`[Server] Listening on port ${PORT} (${process.env.NODE_ENV || "development"})`);
     });
