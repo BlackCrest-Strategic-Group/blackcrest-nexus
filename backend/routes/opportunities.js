@@ -134,6 +134,16 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
       durationMs: Date.now() - startTime,
       details:    { error: error.message }
     });
+
+    const userInputError =
+      error.message?.startsWith("Unsupported file type:") ||
+      error.message?.includes("requires the 'mammoth' package") ||
+      error.message?.startsWith("Failed to parse DOCX file:");
+
+    if (userInputError) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+
     res.status(500).json({ success: false, error: "Failed to analyze document." });
   }
 });
@@ -164,11 +174,13 @@ router.post("/save", authenticateToken, async (req, res) => {
 
 // GET /api/opportunities/debug — Validate SAM API connectivity
 router.get("/debug", authenticateToken, async (req, res) => {
-  if (!process.env.SAM_API_KEY) {
+  const configuredSamKey =
+    process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
+  if (!configuredSamKey || !String(configuredSamKey).trim()) {
     return res.status(400).json({
       success: false,
       errorCode: "MISSING_API_KEY",
-      error: "SAM_API_KEY is not configured. Add it to your .env file and restart."
+      error: "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
     });
   }
 

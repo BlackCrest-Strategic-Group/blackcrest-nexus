@@ -4,6 +4,26 @@ dotenv.config();
 
 const SAM_BASE_URL = "https://api.sam.gov/opportunities/v2/search";
 
+
+function normalizeEnvValue(value) {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  return trimmed.replace(/^['"]|['"]$/g, "");
+}
+
+function getSamApiKey() {
+  const candidates = [
+    process.env.SAM_API_KEY,
+    process.env.SAM_GOV_API_KEY,
+    process.env.SAMGOV_API_KEY
+  ];
+  for (const value of candidates) {
+    const normalized = normalizeEnvValue(value);
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
 function cleanParams(params) {
   return Object.fromEntries(
     Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "")
@@ -34,9 +54,10 @@ export async function searchOpportunities({
   page = 1,
   limit = 100
 }) {
-  if (!process.env.SAM_API_KEY) {
+  const samApiKey = getSamApiKey();
+  if (!samApiKey) {
     const err = new Error(
-      "SAM_API_KEY is not configured. Add it to your .env file and restart."
+      "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
     );
     err.code = "MISSING_API_KEY";
     throw err;
@@ -49,7 +70,7 @@ export async function searchOpportunities({
   const offset = (page - 1) * limit;
 
   const params = cleanParams({
-    api_key: process.env.SAM_API_KEY,
+    api_key: samApiKey,
     postedFrom: toSamDate(postedFrom),
     postedTo: toSamDate(postedTo),
     limit,
