@@ -14,6 +14,24 @@ const upload = multer({
   limits: { fileSize: 10 * 1024 * 1024 } // 10 MB
 });
 
+function handleAnalyzeUpload(req, res, next) {
+  upload.single("file")(req, res, (err) => {
+    if (!err) return next();
+
+    if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({
+        success: false,
+        error: "File is too large. Maximum upload size is 10 MB."
+      });
+    }
+
+    return res.status(400).json({
+      success: false,
+      error: err.message || "Invalid upload request."
+    });
+  });
+}
+
 // POST /api/opportunities/search — Search SAM.gov by NAICS / keyword
 router.post("/search", authenticateToken, async (req, res) => {
   try {
@@ -70,7 +88,7 @@ router.get("/", authenticateToken, async (req, res) => {
 });
 
 // POST /api/opportunities/analyze — Analyze an uploaded document
-router.post("/analyze", authenticateToken, upload.single("file"), async (req, res) => {
+router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res) => {
   const startTime = req.startTime ?? Date.now();
   try {
     let text = "";
@@ -94,6 +112,13 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
       text = req.body.text;
     } else {
       return res.status(400).json({ success: false, error: "Provide a file or text for analysis." });
+    }
+
+    if (!text || text.trim().length < 50) {
+      return res.status(400).json({
+        success: false,
+        error: "No readable solicitation text was detected. Please upload a text-based PDF/TXT or paste the solicitation text."
+      });
     }
 
     const clauses = detectClauses(text);
@@ -134,6 +159,22 @@ router.post("/analyze", authenticateToken, upload.single("file"), async (req, re
       durationMs: Date.now() - startTime,
       details:    { error: error.message }
     });
+
+    const isUnsupportedType = error.message?.startsWith("Unsupported file type:");
+    const isDocxDependencyIssue = error.message?.includes("requires the 'mammoth' package");
+    const isDocxParseError = error.message?.startsWith("Failed to parse DOCX file:");
+
+    if (isUnsupportedType || isDocxDependencyIssue || isDocxParseError) {
+      const productionMessage = isUnsupportedType
+        ? "Unsupported file type. Upload a PDF or TXT file."
+        : "DOCX uploads are currently unavailable in production. Please upload PDF or TXT.";
+
+      return res.status(400).json({
+        success: false,
+        error: process.env.NODE_ENV === "production" ? productionMessage : error.message
+      });
+    }
+
     res.status(500).json({ success: false, error: "Failed to analyze document." });
   }
 });
@@ -164,11 +205,13 @@ router.post("/save", authenticateToken, async (req, res) => {
 
 // GET /api/opportunities/debug — Validate SAM API connectivity
 router.get("/debug", authenticateToken, async (req, res) => {
-  if (!process.env.SAM_API_KEY) {
+  const configuredSamKey =
+    process.env.SAM_API_KEY || process.env.SAM_GOV_API_KEY || process.env.SAMGOV_API_KEY;
+  if (!configuredSamKey || !String(configuredSamKey).trim()) {
     return res.status(400).json({
       success: false,
       errorCode: "MISSING_API_KEY",
-      error: "SAM_API_KEY is not configured. Add it to your .env file and restart."
+      error: "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
     });
   }
 

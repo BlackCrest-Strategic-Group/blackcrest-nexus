@@ -187,6 +187,11 @@ export async function getSearchTrends() {
 // System Health
 // ---------------------------------------------------------------------------
 
+
+function hasConfiguredValue(...values) {
+  return values.some((v) => typeof v === "string" && v.trim().length > 0);
+}
+
 export async function getSystemHealth() {
   let mongoStatus = "unknown";
   let mongoLatencyMs = null;
@@ -213,8 +218,19 @@ export async function getSystemHealth() {
     },
     integrations: {
       mongodb: { status: mongoStatus, latencyMs: mongoLatencyMs },
-      samApi: { configured: !!process.env.SAM_API_KEY },
-      stripe: { configured: !!process.env.STRIPE_PAYMENT_LINK }
+      samApi: {
+        configured: hasConfiguredValue(
+          process.env.SAM_API_KEY,
+          process.env.SAM_GOV_API_KEY,
+          process.env.SAMGOV_API_KEY
+        )
+      },
+      email: {
+        configured: hasConfiguredValue(process.env.SENDGRID_API_KEY) ||
+          (hasConfiguredValue(process.env.GMAIL_USER) && hasConfiguredValue(process.env.GMAIL_PASSWORD)),
+        senderConfigured: hasConfiguredValue(process.env.EMAIL_FROM)
+      },
+      stripe: { configured: hasConfiguredValue(process.env.STRIPE_PAYMENT_LINK) }
     },
     nodeVersion: process.version,
     env: process.env.NODE_ENV || "development"
