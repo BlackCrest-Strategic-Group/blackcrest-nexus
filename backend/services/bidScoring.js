@@ -60,8 +60,8 @@ const NEGATIVE_SIGNALS = [
 ];
 
 const FAR_DFARS_CLAUSES = [
-  { name: "FAR 52.212-1", terms: ["52.212-1", "instructions to offerors"] },
-  { name: "FAR 52.212-2", terms: ["52.212-2", "evaluation"] },
+  { name: "FAR 52.212-1", terms: ["52.212-1", "instructions to offerors—commercial products and services"] },
+  { name: "FAR 52.212-2", terms: ["52.212-2", "evaluation criteria—commercial products and services"] },
   { name: "FAR 52.219-6", terms: ["52.219-6", "small business set-aside"] },
   { name: "FAR 52.233-1", terms: ["52.233-1", "disputes"] },
   { name: "DFARS 252.204-7012", terms: ["252.204-7012", "covered defense information"] },
@@ -71,8 +71,14 @@ const FAR_DFARS_CLAUSES = [
 
 export function detectClauses(text = "") {
   const lower = text.toLowerCase();
+  const hasTerm = (term) => {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`(^|\\W)${escaped}(\\W|$)`, "i");
+    return regex.test(lower);
+  };
+
   return FAR_DFARS_CLAUSES
-    .filter((clause) => clause.terms.some((term) => lower.includes(term)))
+    .filter((clause) => clause.terms.some((term) => hasTerm(term.toLowerCase())))
     .map((clause) => clause.name);
 }
 

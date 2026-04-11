@@ -348,7 +348,7 @@ export default function LandingPage() {
               lineHeight: 1.65,
             }}
           >
-            GovCon AI Scanner gives your team an unfair advantage — instant RFP analysis, Bid/No-Bid decisions, SAM.gov intelligence, and proposal generation, all driven by Truth Serum AI.
+            GovCon AI (Powered by Truth Serum) gives your team an unfair advantage — instant RFP analysis, Bid/No-Bid decisions, SAM.gov intelligence, and proposal generation, all driven by Truth Serum AI.
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 52 }}>
@@ -586,7 +586,7 @@ export default function LandingPage() {
             {[
               {
                 q: "Is my data secure?",
-                a: "Yes. All data is encrypted in transit (TLS 1.3) and at rest (AES-256). GovCon AI Scanner is built with compliance-minded buyers in mind — we never share, sell, or use your proprietary data to train third-party models. Your RFP documents, ERP data, and bid strategies stay yours, period. We operate on SOC 2-aligned infrastructure and support TOTP multi-factor authentication on every account.",
+                a: "Yes. All data is encrypted in transit (TLS 1.3) and at rest (AES-256). GovCon AI (Powered by Truth Serum) is built with compliance-minded buyers in mind — we never share, sell, or use your proprietary data to train third-party models. Your RFP documents, ERP data, and bid strategies stay yours, period. We operate on SOC 2-aligned infrastructure and support TOTP multi-factor authentication on every account.",
               },
               {
                 q: "Can I use this with my existing ERP system?",
@@ -698,7 +698,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ShieldLogo size={30} />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>GovCon AI Scanner</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>GovCon AI (Powered by Truth Serum)</div>
               <div style={{ fontSize: 10, color: "#c79d3b", letterSpacing: 1.5, textTransform: "uppercase" }}>Powered by Truth Serum AI</div>
             </div>
           </div>
