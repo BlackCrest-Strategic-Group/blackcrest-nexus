@@ -1,0 +1,136 @@
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const SAM_BASE_URL = "https://api.sam.gov/opportunities/v2/search";
+
+
+function normalizeEnvValue(value) {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  return trimmed.replace(/^['"]|['"]$/g, "");
+}
+
+function getSamApiKey() {
+  const candidates = [
+    process.env.SAM_API_KEY,
+    process.env.SAM_GOV_API_KEY,
+    process.env.SAMGOV_API_KEY
+  ];
+  for (const value of candidates) {
+    const normalized = normalizeEnvValue(value);
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
+function cleanParams(params) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== "")
+  );
+}
+
+// SAM.gov v2 API expects dates in MM/DD/YYYY format.
+function toSamDate(value) {
+  if (!value) return value;
+  // Already in MM/DD/YYYY — pass through unchanged
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) return value;
+  // Accept YYYY-MM-DD and convert to MM/DD/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-");
+    return `${month}/${day}/${year}`;
+  }
+  throw new Error(`Invalid date format: "${value}". Expected YYYY-MM-DD or MM/DD/YYYY.`);
+}
+
+export async function searchOpportunities({
+  postedFrom,
+  postedTo,
+  keyword,
+  naics,
+  psc,
+  setAside,
+  noticeType,
+  page = 1,
+  limit = 100
+}) {
+  const samApiKey = getSamApiKey();
+  if (!samApiKey) {
+    const err = new Error(
+      "SAM API key is missing. Set SAM_API_KEY (or SAM_GOV_API_KEY) in your service environment and redeploy."
+    );
+    err.code = "MISSING_API_KEY";
+    throw err;
+  }
+
+  if (!postedFrom || !postedTo) {
+    throw new Error("postedFrom and postedTo are required.");
+  }
+
+  const offset = (page - 1) * limit;
+
+  const params = cleanParams({
+    api_key: samApiKey,
+    postedFrom: toSamDate(postedFrom),
+    postedTo: toSamDate(postedTo),
+    limit,
+    offset,
+    keyword,
+    naics,
+    psc,
+    setAside,
+    noticeType
+  });
+
+  const url = `${SAM_BASE_URL}?${new URLSearchParams(params).toString()}`;
+  const safeUrl = url.replace(/api_key=[^&]+(&|$)/, "api_key=***REDACTED***$1");
+  console.log("SAM request:", safeUrl);
+
+  const response = await fetch(url, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "GovCon-AI-Scanner/2.0"
+    }
+  });
+
+  const text = await response.text();
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    const contentType = response.headers.get("content-type") || "unknown";
+    const snippet = text.replace(/\s+/g, " ").slice(0, 160);
+    throw new Error(
+      `SAM returned invalid JSON (HTTP ${response.status}, content-type: ${contentType}). ` +
+      `This usually means the key is invalid/restricted or SAM returned HTML. Response preview: ${snippet || "<empty>"}`
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || `SAM API request failed with status ${response.status}`);
+  }
+
+  return data;
+}
+
+export function normalizeOpportunity(item = {}) {
+  return {
+    noticeId: item.noticeId || item._id || null,
+    title: item.title || null,
+    solicitationNumber: item.solicitationNumber || null,
+    agency: item.fullParentPathName || item.departmentIndAgency || null,
+    subTier: item.subTier || null,
+    office: item.office || null,
+    postedDate: item.postedDate || null,
+    responseDeadLine: item.responseDeadLine || null,
+    naicsCode: item.naicsCode || null,
+    pscCode: item.classificationCode || item.pscCode || null,
+    setAside: item.typeOfSetAsideDescription || item.typeOfSetAside || null,
+    noticeType: item.noticeType || null,
+    contractType: item.typeOfContractPricing || null,
+    placeOfPerformance: item.placeOfPerformance || null,
+    uiLink:
+      item.uiLink ||
+      (item.noticeId ? `https://sam.gov/opp/${item.noticeId}/view` : null)
+  };
+}

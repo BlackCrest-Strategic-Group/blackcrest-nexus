@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: govcon-ai-scanner
+    runtime: node
+    buildCommand: npm cache clean --force && npm ci && npm run build:frontend
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MONGODB_URI
+        sync: false

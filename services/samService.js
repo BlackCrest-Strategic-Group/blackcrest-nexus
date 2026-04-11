@@ -2,6 +2,11 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Optionally log SAM_API_KEY availability in non-production environments without exposing details
+if (process.env.NODE_ENV && process.env.NODE_ENV !== "production") {
+  const hasSamApiKey = Boolean(process.env.SAM_API_KEY);
+  console.log("samService: SAM_API_KEY configured:", hasSamApiKey);
+}
 const SAM_BASE_URL = "https://api.sam.gov/opportunities/v2/search";
 
 function cleanParams(params) {
@@ -12,17 +17,20 @@ function cleanParams(params) {
   );
 }
 
-function toIsoDate(value) {
+// SAM.gov API expects dates in MM/DD/YYYY format.
+function toSamDate(value) {
   if (!value) return value;
 
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  // Already in MM/DD/YYYY — pass through unchanged
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
     return value;
   }
 
-  const parts = value.split("/");
-  if (parts.length === 3) {
-    const [month, day, year] = parts;
-    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  // Convert ISO YYYY-MM-DD → MM/DD/YYYY
+  // Convert YYYY-MM-DD (ISO / HTML date input format) → MM/DD/YYYY
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const [year, month, day] = value.split("-");
+    return `${month}/${day}/${year}`;
   }
 
   return value;
@@ -40,7 +48,9 @@ export async function searchOpportunities({
   limit = 100
 }) {
   if (!process.env.SAM_API_KEY) {
-    throw new Error("Missing SAM_API_KEY in environment variables.");
+    const err = new Error("SAM_API_KEY is not configured on the server. Add it to your .env file and restart.");
+    err.code = "MISSING_API_KEY";
+    throw err;
   }
 
   if (!postedFrom || !postedTo) {
@@ -51,41 +61,54 @@ export async function searchOpportunities({
 
   const params = cleanParams({
     api_key: process.env.SAM_API_KEY,
-    postedFrom: toIsoDate(postedFrom),
-    postedTo: toIsoDate(postedTo),
+    postedFrom: toSamDate(postedFrom),
+    postedTo: toSamDate(postedTo),
     limit,
     offset,
     keyword,
     naics,
     psc,
-    typeOfSetAside: setAside,
+    setAside,
     noticeType
   });
 
   const url = `${SAM_BASE_URL}?${new URLSearchParams(params).toString()}`;
 
-  console.log("SAM request URL:", url);
-
-  const response = await fetch(url);
-
-  console.log("SAM response status:", response.status);
-
-  const text = await response.text();
-  console.log("SAM raw response:", text.substring(0, 500));
-
-  let data;
+  // Mask the API key in logs to avoid exposing sensitive credentials
+  const safeUrl = url.replace(/api_key=[^&]+(&|$)/, "api_key=***REDACTED***$1");
+  console.log("🔍 SAM request URL:", safeUrl);
+  console.log("📋 SAM request params:", { postedFrom, postedTo, keyword, naics, psc, setAside, noticeType, page, limit });
 
   try {
-    data = JSON.parse(text);
-  } catch (err) {
-    throw new Error("SAM returned invalid JSON: " + text.substring(0, 200));
-  }
+    const response = await fetch(url);
 
-  if (!response.ok) {
-    throw new Error(data?.message || `SAM API request failed with status ${response.status}`);
-  }
+    console.log("📊 SAM response status:", response.status);
 
-  return data;
+    const text = await response.text();
+    console.log("📝 SAM raw response:", text.substring(0, 1000));
+
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("❌ Failed to parse SAM JSON response:", err.message);
+      throw new Error("SAM returned invalid JSON: " + text.substring(0, 200));
+    }
+
+    if (!response.ok) {
+      console.error("❌ SAM API Error response body:", JSON.stringify(data));
+      const detail = data?.error?.message || data?.message || `SAM API request failed with status ${response.status}`;
+      const err = new Error(detail);
+      err.statusCode = response.status;
+      throw err;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("❌ SAM Service Error:", error.message);
+    throw error;
+  }
 }
 
 export function normalizeOpportunity(item = {}) {

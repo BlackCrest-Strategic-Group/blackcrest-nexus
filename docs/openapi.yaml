@@ -1,0 +1,263 @@
+openapi: "3.0.3"
+
+info:
+  title: GovCon AI Scanner API
+  version: "1.0.0"
+  description: |
+    Minimal OpenAPI spec for GovCon AI Scanner.
+
+servers:
+  - url: https://govcon-ai-scanner.onrender.com
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+tags:
+  - name: System
+    description: Health check
+  - name: Auth
+    description: Authentication endpoints
+  - name: Opportunities
+    description: Opportunity search and analysis
+  - name: Email
+    description: Email preferences
+  - name: Admin
+    description: Admin endpoints
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Descriptive error message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "64a7b2c3d4e5f6a7b8c9d0e1"
+        email:
+          type: string
+          format: email
+          example: "jane@example.com"
+        name:
+          type: string
+          example: "Jane Smith"
+        company:
+          type: string
+          example: "Acme Federal LLC"
+        naicsCodes:
+          type: array
+          items:
+            type: string
+          example: ["541511", "541330"]
+        role:
+          type: string
+          example: "user"
+
+    TokenPair:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+
+    Opportunity:
+      type: object
+      properties:
+        noticeId:
+          type: string
+          example: "ABC123"
+        title:
+          type: string
+          example: "IT Modernization Services"
+        agency:
+          type: string
+          example: "Department of Defense"
+        naicsCode:
+          type: string
+          example: "541511"
+        postedDate:
+          type: string
+          format: date
+          example: "2024-01-10"
+        responseDeadLine:
+          type: string
+          format: date-time
+          example: "2024-02-10T17:00:00Z"
+        setAside:
+          type: string
+          example: "Small Business"
+        uiLink:
+          type: string
+          format: uri
+          example: "https://sam.gov"
+
+    AnalysisResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        bidScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 72
+        recommendation:
+          type: string
+          example: "BID"
+        clausesDetected:
+          type: array
+          items:
+            type: string
+          example: ["FAR 52.204-7", "DFARS 252.204-7012"]
+
+paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        "200":
+          description: Login successful
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      responses:
+        "201":
+          description: User created
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh token
+      responses:
+        "200":
+          description: Token refreshed
+
+  /api/opportunities/search:
+    post:
+      tags: [Opportunities]
+      summary: Search SAM.gov opportunities
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Search results returned
+
+  /api/opportunities:
+    get:
+      tags: [Opportunities]
+      summary: Get saved opportunities
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Saved opportunities returned
+
+  /api/opportunities/save:
+    post:
+      tags: [Opportunities]
+      summary: Save an opportunity
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Opportunity saved
+
+  /api/opportunities/analyze:
+    post:
+      tags: [Opportunities]
+      summary: Analyze a solicitation document
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Analysis completed
+
+  /api/email-preferences/preferences:
+    get:
+      tags: [Email]
+      summary: Get email preferences
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Preferences returned
+
+  /api/email-preferences/preferences/update:
+    post:
+      tags: [Email]
+      summary: Update email preferences
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Preferences updated
+
+  /api/admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Admin dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Dashboard returned
+
+  /api/admin/users:
+    get:
+      tags: [Admin]
+      summary: List users
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User list returned
+
+  /api/admin/health/system:
+    get:
+      tags: [Admin]
+      summary: System health
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: System health returned
