@@ -65,6 +65,16 @@ router.post("/search", authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error("SAM search error:", error.message);
+    const isSamInvalidJson = typeof error?.message === "string" && error.message.includes("SAM returned invalid JSON");
+    if (isSamInvalidJson) {
+      return res.status(502).json({
+        success: false,
+        errorCode: "SAM_BAD_RESPONSE",
+        error: process.env.NODE_ENV === "production"
+          ? "SAM.gov returned an unexpected response. Please verify your API key permissions and try again."
+          : error.message
+      });
+    }
     return res.status(error?.code === "MISSING_API_KEY" ? 400 : 500).json({
       success: false,
       errorCode: error?.code || null,
