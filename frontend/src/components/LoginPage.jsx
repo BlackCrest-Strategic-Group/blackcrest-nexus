@@ -145,7 +145,7 @@ function TotpSetupStep({ mfaSetupToken, onSuccess, onBack }) {
             </p>
             <div className="rounded-xl p-4 mb-3" style={{ background: "#f8fafc", border: "1px solid #c8d5e6" }}>
               <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Account Name</p>
-              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>GovCon AI Scanner</p>
+              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>GovCon AI (Powered by Truth Serum)</p>
               <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Setup Key</p>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-mono break-all flex-1" style={{ color: "#14243a", wordBreak: "break-all" }}>
@@ -472,7 +472,11 @@ export default function LoginPage() {
         return;
       }
 
-      saveAuth(res.data, form.rememberMe);
+      const persisted = saveAuth(res.data, form.rememberMe);
+      if (!persisted) {
+        setError("Signed in, but your browser blocked secure storage. Please disable private mode or strict privacy settings and try again.");
+        return;
+      }
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong. Please try again.");
@@ -482,7 +486,11 @@ export default function LoginPage() {
   }
 
   function handleMfaSuccess(data) {
-    saveAuth(data, form.rememberMe);
+    const persisted = saveAuth(data, form.rememberMe);
+    if (!persisted) {
+      setError("Signed in, but your browser blocked secure storage. Please disable private mode or strict privacy settings and try again.");
+      return;
+    }
     navigate("/dashboard", { replace: true });
   }
 
@@ -503,7 +511,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-16 relative">
-          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group – GovCon AI Scanner" style={{ height: 48, width: "auto" }} />
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group – GovCon AI (Powered by Truth Serum)" style={{ height: 48, width: "auto" }} />
         </div>
 
         {/* Hero text */}
@@ -550,7 +558,7 @@ export default function LoginPage() {
         {/* Top bar */}
         <header className="flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(20,36,58,0.10)", background: "#ffffff" }}>
           <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group" style={{ height: 36, width: "auto" }} />
-          <img src="/logos/govcon-logo.svg" alt="GovCon AI Scanner" style={{ height: 36, width: "auto" }} />
+          <img src="/logos/govcon-logo.svg" alt="GovCon AI (Powered by Truth Serum)" style={{ height: 36, width: "auto" }} />
         </header>
 
         {/* Form area */}

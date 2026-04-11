@@ -329,7 +329,7 @@ function ProposalPrintView({ proposal }) {
 
         {/* Footer */}
         <div style={{ marginTop: 32, paddingTop: 8, borderTop: "1px solid #ddd", fontSize: 9, color: "#777", textAlign: "center" }}>
-          Prepared by {proposal.companyName || "Contractor"} &bull; {new Date().toLocaleDateString()} &bull; GovCon AI Scanner – Non-Classified Use Only
+          Prepared by {proposal.companyName || "Contractor"} &bull; {new Date().toLocaleDateString()} &bull; GovCon AI (Powered by Truth Serum) – Non-Classified Use Only
         </div>
       </div>
     </div>
