@@ -3,14 +3,16 @@
   "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "nodemon server.js",
-    "prestart": "npm run check:syntax",
-    "start": "node server.js",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/",
-    "build:frontend": "cd frontend && npm install --include=dev && npm run build",
-    "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
-    "check:syntax": "bash -lc 'node --check server.js && rg --files backend routes -g \"*.js\" | xargs -n1 node --check'",
-    "verify": "npm run check:syntax && npm test -- --runInBand"
+  "dev": "nodemon server.js",
+  "prestart": "npm run check:syntax",
+  "start": "node server.js",
+  "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/",
+  "build:frontend": "cd frontend && npm install --include=dev && npm run build",
+  "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
+  "check:syntax": "bash -lc 'node --check server.js && rg --files backend routes -g \"*.js\" | xargs -n1 node --check'",
+  "verify": "npm run check:syntax && npm test -- --runInBand",
+  "postinstall": "patch-package"
+},
   },
   "keywords": [
     "govcon",
