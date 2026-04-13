@@ -40,7 +40,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
   /* Contract value from analysis (optional) */
   const contractValue = analysisResult?.contractValue ?? null;
 
-  const lenderMatchMailto = `mailto:funding@blackcrestai.com?subject=${encodeURIComponent("Lender Match Request")}&body=${encodeURIComponent(
+  return (
     <div className="space-y-6 animate-fade-in">
       {/* ── Header ── */}
       <div className="card">
