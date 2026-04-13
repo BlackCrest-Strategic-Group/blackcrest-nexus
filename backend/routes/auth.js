@@ -1,87 +1,47 @@
 import express from "express";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import rateLimit from "express-rate-limit";
+import User from "../models/User.js";
+import EmailPreference from "../models/EmailPreference.js";
+import { authenticateToken } from "../middleware/auth.js";
+import { audit, EVENT, getIp } from "../services/auditLogger.js";
+import { sendPasswordResetEmail } from "../services/emailService.js";
+import { verifyTotpCode } from "../services/totpService.js";
 
 const router = express.Router();
 
-/**
- * Demo login route
- * Replace with real auth/database validation later
- */
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body || {};
+const PASSWORD_MIN_LENGTH = 12;
+const PASSWORD_MAX_LENGTH = 128;
+const LOGIN_MAX_FAILED_ATTEMPTS = parseInt(process.env.LOGIN_MAX_FAILED_ATTEMPTS || "5", 10);
+const LOGIN_LOCKOUT_MINUTES = parseInt(process.env.LOGIN_LOCKOUT_MINUTES || "15", 10);
 
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: "Email and password are required"
-      });
-    }
-
-    // Temporary demo credentials
-    if (email === "demo@govconscanner.com" && password === "password123") {
-      return res.status(200).json({
-        success: true,
-        message: "Login successful",
-        token: "demo-token-123",
-        user: {
-          id: "demo-user",
-          name: "Demo User",
-          email: "demo@govconscanner.com",
-          companyName: "BlackCrest Demo"
-        }
-      });
-    }
-
-    return res.status(401).json({
-      success: false,
-      error: "Invalid email or password"
-    });
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Server error during login"
-    });
-  }
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many authentication attempts. Please try again later." }
 });
 
-router.post("/register", async (req, res) => {
-  try {
-    const { email, password, companyName } = req.body || {};
+const registerLimiter = authLimiter;
+const loginLimiter = authLimiter;
+const mfaLoginLimiter = authLimiter;
+const passwordResetLimiter = authLimiter;
 
-    if (!email || !password || !companyName) {
-      return res.status(400).json({
-        success: false,
-        error: "Email, password, and company name are required"
-      });
-    }
+function validatePassword(password) {
+  if (typeof password !== "string") return "Password is required.";
+  if (password.length < PASSWORD_MIN_LENGTH) return `Password must be at least ${PASSWORD_MIN_LENGTH} characters.`;
+  if (password.length > PASSWORD_MAX_LENGTH) return `Password must be no more than ${PASSWORD_MAX_LENGTH} characters.`;
+  if (!/[A-Z]/.test(password)) return "Password must include at least one uppercase letter.";
+  if (!/[a-z]/.test(password)) return "Password must include at least one lowercase letter.";
+  if (!/[0-9]/.test(password)) return "Password must include at least one number.";
+  if (!/[^A-Za-z0-9]/.test(password)) return "Password must include at least one special character.";
+  return null;
+}
 
-    return res.status(201).json({
-      success: true,
-      message: "Registration successful",
-      user: {
-        id: "new-user",
-        email,
-        companyName
-      }
-    });
-  } catch (error) {
-    console.error("Register error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Server error during registration"
-    });
-  }
-});
-
-router.get("/health", (req, res) => {
-  res.json({
-    success: true,
-    service: "auth"
-  });
-});
-
-export default router;const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
+const OTP_EXPIRY_MINUTES = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
 
 const ALGORITHM = "aes-256-gcm";
 
