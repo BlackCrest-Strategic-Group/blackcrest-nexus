@@ -612,7 +612,14 @@ router.post("/forgot-password", passwordResetLimiter, async (req, res) => {
         success: false,
         details: { reason: "Email delivery failed", errorMessage: emailErr.message }
       });
-      return res.status(500).json({ success: false, error: "Failed to send reset email. Please try again later." });
+      // Return the same generic success response used for all reset requests so
+      // callers never receive a hard failure due to downstream email-provider
+      // issues. This avoids exposing transport outages to end users and keeps
+      // behavior consistent with anti-enumeration design.
+      return res.json({
+        success: true,
+        message: "If that email address is registered, a password reset link has been sent."
+      });
     }
 
     audit(EVENT.PASSWORD_RESET_REQUEST, {
