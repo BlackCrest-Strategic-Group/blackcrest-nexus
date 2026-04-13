@@ -19,7 +19,36 @@ const EMAIL_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220
 </svg>`;
 
 function createTransport() {
-  const { GMAIL_USER, GMAIL_PASSWORD, SENDGRID_API_KEY, EMAIL_FROM } = process.env;
+  const {
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USER,
+    SMTP_PASSWORD,
+    SMTP_SECURE,
+    GMAIL_USER,
+    GMAIL_PASSWORD,
+    SENDGRID_API_KEY
+  } = process.env;
+
+  // Generic SMTP support (Render/hosted providers often use these env names).
+  // When configured, prefer this transport before provider-specific presets.
+  if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
+    const parsedPort = Number.parseInt(SMTP_PORT || "", 10);
+    const port = Number.isFinite(parsedPort) ? parsedPort : 587;
+    const secure = typeof SMTP_SECURE === "string"
+      ? ["1", "true", "yes"].includes(SMTP_SECURE.toLowerCase())
+      : port === 465;
+
+    return nodemailer.createTransport({
+      host: SMTP_HOST,
+      port,
+      secure,
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASSWORD
+      }
+    });
+  }
 
   if (SENDGRID_API_KEY) {
     return nodemailer.createTransport({
@@ -43,7 +72,7 @@ function createTransport() {
   }
 
   throw new Error(
-    "Email not configured. Set GMAIL_USER + GMAIL_PASSWORD or SENDGRID_API_KEY in your .env file."
+    "Email not configured. Set SMTP_HOST + SMTP_USER + SMTP_PASSWORD, or GMAIL_USER + GMAIL_PASSWORD, or SENDGRID_API_KEY in your .env file."
   );
 }
 
@@ -96,7 +125,7 @@ export async function sendDailyDigest(user) {
   }
 
   const transport = createTransport();
-  const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "noreply@govconscanner.com";
 
   // Fetch email preferences for this user
   const prefs = await EmailPreference.findOne({ user: user._id });
@@ -159,7 +188,7 @@ export async function sendDailyDigest(user) {
 
 export async function sendMfaOtpEmail(user, otp) {
   const transport = createTransport();
-  const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "noreply@govconscanner.com";
   const expiryMinutes = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
 
   const html = `
@@ -217,7 +246,7 @@ export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
     throw configErr; // re-throw in production so the caller can handle it
   }
 
-  const fromAddress = process.env.EMAIL_FROM || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "noreply@govconscanner.com";
 
   const html = `
     <!DOCTYPE html>

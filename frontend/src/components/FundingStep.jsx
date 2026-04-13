@@ -40,7 +40,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
   /* Contract value from analysis (optional) */
   const contractValue = analysisResult?.contractValue ?? null;
 
-  return (
+  const lenderMatchMailto = `mailto:funding@blackcrestai.com?subject=${encodeURIComponent("Lender Match Request")}&body=${encodeURIComponent(
     <div className="space-y-6 animate-fade-in">
       {/* ── Header ── */}
       <div className="card">
@@ -186,7 +186,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
             {/* CTA button */}
             <div className="shrink-0">
               <a
-                href="mailto:funding@blackcrest.com?subject=Funding%20Assessment%20Request"
+                href="mailto:funding@blackcrestai.com?subject=Funding%20Assessment%20Request"
                 className="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-sm py-3 px-6 rounded-lg shadow-lg transition-colors duration-150 whitespace-nowrap"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@ export default function FundingStep({ executionPlan, analysisResult, onBack }) {
         </div>
       )}
 
-      {/* ── Fully funded state CTA ── */}
+          <p className="text-xs text-slate-500">You can also email funding@blackcrestai.com directly.</p>
       {fullyFunded && (
         <div className="card bg-emerald-50 border-emerald-200">
           <div className="flex items-center gap-4">
