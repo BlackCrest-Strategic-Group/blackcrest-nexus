@@ -11,6 +11,7 @@ import SourcingKPIs from "./SourcingKPIs.jsx";
 import ProposalGenerator from "./ProposalGenerator.jsx";
 import MarginLeakage from "./MarginLeakage.jsx";
 import CapacityPlanner from "./CapacityPlanner.jsx";
+import FundingStep from "./FundingStep.jsx";
 import FitCheckModal from "./FitCheckModal.jsx";
 /* NEW: Guided 4-step opportunity workflow */
 import OpportunityWorkflow from "./OpportunityWorkflow.jsx";
@@ -110,6 +111,7 @@ const TABS = [
   { id: "sourcing",    label: "Sourcing KPIs" },
   { id: "margins",     label: "Margin Analytics" },
   { id: "capacity",    label: "Capacity" },
+  { id: "financing",   label: "Financing" },
   { id: "erp",         label: "ERP Connectors" },
   { id: "email",       label: "Email Settings" }
 ];
@@ -897,6 +899,7 @@ export default function Dashboard() {
 
         {/* ── Capacity Planner ── */}
         {tab === "capacity" && <CapacityPlanner />}
+        {tab === "financing" && <FundingStep />}
 
         {/* ── ERP Connectors ── */}
         {tab === "erp" && <ErpConnector />}

@@ -5,10 +5,21 @@ import rateLimit from "express-rate-limit";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import { connectDB } from "./backend/config/db.js";
 
 dotenv.config();
 
 const app = express();
+
+if (process.env.MONGODB_URI) {
+  try {
+    await connectDB();
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error.message);
+  }
+} else {
+  console.warn("MONGODB_URI is not set. Persistent features (auth, profiles, workflows) are disabled.");
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -65,40 +76,30 @@ app.get("/api/health", (req, res) => {
 
 /**
  * API routes
- * Make sure these files actually exist and export a default router.
- * If your filenames are different, change the import paths.
  */
-try {
-  const opportunitiesModule = await import("./routes/opportunities.js");
-  app.use("/api/opportunities", opportunitiesModule.default);
-  console.log("Loaded /api/opportunities");
-} catch (error) {
-  console.warn("Could not load ./routes/opportunities.js");
+async function mountRoute(path, candidates) {
+  for (const modulePath of candidates) {
+    try {
+      const routeModule = await import(modulePath);
+      app.use(path, routeModule.default);
+      console.log(`Loaded ${path} from ${modulePath}`);
+      return;
+    } catch (error) {
+      console.warn(`Could not load ${modulePath} for ${path}: ${error.message}`);
+    }
+  }
 }
 
-try {
-  const capitalModule = await import("./routes/capital.js");
-  app.use("/api/capital", capitalModule.default);
-  console.log("Loaded /api/capital");
-} catch (error) {
-  console.warn("Could not load ./routes/capital.js");
-}
-
-try {
-  const authModule = await import("./routes/auth.js");
-  app.use("/api/auth", authModule.default);
-  console.log("Loaded /api/auth");
-} catch (error) {
-  console.warn("Could not load ./routes/auth.js");
-}
-
-try {
-  const docsModule = await import("./routes/docs.js");
-  app.use("/api-docs", docsModule.default);
-  console.log("Loaded /api-docs");
-} catch (error) {
-  console.warn("Could not load ./routes/docs.js");
-}
+await mountRoute("/api/opportunities", ["./backend/routes/opportunities.js", "./routes/opportunities.js"]);
+await mountRoute("/api/auth", ["./backend/routes/auth.js", "./routes/auth.js"]);
+await mountRoute("/api/capacity", ["./backend/routes/capacity.js"]);
+await mountRoute("/api/workflows", ["./backend/routes/workflows.js"]);
+await mountRoute("/api/suppliers", ["./backend/routes/suppliers.js"]);
+await mountRoute("/api/margins", ["./backend/routes/margins.js"]);
+await mountRoute("/api/proposals", ["./backend/routes/proposals.js"]);
+await mountRoute("/api/erp", ["./backend/routes/erp.js"]);
+await mountRoute("/api/docs", ["./backend/routes/docs.js"]);
+await mountRoute("/api-docs", ["./routes/docs.js"]);
 
 /**
  * Serve Vite frontend build
