@@ -107,6 +107,7 @@ await mountRoute("/api/email", ["./backend/routes/email.js"]);
 await mountRoute("/api/dashboard", ["./backend/routes/dashboard.js"]);
 await mountRoute("/api/admin", ["./backend/routes/admin.js"]);
 await mountRoute("/api/docs", ["./backend/routes/docs.js"]);
+await mountRoute("/api/blanket-po", ["./backend/routes/blanketPoRoutes.js"]);
 await mountRoute("/api-docs", ["./routes/docs.js"]);
 
 /**

@@ -13,6 +13,7 @@ import MarginLeakage from "./MarginLeakage.jsx";
 import CapacityPlanner from "./CapacityPlanner.jsx";
 import FundingStep from "./FundingStep.jsx";
 import FitCheckModal from "./FitCheckModal.jsx";
+import BlanketPOBuilder from "./BlanketPOBuilder.jsx";
 /* NEW: Guided 4-step opportunity workflow */
 import OpportunityWorkflow from "./OpportunityWorkflow.jsx";
 import { opportunitiesApi, emailApi, opportunityApi } from "../utils/api.js";
@@ -113,6 +114,7 @@ const TABS = [
   { id: "capacity",    label: "Capacity" },
   { id: "financing",   label: "Financing" },
   { id: "erp",         label: "ERP Connectors" },
+  { id: "blanket-po",  label: "Blanket PO Builder" },
   { id: "email",       label: "Email Settings" }
 ];
 
@@ -903,6 +905,9 @@ export default function Dashboard() {
 
         {/* ── ERP Connectors ── */}
         {tab === "erp" && <ErpConnector />}
+
+        {/* ── Blanket PO Builder ── */}
+        {tab === "blanket-po" && <BlanketPOBuilder />}
 
         {/* ── Email Alerts ── */}
         {tab === "email" && (
