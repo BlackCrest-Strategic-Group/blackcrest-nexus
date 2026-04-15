@@ -1,108 +1,25 @@
-const POSITIVE_SIGNALS = [
-  {
-    label: "Set-aside language detected",
-    points: 15,
-    tests: ["small business", "sdvosb", "hubzone", "wosb", "8(a)", "set-aside"]
-  },
-  {
-    label: "Incumbent or past performance language detected",
-    points: 10,
-    tests: ["past performance", "relevant experience", "cpars", "incumbent"]
-  },
-  {
-    label: "Pricing structure identified",
-    points: 10,
-    tests: ["firm-fixed-price", "ffp", "time-and-materials", "t&m", "cost-plus"]
-  },
-  {
-    label: "Statement of work / PWS found",
-    points: 10,
-    tests: ["statement of work", "performance work statement", "pws", "scope of work"]
-  },
-  {
-    label: "Evaluation criteria found",
-    points: 15,
-    tests: ["evaluation criteria", "best value", "tradeoff", "technically acceptable", "lpta"]
-  },
-  {
-    label: "Submission instructions found",
-    points: 10,
-    tests: ["instructions to offerors", "submission", "proposal due", "closing date"]
-  }
-];
+import {
+  ANALYSIS_MODES,
+  normalizeAnalysisMode,
+  evaluateRiskRules,
+  detectClausesByMode
+} from "./ruleEngine/index.js";
 
-const NEGATIVE_SIGNALS = [
-  {
-    label: "Security / clearance requirement detected",
-    points: 20,
-    tests: ["secret clearance", "top secret", "classified", "sci", "facility clearance"]
-  },
-  {
-    label: "Complex compliance burden detected",
-    points: 10,
-    tests: ["cmmc", "nist 800-171", "dcma", "dibr", "cybersecurity maturity"]
-  },
-  {
-    label: "Heavy staffing requirement detected",
-    points: 10,
-    tests: ["key personnel", "minimum staffing", "resume requirements", "staffing plan"]
-  },
-  {
-    label: "Aggressive turnaround detected",
-    points: 15,
-    tests: ["within 24 hours", "within 48 hours", "urgent", "expedited", "immediate response"]
-  },
-  {
-    label: "Bonding / insurance burden detected",
-    points: 10,
-    tests: ["bonding", "performance bond", "liability insurance", "certificate of insurance"]
-  }
-];
-
-const FAR_DFARS_CLAUSES = [
-  { name: "FAR 52.212-1", terms: ["52.212-1", "instructions to offerors—commercial products and services"] },
-  { name: "FAR 52.212-2", terms: ["52.212-2", "evaluation criteria—commercial products and services"] },
-  { name: "FAR 52.219-6", terms: ["52.219-6", "small business set-aside"] },
-  { name: "FAR 52.233-1", terms: ["52.233-1", "disputes"] },
-  { name: "DFARS 252.204-7012", terms: ["252.204-7012", "covered defense information"] },
-  { name: "DFARS 252.204-7020", terms: ["252.204-7020", "nist sp 800-171 dod assessment"] },
-  { name: "DFARS 252.215-7008", terms: ["252.215-7008"] }
-];
-
-export function detectClauses(text = "") {
-  const lower = text.toLowerCase();
-  const hasTerm = (term) => {
-    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`(^|\\W)${escaped}(\\W|$)`, "i");
-    return regex.test(lower);
-  };
-
-  return FAR_DFARS_CLAUSES
-    .filter((clause) => clause.terms.some((term) => hasTerm(term.toLowerCase())))
-    .map((clause) => clause.name);
+export function detectClauses(text = "", analysisMode = ANALYSIS_MODES.FEDERAL) {
+  const mode = normalizeAnalysisMode(analysisMode);
+  return detectClausesByMode(text, mode);
 }
 
-export function calculateBidScore(text = "") {
-  const lower = text.toLowerCase();
-  let positive = 0;
-  let negative = 0;
-  const flags = [];
+export function calculateBidScore(text = "", analysisMode = ANALYSIS_MODES.FEDERAL) {
+  const mode = normalizeAnalysisMode(analysisMode);
+  const { positives, negatives, positiveScore, negativeScore } = evaluateRiskRules(text, mode);
 
-  for (const signal of POSITIVE_SIGNALS) {
-    if (signal.tests.some((term) => lower.includes(term))) {
-      positive += signal.points;
-      flags.push(`+ ${signal.label}`);
-    }
-  }
+  const flags = [
+    ...positives.map((signal) => `+ ${signal.label}`),
+    ...negatives.map((signal) => `- ${signal.label}`)
+  ];
 
-  for (const signal of NEGATIVE_SIGNALS) {
-    if (signal.tests.some((term) => lower.includes(term))) {
-      negative += signal.points;
-      flags.push(`- ${signal.label}`);
-    }
-  }
-
-  let score = Math.min(100, Math.max(0, 50 + positive - negative));
+  const score = Math.min(100, Math.max(0, 50 + positiveScore - negativeScore));
 
   const recommendation =
     score >= 75 ? "Strong Bid"
@@ -134,6 +51,9 @@ export function calculateBidScore(text = "") {
     estimatedHours,
     estimatedProposalCost,
     flags,
+    analysisMode: mode,
     summary: [summary]
   };
 }
+
+export { ANALYSIS_MODES, normalizeAnalysisMode };

@@ -3,7 +3,7 @@ import crypto from "crypto";
 
 const router = express.Router();
 
-const DEMO_EMAIL = "demo@govconscanner.com";
+const DEMO_EMAIL = "demo@blackcrestai.com";
 const DEMO_PASSWORD = process.env.DEMO_PASSWORD || "password123";
 const DEMO_USER = {
   id: "demo-user",

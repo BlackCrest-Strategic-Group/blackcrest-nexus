@@ -15,16 +15,21 @@ export default function AnalysisStep({ analysisResult, onNext, onBack }) {
       <div className="card">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="section-title">Opportunity Analysis</h2>
+            <h2 className="section-title">BlackCrest Opportunity Analysis</h2>
             <p className="section-subtitle">
-              Review the AI-powered bid assessment before moving to execution planning
+              Review the multi-market assessment before moving to execution planning
             </p>
           </div>
           {/* Bid score badge from result */}
           {analysisResult?.recommendation && (
-            <span className="badge badge-navy text-sm py-1.5 px-4">
-              {analysisResult.recommendation}
-            </span>
+            <div className="flex items-center gap-2">
+              {analysisResult?.analysisMode && (
+                <span className="badge text-xs py-1 px-3 uppercase">{analysisResult.analysisMode}</span>
+              )}
+              <span className="badge badge-navy text-sm py-1.5 px-4">
+                {analysisResult.recommendation}
+              </span>
+            </div>
           )}
         </div>
       </div>

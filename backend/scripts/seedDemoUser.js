@@ -1,10 +1,10 @@
 import User from "../models/User.js";
 import EmailPreference from "../models/EmailPreference.js";
 
-const DEMO_EMAIL = process.env.DEMO_USER_EMAIL || "demo@govconscanner.com";
+const DEMO_EMAIL = process.env.DEMO_USER_EMAIL || "demo@blackcrestai.com";
 const DEMO_PASSWORD = process.env.DEMO_USER_PASSWORD || "Demo1234!";
 const DEMO_NAME = "Demo User";
-const DEMO_COMPANY = "GovCon AI Demo";
+const DEMO_COMPANY = "BlackCrest AI Demo";
 
 /**
  * Seeds the demo user into the database if it does not already exist.
@@ -12,7 +12,7 @@ const DEMO_COMPANY = "GovCon AI Demo";
  * explore the application without creating a real account.
  *
  * Credentials (override via environment variables):
- *   Email:    DEMO_USER_EMAIL    (default: demo@govconscanner.com)
+ *   Email:    DEMO_USER_EMAIL    (default: demo@blackcrestai.com)
  *   Password: DEMO_USER_PASSWORD (default: Demo1234!)
  */
 export async function seedDemoUser() {

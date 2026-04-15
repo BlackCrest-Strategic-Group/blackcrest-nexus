@@ -3,8 +3,8 @@ import Opportunity from "../models/Opportunity.js";
 import EmailPreference from "../models/EmailPreference.js";
 
 // Inline SVG logo used in email templates (safe for all email clients)
-const EMAIL_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="176" height="48" role="img" aria-label="GovCon AI (Powered by Truth Serum)">
-  <title>GovCon AI (Powered by Truth Serum)</title>
+const EMAIL_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="176" height="48" role="img" aria-label="BlackCrest AI Opportunity Intelligence">
+  <title>BlackCrest AI Opportunity Intelligence</title>
   <g transform="translate(4,4)">
     <circle cx="23" cy="23" r="19" fill="#14243a" stroke="#1e3553" stroke-width="2"/>
     <text x="23" y="29" text-anchor="middle" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="#ffffff">G</text>
@@ -14,8 +14,8 @@ const EMAIL_LOGO_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220
     <circle cx="10" cy="36" r="2.5" fill="#c79d3b"/>
     <circle cx="36" cy="36" r="2.5" fill="#c79d3b"/>
   </g>
-  <text x="66" y="22" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#14243a" letter-spacing="0.5">GovCon AI</text>
-  <text x="66" y="40" font-family="Arial,sans-serif" font-size="10" fill="#9a7724" letter-spacing="1">SCANNER</text>
+  <text x="66" y="22" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#14243a" letter-spacing="0.5">BlackCrest AI</text>
+  <text x="66" y="40" font-family="Arial,sans-serif" font-size="10" fill="#9a7724" letter-spacing="1">PLATFORM</text>
 </svg>`;
 
 function createTransport() {
@@ -25,14 +25,15 @@ function createTransport() {
     SMTP_USER,
     SMTP_PASSWORD,
     SMTP_SECURE,
-    GMAIL_USER,
-    GMAIL_PASSWORD,
+    OUTBOUND_EMAIL_PROVIDER,
+    OUTBOUND_EMAIL_USER,
+    OUTBOUND_EMAIL_PASSWORD,
     SENDGRID_API_KEY
   } = process.env;
 
   // Generic SMTP support (Render/hosted providers often use these env names).
   // When configured, prefer this transport before provider-specific presets.
-  if (SMTP_HOST && SMTP_USER && SMTP_PASSWORD) {
+  if (SMTP_HOST && (SMTP_USER || OUTBOUND_EMAIL_USER) && (SMTP_PASSWORD || OUTBOUND_EMAIL_PASSWORD)) {
     const parsedPort = Number.parseInt(SMTP_PORT || "", 10);
     const port = Number.isFinite(parsedPort) ? parsedPort : 587;
     const secure = typeof SMTP_SECURE === "string"
@@ -44,8 +45,8 @@ function createTransport() {
       port,
       secure,
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASSWORD
+        user: SMTP_USER || OUTBOUND_EMAIL_USER,
+        pass: SMTP_PASSWORD || OUTBOUND_EMAIL_PASSWORD
       }
     });
   }
@@ -61,18 +62,20 @@ function createTransport() {
     });
   }
 
-  if (GMAIL_USER && GMAIL_PASSWORD) {
+  if (OUTBOUND_EMAIL_PROVIDER === "smtp" && OUTBOUND_EMAIL_USER && OUTBOUND_EMAIL_PASSWORD) {
     return nodemailer.createTransport({
-      service: "gmail",
+      host: SMTP_HOST || "smtp.sendgrid.net",
+      port: Number.parseInt(SMTP_PORT || "587", 10),
+      secure: false,
       auth: {
-        user: GMAIL_USER,
-        pass: GMAIL_PASSWORD
+        user: OUTBOUND_EMAIL_USER,
+        pass: OUTBOUND_EMAIL_PASSWORD
       }
     });
   }
 
   throw new Error(
-    "Email not configured. Set SMTP_HOST + SMTP_USER + SMTP_PASSWORD, or GMAIL_USER + GMAIL_PASSWORD, or SENDGRID_API_KEY in your .env file."
+    "Email not configured. Set SMTP_HOST + SMTP_USER + SMTP_PASSWORD or OUTBOUND_EMAIL_PROVIDER/OUTBOUND_EMAIL_USER/OUTBOUND_EMAIL_PASSWORD, or SENDGRID_API_KEY."
   );
 }
 
@@ -125,7 +128,7 @@ export async function sendDailyDigest(user) {
   }
 
   const transport = createTransport();
-  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const fromAddress = process.env.OUTBOUND_EMAIL_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.OUTBOUND_EMAIL_USER || "noreply@blackcrestai.com";
 
   // Fetch email preferences for this user
   const prefs = await EmailPreference.findOne({ user: user._id });
@@ -156,13 +159,13 @@ export async function sendDailyDigest(user) {
     <body style="font-family:sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#f8fafc;">
       <div style="background:#fff;border-radius:12px;padding:32px;border:1px solid #e2e8f0;">
         <div style="margin-bottom:24px;">${EMAIL_LOGO_SVG}</div>
-        <h2 style="color:#64748b;font-weight:normal;margin:0 0 24px;">Daily Opportunity Digest</h2>
+        <h2 style="color:#64748b;font-weight:normal;margin:0 0 24px;">Daily Opportunity Intelligence Digest</h2>
         <p>Hello ${escapeHtml(user.name || user.email)},</p>
-        <p>Here are your latest federal contracting opportunities:</p>
+        <p>Here are your latest opportunities across federal and commercial markets:</p>
         ${formatOpportunitiesHtml(opportunities)}
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
         <p style="color:#94a3b8;font-size:12px;">
-          Designed for Non-Classified Use Only. GovCon AI provides preliminary analysis and does not
+          Designed for Non-Classified Use Only. BlackCrest AI provides preliminary analysis and does not
           replace professional contract review.
         </p>
       </div>
@@ -170,9 +173,9 @@ export async function sendDailyDigest(user) {
     </html>`;
 
   const info = await transport.sendMail({
-    from: `"GovCon AI (Powered by Truth Serum)" <${fromAddress}>`,
+    from: `"BlackCrest AI Opportunity Intelligence" <${fromAddress}>`,
     to: user.email,
-    subject: `GovCon AI + Truth Serum Daily Digest — ${new Date().toLocaleDateString()}`,
+    subject: `BlackCrest AI Daily Digest — ${new Date().toLocaleDateString()}`,
     html
   });
 
@@ -188,7 +191,7 @@ export async function sendDailyDigest(user) {
 
 export async function sendMfaOtpEmail(user, otp) {
   const transport = createTransport();
-  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const fromAddress = process.env.OUTBOUND_EMAIL_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.OUTBOUND_EMAIL_USER || "noreply@blackcrestai.com";
   const expiryMinutes = parseInt(process.env.MFA_OTP_EXPIRY_MINUTES || "5", 10);
 
   const html = `
@@ -207,7 +210,7 @@ export async function sendMfaOtpEmail(user, otp) {
           </div>
         </div>
         <p style="color:#64748b;font-size:13px;">
-          Never share this code with anyone. GovCon AI will never ask for your code.
+          Never share this code with anyone. BlackCrest AI will never ask for your code.
         </p>
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
         <p style="color:#94a3b8;font-size:12px;">
@@ -219,9 +222,9 @@ export async function sendMfaOtpEmail(user, otp) {
     </html>`;
 
   await transport.sendMail({
-    from: `"GovCon AI (Powered by Truth Serum)" <${fromAddress}>`,
+    from: `"BlackCrest AI Opportunity Intelligence" <${fromAddress}>`,
     to: user.email,
-    subject: "Your GovCon AI (Powered by Truth Serum) Verification Code",
+    subject: "Your BlackCrest AI Opportunity Intelligence Verification Code",
     html
   });
 }
@@ -246,7 +249,7 @@ export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
     throw configErr; // re-throw in production so the caller can handle it
   }
 
-  const fromAddress = process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.GMAIL_USER || "noreply@govconscanner.com";
+  const fromAddress = process.env.OUTBOUND_EMAIL_FROM || process.env.EMAIL_FROM || process.env.SMTP_USER || process.env.OUTBOUND_EMAIL_USER || "noreply@blackcrestai.com";
 
   const html = `
     <!DOCTYPE html>
@@ -257,7 +260,7 @@ export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
         <div style="margin-bottom:24px;">${EMAIL_LOGO_SVG}</div>
         <h2 style="color:#1e293b;margin:0 0 8px;">Password Reset Request</h2>
         <p>Hello ${escapeHtml(user.name || user.email)},</p>
-        <p>We received a request to reset your GovCon AI (Powered by Truth Serum) password. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
+        <p>We received a request to reset your BlackCrest AI Opportunity Intelligence password. Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.</p>
         <div style="text-align:center;margin:32px 0;">
           <a href="${resetUrl}"
              style="display:inline-block;padding:14px 32px;background:#14243a;color:#ffffff;text-decoration:none;border-radius:10px;font-weight:bold;font-size:15px;">
@@ -271,16 +274,16 @@ export async function sendPasswordResetEmail(user, resetToken, baseUrl) {
         <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
         <p style="color:#94a3b8;font-size:12px;">
           If you did not request a password reset, you can safely ignore this email — your password will not change.
-          <br/>Designed for Non-Classified Use Only. GovCon AI provides preliminary analysis and does not replace professional contract review.
+          <br/>Designed for Non-Classified Use Only. BlackCrest AI provides preliminary analysis and does not replace professional contract review.
         </p>
       </div>
     </body>
     </html>`;
 
   await transport.sendMail({
-    from: `"GovCon AI (Powered by Truth Serum)" <${fromAddress}>`,
+    from: `"BlackCrest AI Opportunity Intelligence" <${fromAddress}>`,
     to: user.email,
-    subject: "Reset Your GovCon AI (Powered by Truth Serum) Password",
+    subject: "Reset Your BlackCrest AI Opportunity Intelligence Password",
     html
   });
 }

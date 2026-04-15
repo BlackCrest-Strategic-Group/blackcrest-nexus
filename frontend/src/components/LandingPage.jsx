@@ -15,7 +15,7 @@ const TIERS = [
     price: "$0",
     period: "/mo",
     badge: null,
-    description: "Everything you need to find and evaluate federal contracts.",
+    description: "Everything you need to evaluate federal, commercial, and hybrid opportunities.",
     trial: "30-day full access, no credit card required",
     features: [
       "RFP Analysis — Unlimited",
@@ -34,7 +34,7 @@ const TIERS = [
     price: "$349",
     period: "/mo",
     badge: "Most Popular",
-    description: "Advanced tools for growing GovCon teams ready to scale.",
+    description: "Advanced tools for teams scaling multi-market opportunity operations.",
     trial: "30-day free trial, then $349/mo",
     features: [
       "Everything in Starter",
@@ -75,7 +75,7 @@ const SCREENSHOTS = [
     id: 1,
     title: "SAM.gov Opportunity Search",
     description:
-      "Instantly search, filter, and surface relevant federal contracting opportunities from SAM.gov. AI-ranked results mean you spend time on the right bids — not sifting through noise.",
+      "Instantly search, filter, and surface relevant opportunities. AI-ranked results mean you spend time on the right bids — not sifting through noise.",
     imgSrc: "/assets/screenshot-sam-search.png",
     fallback: true,
   },
@@ -92,7 +92,7 @@ const SCREENSHOTS = [
     id: 3,
     title: "Opportunity Intelligence",
     description:
-      "Deep-dive analytics on every opportunity: incumbent analysis, set-aside status, historical awards, agency spend patterns, and competitive landscape — all in one place.",
+      "Deep-dive analytics on every opportunity: federal compliance, commercial contract risk, historical awards, and competitive landscape — all in one place.",
     imgSrc: null,
     icon: "🔍",
     color: "#14243a",
@@ -110,8 +110,8 @@ const SCREENSHOTS = [
 
 // ─── How it works steps ───────────────────────────────────────────────────────
 const HOW_IT_WORKS = [
-  { step: "01", icon: "🔎", title: "Scan", description: "Connect to SAM.gov and let AI surface the most relevant opportunities for your NAICS codes and capabilities." },
-  { step: "02", icon: "⚖️", title: "Analyze", description: "Run instant Bid/No-Bid analysis powered by Truth Serum AI — backed by your capacity, past performance, and teaming data." },
+  { step: "01", icon: "🔎", title: "Scan", description: "Connect data sources and let AI surface the most relevant federal, commercial, and hybrid opportunities." },
+  { step: "02", icon: "⚖️", title: "Analyze", description: "Run instant bid/no-bid analysis powered by BlackCrest AI — backed by your capacity, past performance, and teaming data." },
   { step: "03", icon: "📝", title: "Propose", description: "Generate compliant, competitive proposals with AI-assisted writing, supplier identification, and ERP-backed pricing." },
   { step: "04", icon: "🏆", title: "Win", description: "Track every submission, monitor award decisions, and continuously improve your win-rate with AI-driven post-award insights." },
 ];
@@ -241,10 +241,10 @@ export default function LandingPage() {
             <ShieldLogo size={36} />
             <div>
               <div style={{ fontSize: 16, fontWeight: 800, color: "#ffffff", letterSpacing: 0.3 }}>
-                GovCon
+                BlackCrest
               </div>
               <div style={{ fontSize: 9, fontWeight: 600, color: "#c79d3b", letterSpacing: 2, textTransform: "uppercase" }}>
-                AI Scanner
+                AI Platform
               </div>
             </div>
           </div>
@@ -348,7 +348,7 @@ export default function LandingPage() {
               lineHeight: 1.65,
             }}
           >
-            GovCon AI (Powered by Truth Serum) gives your team an unfair advantage — instant RFP analysis, Bid/No-Bid decisions, SAM.gov intelligence, and proposal generation, all driven by Truth Serum AI.
+            BlackCrest AI (Powered by Truth Serum) gives your team an unfair advantage — instant RFP analysis, Bid/No-Bid decisions, SAM.gov intelligence, and proposal generation, all driven by Truth Serum AI.
           </p>
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 14, justifyContent: "center", marginBottom: 52 }}>
@@ -419,7 +419,7 @@ export default function LandingPage() {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: "#c79d3b", letterSpacing: 2, textTransform: "uppercase", marginBottom: 10 }}>Platform Features</p>
-            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 800, color: "#14243a", marginBottom: 14 }}>Everything Your GovCon Team Needs</h2>
+            <h2 style={{ fontSize: "clamp(26px, 3.5vw, 40px)", fontWeight: 800, color: "#14243a", marginBottom: 14 }}>Everything Your BlackCrest Team Needs</h2>
             <p style={{ fontSize: 16, color: "#4a6080", maxWidth: 560, margin: "0 auto" }}>From opportunity discovery to proposal submission — all in one platform, powered by Truth Serum AI.</p>
           </div>
 
@@ -586,11 +586,11 @@ export default function LandingPage() {
             {[
               {
                 q: "Is my data secure?",
-                a: "Yes. All data is encrypted in transit (TLS 1.3) and at rest (AES-256). GovCon AI (Powered by Truth Serum) is built with compliance-minded buyers in mind — we never share, sell, or use your proprietary data to train third-party models. Your RFP documents, ERP data, and bid strategies stay yours, period. We operate on SOC 2-aligned infrastructure and support TOTP multi-factor authentication on every account.",
+                a: "Yes. All data is encrypted in transit (TLS 1.3) and at rest (AES-256). BlackCrest AI (Powered by Truth Serum) is built with compliance-minded buyers in mind — we never share, sell, or use your proprietary data to train third-party models. Your RFP documents, ERP data, and bid strategies stay yours, period. We operate on SOC 2-aligned infrastructure and support TOTP multi-factor authentication on every account.",
               },
               {
                 q: "Can I use this with my existing ERP system?",
-                a: "Yes. Professional and Enterprise plans include ERP system connections. We support major GovCon ERP platforms and provide secure, read-only API integrations so your financial data can power AI-driven pricing and margin analysis without compromising your systems.",
+                a: "Yes. Professional and Enterprise plans include ERP system connections. We support major BlackCrest ERP platforms and provide secure, read-only API integrations so your financial data can power AI-driven pricing and margin analysis without compromising your systems.",
               },
               {
                 q: "Who owns the proposals and analyses generated?",
@@ -681,7 +681,7 @@ export default function LandingPage() {
             Ready to Win More Federal Contracts?
           </h2>
           <p style={{ fontSize: 17, color: "rgba(255,255,255,0.6)", marginBottom: 40, lineHeight: 1.65 }}>
-            Join GovCon teams already using Truth Serum AI to find, evaluate, and win government contracts faster than ever before.
+            Join BlackCrest teams already using Truth Serum AI to find, evaluate, and win government contracts faster than ever before.
           </p>
           <button onClick={() => goToRegister("free")} style={heroCTAStyle}>
             Request a Demo
@@ -698,7 +698,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <ShieldLogo size={30} />
             <div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>GovCon AI (Powered by Truth Serum)</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "#ffffff" }}>BlackCrest AI (Powered by Truth Serum)</div>
               <div style={{ fontSize: 10, color: "#c79d3b", letterSpacing: 1.5, textTransform: "uppercase" }}>Powered by Truth Serum AI</div>
             </div>
           </div>

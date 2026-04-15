@@ -1,7 +1,7 @@
 import express from "express";
 import multer from "multer";
 import { searchOpportunities, normalizeOpportunity } from "../services/samGov.js";
-import { calculateBidScore, detectClauses } from "../services/bidScoring.js";
+import { calculateBidScore, detectClauses, normalizeAnalysisMode } from "../services/bidScoring.js";
 import { parseDocument } from "../services/documentParser.js";
 import { extractNaicsCodesFromText, extractPrimaryNaicsCodeFromText } from "../services/naicsIdentificationService.js";
 import { authenticateToken } from "../middleware/auth.js";
@@ -175,8 +175,9 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
       });
     }
 
-    const clauses = detectClauses(text);
-    const scoreData = calculateBidScore(text);
+    const analysisMode = normalizeAnalysisMode(req.body.analysisMode);
+    const clauses = detectClauses(text, analysisMode);
+    const scoreData = calculateBidScore(text, analysisMode);
     const identifiedNaicsCodes = extractNaicsCodesFromText(text);
     const primaryNaicsCode = extractPrimaryNaicsCodeFromText(text);
 
@@ -199,6 +200,7 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
       success: true,
       fileName: req.file?.originalname || "pasted-text",
       extractedTextPreview: text.slice(0, 3000),
+      analysisMode: scoreData.analysisMode,
       naicsCode: primaryNaicsCode,
       identifiedNaicsCodes,
       clausesDetected: clauses,

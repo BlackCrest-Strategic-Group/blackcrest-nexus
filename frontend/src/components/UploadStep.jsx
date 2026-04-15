@@ -16,6 +16,7 @@ export default function UploadStep({ onComplete }) {
   const [dragOver, setDragOver] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [analysisMode, setAnalysisMode] = useState("federal");
   const fileRef = useRef(null);
 
   /* ── helpers ─────────────────────────────────────────────── */
@@ -37,10 +38,10 @@ export default function UploadStep({ onComplete }) {
       let res;
       if (payload instanceof FormData) {
         // File upload – multipart/form-data (existing backend endpoint)
-        res = await opportunitiesApi.analyze(payload);
+        res = await opportunitiesApi.analyze(payload, { analysisMode });
       } else {
         // Pasted text – JSON body (existing backend endpoint)
-        res = await opportunitiesApi.analyzeText(payload);
+        res = await opportunitiesApi.analyzeText({ text: payload, analysisMode });
       }
       onComplete(res.data);
     } catch (err) {
@@ -95,6 +96,32 @@ export default function UploadStep({ onComplete }) {
           </div>
         </div>
 
+        <div className="mb-5">
+          <label className="label">Analysis Mode</label>
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "federal", label: "Federal" },
+              { id: "commercial", label: "Commercial" },
+              { id: "hybrid", label: "Hybrid" }
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setAnalysisMode(id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all duration-150 ${
+                  analysisMode === id
+                    ? "bg-navy-900 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:text-slate-800"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            Select how BlackCrest AI should evaluate clauses and risk rules.
+          </p>
+        </div>
         {/* Error banner */}
         {error && (
           <div className="alert-error mb-4">
