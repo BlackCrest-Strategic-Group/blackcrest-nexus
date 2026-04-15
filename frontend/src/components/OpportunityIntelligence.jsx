@@ -174,7 +174,7 @@ export default function OpportunityIntelligence() {
         <div className="card text-center py-10">
           <p className="text-slate-500 font-medium">No data collected yet.</p>
           <p className="text-slate-400 text-sm mt-1">
-            Click <strong>Refresh Data</strong> to scan all federal opportunity databases.
+            Click <strong>Refresh Data</strong> to scan federal opportunity databases and align to commercial strategy.
           </p>
         </div>
       )}

@@ -99,7 +99,7 @@ export default function SearchForm({ onResults }) {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h2 className="section-title">SAM.gov Opportunity Search</h2>
-          <p className="section-subtitle">Search federal contracting opportunities from SAM.gov</p>
+          <p className="section-subtitle">Search federal opportunities from SAM.gov and compare with commercial priorities</p>
         </div>
         <button
           type="button"

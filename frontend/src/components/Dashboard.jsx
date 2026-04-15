@@ -578,7 +578,7 @@ export default function Dashboard() {
                 Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}!
               </h1>
               <p className="text-slate-400 text-sm mt-0.5">
-                Your GovCon intelligence dashboard — find and win federal contracts.
+                Your GovCon intelligence dashboard — find and win commercial and federal contracts.
               </p>
             </div>
             <div className="flex items-center gap-2">
