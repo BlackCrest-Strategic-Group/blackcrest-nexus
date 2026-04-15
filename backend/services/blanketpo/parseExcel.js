@@ -1,4 +1,7 @@
+import path from "path";
 import xlsx from "xlsx";
+
+const SUPPORTED_EXTENSIONS = new Set([".xlsx", ".xls", ".csv"]);
 
 const COLUMN_MAP = {
   supplier: ["supplier"],
@@ -7,8 +10,15 @@ const COLUMN_MAP = {
   qty: ["qty", "quantity"],
   unitPrice: ["unit price", "price", "unitprice"],
   releaseDate: ["release date", "release", "date"],
-  uom: ["uom", "unit of measure", "unit"]
+  uom: ["uom", "unit of measure", "unit"],
+  blanketStartDate: ["blanket start date", "start date", "blanket start"],
+  blanketEndDate: ["blanket end date", "end date", "blanket end"]
 };
+
+export function isSupportedSpreadsheet(filename = "") {
+  const extension = path.extname(filename || "").toLowerCase();
+  return SUPPORTED_EXTENSIONS.has(extension);
+}
 
 function normalizeHeader(header) {
   return String(header || "")
@@ -18,7 +28,7 @@ function normalizeHeader(header) {
     .replace(/\s+/g, " ");
 }
 
-function resolveHeaderMap(headers) {
+function resolveHeaderMap(headers = []) {
   const normalizedHeaders = headers.reduce((acc, header) => {
     acc[normalizeHeader(header)] = header;
     return acc;
@@ -71,7 +81,13 @@ export function parseExcel(buffer) {
   const sheetName = workbook.SheetNames[0];
 
   if (!sheetName) {
-    return { rows: [], missingColumns: Object.keys(COLUMN_MAP) };
+    return {
+      sheetName: null,
+      rawRows: [],
+      mappedRows: [],
+      resolvedHeaders: {},
+      missingColumns: []
+    };
   }
 
   const sheet = workbook.Sheets[sheetName];
@@ -83,9 +99,8 @@ export function parseExcel(buffer) {
 
   const headers = rawRows.length > 0 ? Object.keys(rawRows[0]) : [];
   const resolvedHeaders = resolveHeaderMap(headers);
-  const missingColumns = Object.keys(COLUMN_MAP).filter((column) => !resolvedHeaders[column]);
 
-  const rows = rawRows.map((row, index) => ({
+  const mappedRows = rawRows.map((row, index) => ({
     rowNumber: index + 2,
     supplier: String(row[resolvedHeaders.supplier] ?? "").trim(),
     partNumber: String(row[resolvedHeaders.partNumber] ?? "").trim(),
@@ -93,12 +108,19 @@ export function parseExcel(buffer) {
     qty: toNumber(row[resolvedHeaders.qty]),
     unitPrice: toNumber(row[resolvedHeaders.unitPrice]),
     releaseDate: parseExcelDate(row[resolvedHeaders.releaseDate]),
-    uom: String(row[resolvedHeaders.uom] ?? "").trim()
+    uom: String(row[resolvedHeaders.uom] ?? "").trim(),
+    blanketStartDate: parseExcelDate(row[resolvedHeaders.blanketStartDate]),
+    blanketEndDate: parseExcelDate(row[resolvedHeaders.blanketEndDate])
   }));
 
+  const requiredColumns = ["supplier", "partNumber", "qty", "unitPrice"];
+  const missingColumns = requiredColumns.filter((column) => !resolvedHeaders[column]);
+
   return {
-    rows,
-    missingColumns,
-    sheetName
+    sheetName,
+    rawRows,
+    mappedRows,
+    resolvedHeaders,
+    missingColumns
   };
 }
