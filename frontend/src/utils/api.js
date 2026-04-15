@@ -119,12 +119,15 @@ export const opportunitiesApi = {
   search: (params) => api.post("/api/opportunities/search", params),
   getSaved: () => api.get("/api/opportunities"),
   save: (opportunity) => api.post("/api/opportunities/save", { opportunity }),
-  analyze: (formData) =>
-    api.post("/api/opportunities/analyze", formData, {
+  analyze: (formData, options = {}) => {
+    const payload = formData;
+    if (options.analysisMode) payload.append("analysisMode", options.analysisMode);
+    return api.post("/api/opportunities/analyze", payload, {
       headers: { "Content-Type": "multipart/form-data" }
-    }),
-  analyzeText: (text) =>
-    api.post("/api/opportunities/analyze", { text }, {
+    });
+  },
+  analyzeText: (payload) =>
+    api.post("/api/opportunities/analyze", payload, {
       headers: { "Content-Type": "application/json" }
     })
 };

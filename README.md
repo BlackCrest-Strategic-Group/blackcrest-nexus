@@ -1,6 +1,6 @@
-# GovCon AI Scanner v2.0
+# BlackCrest AI Opportunity Intelligence Platform v3.0
 
-> AI-powered federal contracting opportunity scanner for government contractors
+> Multi-market opportunity intelligence for federal, commercial, and hybrid teams
 
 **Built by [BlackCrest Sourcing Group](https://blackcrestsourcing.com)**
 
@@ -11,7 +11,7 @@
 - 🔍 **SAM.gov Opportunity Search** — search by NAICS code, keyword, PSC, set-aside, and date range
 - 📄 **Document Analysis** — upload PDF / DOCX or paste text for instant bid/no-bid scoring
 - 🎯 **Bid Scoring Engine** — FAR/DFARS intelligence scores each opportunity 0–100
-- 📧 **Daily Email Digest** — automated opportunity delivery via Gmail or SendGrid
+- 📧 **Daily Email Digest** — automated opportunity delivery via SMTP or SendGrid
 - 🔐 **JWT Authentication** — secure login / registration with refresh tokens
 - 💾 **MongoDB Persistence** — users, saved opportunities, email preferences
 - ⚡ **React + Tailwind CSS** — modern responsive frontend with both logos
@@ -25,7 +25,7 @@ npm install
 
 # 2. Configure environment
 cp .env.example .env
-# Edit .env with your MongoDB URI, JWT secret, SAM API key, and email credentials
+# Edit .env with your MongoDB URI, JWT secret, SAM API key, and outbound email credentials
 
 # 3. Build frontend
 npm run build:frontend
@@ -85,16 +85,16 @@ See [docs/SETUP.md](docs/SETUP.md) for full setup, API reference, and deployment
 
 - **Backend:** Node.js, Express, MongoDB (Mongoose), JWT, bcryptjs, Nodemailer
 - **Frontend:** React 18, React Router, Tailwind CSS, Vite, Axios
-- **Services:** SAM.gov OpenGov API, Gmail / SendGrid
+- **Services:** SAM.gov OpenGov API, SMTP / SendGrid
 - **Monitoring:** Datadog APM (optional)
 
-- **Services:** SAM.gov, USASpending.gov, SBIR.gov, Grants.gov, Gmail / SendGrid
+- **Services:** SAM.gov, USASpending.gov, SBIR.gov, Grants.gov, SMTP / SendGrid
 - **Intelligence:** Multi-source NAICS-filtered opportunity analysis with trend scoring (also available as a standalone Python/FastAPI microservice in `intelligence/`)
 - **Monitoring:** Datadog APM (optional)
 
 ## Pricing & Payments
 
-GovCon AI Scanner includes a **30-day free trial** with full access to all features.
+BlackCrest AI includes a **30-day free trial** with full access to all features.
 
 After the trial period, users are directed to upgrade via Stripe:
 
@@ -108,13 +108,15 @@ STRIPE_PAYMENT_LINK=https://buy.stripe.com/aFa7sK8peh2l4Up8aVf7i02
 
 ## Disclaimer
 
-Designed for Non-Classified Use Only. GovCon AI Scanner provides preliminary analysis and does not replace professional contract review.
+Designed for Non-Classified Use Only. BlackCrest AI provides preliminary analysis and does not replace professional contract review.
 
 ---
 
 ## Opportunity Scoring Engine
 
-The **Opportunity Scoring Engine** (`backend/services/opportunityScoringEngine.js`) evaluates a federal solicitation against a company profile and returns a structured score.
+The **Opportunity Scoring Engine** (`backend/services/opportunityScoringEngine.js`) evaluates a solicitation against a company profile and returns a structured score.
+
+For document analysis (`/api/opportunities/analyze`), BlackCrest AI now supports `analysisMode` values of `federal`, `commercial`, and `hybrid`. Clause and risk detection are powered by a modular rule engine in `backend/services/ruleEngine/`.
 
 ### How it works
 
