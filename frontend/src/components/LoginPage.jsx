@@ -517,10 +517,10 @@ export default function LoginPage() {
         {/* Hero text */}
         <div className="relative flex-1">
           <h2 className="text-white text-3xl font-bold leading-tight mb-4">
-            Win more federal<br />contracts with AI.
+            Win more commercial and federal<br />contracts with AI.
           </h2>
           <p className="text-sm leading-relaxed mb-10" style={{ color: "#8a9bb0" }}>
-            Find, evaluate, and prioritize federal contracting opportunities in minutes — not hours.
+            Find, evaluate, and prioritize commercial and federal contracting opportunities in minutes — not hours.
             Built for GovCon professionals who demand results.
           </p>
 
