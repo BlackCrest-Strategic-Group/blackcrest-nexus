@@ -91,6 +91,7 @@ async function mountRoute(path, candidates) {
 }
 
 await mountRoute("/api/opportunities", ["./backend/routes/opportunities.js", "./routes/opportunities.js"]);
+await mountRoute("/api/sam-search", ["./backend/routes/samSearch.js", "./routes/samSearch.js"]);
 await mountRoute("/api/auth", ["./backend/routes/auth.js", "./routes/auth.js"]);
 await mountRoute("/api/mfa", ["./backend/routes/mfa.js"]);
 await mountRoute("/api/capacity", ["./backend/routes/capacity.js"]);
