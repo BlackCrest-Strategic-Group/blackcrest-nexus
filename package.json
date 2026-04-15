@@ -48,7 +48,8 @@
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0",
     "stripe": "^22.0.0",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
