@@ -3,6 +3,7 @@ import multer from "multer";
 import { searchOpportunities, normalizeOpportunity } from "../services/samGov.js";
 import { calculateBidScore, detectClauses } from "../services/bidScoring.js";
 import { parseDocument } from "../services/documentParser.js";
+import { extractNaicsCodesFromText, extractPrimaryNaicsCodeFromText } from "../services/naicsIdentificationService.js";
 import { authenticateToken } from "../middleware/auth.js";
 import Opportunity from "../models/Opportunity.js";
 import { audit, getIp, EVENT } from "../services/auditLogger.js";
@@ -176,6 +177,8 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
 
     const clauses = detectClauses(text);
     const scoreData = calculateBidScore(text);
+    const identifiedNaicsCodes = extractNaicsCodesFromText(text);
+    const primaryNaicsCode = extractPrimaryNaicsCodeFromText(text);
 
     audit(EVENT.ANALYSIS_RUN, {
       userId: req.user.id,
@@ -196,6 +199,8 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
       success: true,
       fileName: req.file?.originalname || "pasted-text",
       extractedTextPreview: text.slice(0, 3000),
+      naicsCode: primaryNaicsCode,
+      identifiedNaicsCodes,
       clausesDetected: clauses,
       ...scoreData,
       disclaimer: "Designed for Non-Classified Use Only"
@@ -231,6 +236,32 @@ router.post("/analyze", authenticateToken, handleAnalyzeUpload, async (req, res)
   }
 });
 
+// POST /api/opportunities/identify-naics — identify NAICS codes from RFP/RFI text
+router.post("/identify-naics", authenticateToken, handleAnalyzeUpload, async (req, res) => {
+  try {
+    let text = "";
+
+    if (req.file) {
+      text = await parseDocument(req.file.buffer, req.file.mimetype, req.file.originalname);
+    } else if (req.body.text) {
+      text = String(req.body.text);
+    } else {
+      return res.status(400).json({ success: false, error: "Provide a file or text to identify NAICS codes." });
+    }
+
+    const naicsCodes = extractNaicsCodesFromText(text);
+    return res.json({
+      success: true,
+      naicsCodes,
+      primaryNaicsCode: naicsCodes[0] || null,
+      source: req.file ? "file_upload" : "pasted_text",
+    });
+  } catch (error) {
+    console.error("NAICS identification error:", error.message);
+    return res.status(500).json({ success: false, error: "Failed to identify NAICS codes." });
+  }
+});
+
 // POST /api/opportunities/save — Save an opportunity
 router.post("/save", authenticateToken, async (req, res) => {
   try {
@@ -252,6 +283,7 @@ router.post("/save", authenticateToken, async (req, res) => {
   } catch (error) {
     console.error("Save opportunity error:", error.message);
     return res.status(500).json({ success: false, error: "Failed to save opportunity." });
-    export default router;
   }
 });
+
+export default router;
