@@ -12,6 +12,7 @@ import BlackCrestAIPage from "../marketing/pages/BlackCrestAIPage.jsx";
 import GovConAIPage from "../marketing/pages/GovConAIPage.jsx";
 import TruthSerumAIPage from "../marketing/pages/TruthSerumAIPage.jsx";
 import LabsPage from "../marketing/pages/LabsPage.jsx";
+import BlanketPOBuilderPage from "./BlanketPOBuilder.jsx";
 
 function ProtectedRoute({ children }) {
   const token = getToken();
@@ -60,6 +61,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/blanket-po-builder"
+          element={
+            <ProtectedRoute>
+              <BlanketPOBuilderPage />
             </ProtectedRoute>
           }
         />

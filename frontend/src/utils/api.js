@@ -248,12 +248,14 @@ export const proposalsApi = {
   remove: (id) => api.delete(`/api/proposals/${id}`)
 };
 
-export default api;
 // Blanket PO
 export const blanketPoApi = {
   upload: (formData) =>
     api.post("/api/blanket-po/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" }
-    })
+    }),
+  exportCsv: (data) => api.post("/api/blanket-po/export/csv", data, { responseType: "text" })
 };
+
+export default api;
 
