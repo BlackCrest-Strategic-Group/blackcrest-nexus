@@ -99,9 +99,9 @@ function SkeletonCard() {
 const TABS = [
   /* NEW: Guided workflow tab — placed first so it is the default landing view */
   { id: "workflow",    label: "🚀 Opportunity Workflow" },
-  { id: "search",      label: "SAM.gov Search" },
+  { id: "search",      label: "Opportunity Search" },
   { id: "analyze",     label: "Document Analysis" },
-  { id: "far",         label: "FAR / DFARS" },
+  { id: "far",         label: "Compliance Hub" },
   { id: "nonclass",    label: "Non-Classified" },
   { id: "intelligence",label: "Intelligence" },
   { id: "saved",       label: "Saved Opportunities" },
@@ -578,13 +578,13 @@ export default function Dashboard() {
                 Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}!
               </h1>
               <p className="text-slate-400 text-sm mt-0.5">
-                Your GovCon intelligence dashboard — find and win commercial and federal contracts.
+                Your hybrid procurement intelligence dashboard — source, evaluate, and act across federal and commercial markets.
               </p>
             </div>
             <div className="flex items-center gap-2">
               <span className="badge badge-green text-xs py-1.5 px-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block mr-1 animate-pulse" />
-                SAM.gov Connected
+                Hybrid Data Connected
               </span>
               <span className="badge badge-blue text-xs py-1.5 px-3">AI Active</span>
             </div>
@@ -597,7 +597,7 @@ export default function Dashboard() {
               icon="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
             <StatCard label="Avg. Bid Score" value="74" sub="Strong bid threshold" accent="amber"
               icon="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            <StatCard label="Compliance Rate" value="92%" sub="FAR/DFARS reviewed" accent="purple"
+            <StatCard label="Compliance Rate" value="92%" sub="Policy clauses reviewed" accent="purple"
               icon="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </div>
         </div>
@@ -658,7 +658,7 @@ export default function Dashboard() {
         {/* ── Opportunity Workflow (NEW guided 4-step flow) ── */}
         {tab === "workflow" && <OpportunityWorkflow />}
 
-        {/* ── SAM.gov Search ── */}
+        {/* ── Opportunity Search ── */}
         {tab === "search" && (
           <div className="space-y-4 animate-fade-in">
             <SearchForm onResults={setSearchResults} />
@@ -824,7 +824,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── FAR / DFARS ── */}
+        {/* ── Compliance Hub ── */}
         {tab === "far" && <FARDFARSTab />}
 
         {/* ── Non-Classified ── */}
@@ -866,9 +866,9 @@ export default function Dashboard() {
                     d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                 </svg>
                 <p className="text-slate-600 font-semibold">No saved opportunities yet</p>
-                <p className="text-slate-400 text-sm mt-1">Search SAM.gov and save opportunities to build your pipeline</p>
+                <p className="text-slate-400 text-sm mt-1">Search hybrid opportunity sources and save opportunities to build your pipeline</p>
                 <button onClick={() => setTab("search")} className="btn-primary mt-4 mx-auto">
-                  Search SAM.gov
+                  Search Opportunities
                 </button>
               </div>
             ) : (
@@ -1008,7 +1008,7 @@ export default function Dashboard() {
       <footer className="border-t border-slate-200 bg-white py-5 px-6">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} BlackCrest Strategic Group &bull; GovCon AI (Powered by Truth Serum)
+            &copy; {new Date().getFullYear()} BlackCrest Strategic Group &bull; AI Procurement Intelligence Engine (Powered by Truth Serum)
           </p>
           <div className="flex items-center gap-4">
             <span className="text-xs text-slate-400">Non-Classified Use Only</span>

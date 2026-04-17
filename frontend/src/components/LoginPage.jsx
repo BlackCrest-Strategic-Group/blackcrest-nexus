@@ -21,10 +21,10 @@ const NAICS_OPTIONS = [
 ];
 
 const FEATURES = [
-  { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", text: "Real-time SAM.gov opportunity search" },
+  { icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z", text: "Real-time hybrid opportunity search" },
   { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "AI-powered bid/no-bid scoring" },
-  { icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2", text: "FAR/DFARS compliance review" },
-  { icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", text: "Daily opportunity digest emails" }
+  { icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2", text: "Cross-market compliance review" },
+  { icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z", text: "Daily procurement digest emails" }
 ];
 
 // TOTP setup wizard — shown when a user hasn't configured an authenticator app yet
@@ -145,7 +145,7 @@ function TotpSetupStep({ mfaSetupToken, onSuccess, onBack }) {
             </p>
             <div className="rounded-xl p-4 mb-3" style={{ background: "#f8fafc", border: "1px solid #c8d5e6" }}>
               <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Account Name</p>
-              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>GovCon AI (Powered by Truth Serum)</p>
+              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>AI Procurement Intelligence Engine (Powered by Truth Serum)</p>
               <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Setup Key</p>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-mono break-all flex-1" style={{ color: "#14243a", wordBreak: "break-all" }}>
@@ -511,7 +511,7 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-16 relative">
-          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group – GovCon AI (Powered by Truth Serum)" style={{ height: 48, width: "auto" }} />
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group – AI Procurement Intelligence Engine (Powered by Truth Serum)" style={{ height: 48, width: "auto" }} />
         </div>
 
         {/* Hero text */}
@@ -521,7 +521,7 @@ export default function LoginPage() {
           </h2>
           <p className="text-sm leading-relaxed mb-10" style={{ color: "#8a9bb0" }}>
             Find, evaluate, and prioritize commercial and federal contracting opportunities in minutes — not hours.
-            Built for GovCon professionals who demand results.
+            Built for sourcing, category, and purchasing teams who need fast, defensible decisions.
           </p>
 
           <div className="space-y-4">
@@ -548,7 +548,7 @@ export default function LoginPage() {
             ))}
           </div>
           <p className="text-sm text-gray-400">
-            Built for GovCon professionals &bull; Powered by real-time SAM.gov data
+            Built for hybrid procurement teams &bull; Powered by multi-source market intelligence
           </p>
         </div>
       </div>
@@ -558,7 +558,7 @@ export default function LoginPage() {
         {/* Top bar */}
         <header className="flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(20,36,58,0.10)", background: "#ffffff" }}>
           <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group" style={{ height: 36, width: "auto" }} />
-          <img src="/logos/govcon-logo.svg" alt="GovCon AI (Powered by Truth Serum)" style={{ height: 36, width: "auto" }} />
+          <img src="/logos/govcon-logo.svg" alt="AI Procurement Intelligence Engine (Powered by Truth Serum)" style={{ height: 36, width: "auto" }} />
         </header>
 
         {/* Form area */}
@@ -591,7 +591,7 @@ export default function LoginPage() {
                 {mode === "forgotPassword" && "Forgot Password"}
               </h1>
               <p className="text-sm mt-1" style={{ color: "#5d6b7c" }}>
-                {mode === "login" && "Sign in to access your GovCon dashboard"}
+                {mode === "login" && "Sign in to access your hybrid procurement dashboard"}
                 {mode === "register" && "Start your 30-day free trial — no credit card required"}
                 {mode === "forgotPassword" && "Enter your email and we'll send you a reset link"}
               </p>
@@ -761,7 +761,7 @@ export default function LoginPage() {
                       <span className="font-normal" style={{ color: "#5d6b7c" }}>(optional — improves opportunity matching)</span>
                     </label>
                     <p className="text-xs mb-2" style={{ color: "#5d6b7c" }}>
-                      Select the industry codes that best describe your business. These help us surface the most relevant federal opportunities for you.
+                      Select the industry codes that best describe your business. These improve matching across federal and commercial opportunities.
                     </p>
                     <div
                       className="max-h-44 overflow-y-auto rounded-xl p-2 space-y-1"
@@ -859,7 +859,7 @@ export default function LoginPage() {
             </div>
 
             <p className="text-sm text-gray-400">
-              Built for GovCon professionals &bull; Powered by real-time SAM.gov data
+              Built for hybrid procurement teams &bull; Powered by multi-source market intelligence
             </p>
             </>
             )}
