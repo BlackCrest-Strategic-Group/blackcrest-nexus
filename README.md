@@ -2,7 +2,7 @@
 
 > Multi-market opportunity intelligence for federal, commercial, and hybrid teams
 
-**Built by [BlackCrest Sourcing Group](https://blackcrestsourcing.com)**
+**Built by [BlackCrest Strategic Group](https://blackcrestsourcing.com)**
 
 ---
 
