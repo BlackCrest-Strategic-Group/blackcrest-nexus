@@ -1,0 +1,35 @@
+:root {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  color: #0f172a;
+  background: #f8fafc;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+.container { max-width: 1280px; margin: 0 auto; padding: 24px; }
+header h1 { margin-bottom: 8px; }
+.panel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin: 16px 0;
+  padding: 16px;
+}
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+.card { background: #f1f5f9; border-radius: 8px; padding: 12px; display:flex; flex-direction:column; gap:8px; }
+.card span { font-size: 1.2rem; font-weight: 700; }
+.button-row { display:flex; flex-wrap:wrap; gap:8px; }
+button {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  background: #0f766e;
+  color: #fff;
+  cursor: pointer;
+}
+button:disabled { opacity: 0.6; cursor: not-allowed; }
+.error { color: #b91c1c; }
+.table-wrap { overflow-x:auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: top; }
+th { background: #f8fafc; }
