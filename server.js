@@ -74,6 +74,13 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+app.get("/api/version", (req, res) => {
+  res.status(200).json({
+    product: "BlackCrest Procurement Intelligence Engine",
+    version: "3.0",
+  });
+});
+
 /**
  * API routes
  */

@@ -145,7 +145,7 @@ function TotpSetupStep({ mfaSetupToken, onSuccess, onBack }) {
             </p>
             <div className="rounded-xl p-4 mb-3" style={{ background: "#f8fafc", border: "1px solid #c8d5e6" }}>
               <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Account Name</p>
-              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>AI Procurement Intelligence Engine (Powered by Truth Serum)</p>
+              <p className="text-sm font-mono mb-3" style={{ color: "#14243a" }}>BlackCrest Procurement Intelligence Engine</p>
               <p className="text-xs font-semibold mb-1 uppercase tracking-wide" style={{ color: "#5d6b7c" }}>Setup Key</p>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-mono break-all flex-1" style={{ color: "#14243a", wordBreak: "break-all" }}>
@@ -477,7 +477,7 @@ export default function LoginPage() {
         setError("Signed in, but your browser blocked secure storage. Please disable private mode or strict privacy settings and try again.");
         return;
       }
-      navigate("/dashboard", { replace: true });
+      navigate("/app", { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || "Something went wrong. Please try again.");
     } finally {
@@ -491,7 +491,7 @@ export default function LoginPage() {
       setError("Signed in, but your browser blocked secure storage. Please disable private mode or strict privacy settings and try again.");
       return;
     }
-    navigate("/dashboard", { replace: true });
+    navigate("/app", { replace: true });
   }
 
   function handleMfaBack() {
@@ -511,13 +511,13 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="flex items-center gap-3 mb-16 relative">
-          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group – AI Procurement Intelligence Engine (Powered by Truth Serum)" style={{ height: 48, width: "auto" }} />
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Procurement Intelligence Engine" style={{ height: 48, width: "auto" }} />
         </div>
 
         {/* Hero text */}
         <div className="relative flex-1">
           <h2 className="text-white text-3xl font-bold leading-tight mb-4">
-            Win more commercial and federal<br />contracts with AI.
+            Make faster commercial and federal procurement decisions with AI.
           </h2>
           <p className="text-sm leading-relaxed mb-10" style={{ color: "#8a9bb0" }}>
             Find, evaluate, and prioritize commercial and federal contracting opportunities in minutes — not hours.
@@ -557,8 +557,8 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col" style={{ background: "#f7fafe" }}>
         {/* Top bar */}
         <header className="flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(20,36,58,0.10)", background: "#ffffff" }}>
-          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Strategic Group" style={{ height: 36, width: "auto" }} />
-          <img src="/logos/govcon-logo.svg" alt="AI Procurement Intelligence Engine (Powered by Truth Serum)" style={{ height: 36, width: "auto" }} />
+          <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Procurement Intelligence Engine" style={{ height: 36, width: "auto" }} />
+          <img src="/logos/govcon-logo.svg" alt="BlackCrest Procurement Intelligence Engine" style={{ height: 36, width: "auto" }} />
         </header>
 
         {/* Form area */}
