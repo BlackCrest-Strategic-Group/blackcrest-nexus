@@ -47,10 +47,10 @@ export default function Header() {
     <header className="bg-navy-950 border-b border-white/10 px-8 py-0 flex items-center justify-between min-h-[72px] sticky top-0 z-50 shadow-nav">
       {/* ── Left: Brand ── */}
       <div className="flex items-center gap-3">
-        <img src="/assets/logo.png" alt="BlackCrest Strategic Group" className="h-10 w-auto object-contain" />
+        <img src="/assets/logo.png" alt="BlackCrest Procurement Intelligence Engine" className="h-10 w-auto object-contain" />
         <div className="hidden sm:block">
-          <p className="text-white text-sm font-bold leading-tight tracking-tight">BlackCrest Strategic Group</p>
-          <p className="text-slate-400 text-[10px] leading-tight tracking-wide uppercase">Hybrid Procurement Intelligence</p>
+          <p className="text-white text-sm font-bold leading-tight tracking-tight">BlackCrest Procurement Intelligence Engine</p>
+          <p className="text-slate-400 text-[10px] leading-tight tracking-wide uppercase">Procurement Intelligence Platform</p>
         </div>
       </div>
 

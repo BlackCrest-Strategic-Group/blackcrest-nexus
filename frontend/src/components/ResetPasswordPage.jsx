@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
       <div className="w-full max-w-md px-6 py-10">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8 justify-center">
-          <img src="/logos/govcon-logo.svg" alt="GovCon AI (Powered by Truth Serum)" style={{ height: 40, width: "auto" }} />
+          <img src="/logos/govcon-logo.svg" alt="BlackCrest Procurement Intelligence Engine" style={{ height: 40, width: "auto" }} />
         </div>
 
         <div className="bg-white rounded-2xl p-8" style={{ border: "1px solid rgba(20,36,58,0.12)", boxShadow: "0 10px 28px rgba(20,36,58,0.08)" }}>
@@ -165,7 +165,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="text-center text-xs mt-6" style={{ color: "#5d6b7c" }}>
-          Designed for Non-Classified Use Only &bull; GovCon AI (Powered by Truth Serum) v2.0
+          Designed for enterprise use &bull; BlackCrest Procurement Intelligence Engine v3.0
         </p>
       </div>
     </div>
