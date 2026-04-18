@@ -116,20 +116,19 @@ export const mfaApi = {
 
 // Opportunities
 export const opportunitiesApi = {
-  search: (params) => api.post("/api/opportunities/search", params),
   getSaved: () => api.get("/api/opportunities"),
   save: (opportunity) => api.post("/api/opportunities/save", { opportunity }),
-  analyze: (formData, options = {}) => {
-    const payload = formData;
-    if (options.analysisMode) payload.append("analysisMode", options.analysisMode);
-    return api.post("/api/opportunities/analyze", payload, {
+  analyze: (formData) =>
+    api.post("/api/opportunities/analyze", formData, {
       headers: { "Content-Type": "multipart/form-data" }
-    });
-  },
-  analyzeText: (payload) =>
-    api.post("/api/opportunities/analyze", payload, {
-      headers: { "Content-Type": "application/json" }
-    })
+    }),
+  analyzeText: (payload) => api.post("/api/opportunities/analyze", payload),
+  score: (payload) => api.post("/api/opportunities/score", payload)
+};
+
+export const fundingApi = {
+  match: (payload) => api.post("/api/funding/match", payload),
+  request: (payload) => api.post("/api/funding/request", payload)
 };
 
 // Email

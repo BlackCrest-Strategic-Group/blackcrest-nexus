@@ -1,5 +1,5 @@
 {
-  "name": "govcon-ai-scanner",
+  "name": "blackcrest-opportunity-funding-intelligence-engine",
   "version": "2.0.0",
   "type": "module",
   "scripts": {
@@ -14,14 +14,12 @@
     "postinstall": "patch-package"
   },
   "keywords": [
-    "govcon",
-    "far",
-    "dfars",
-    "compliance",
-    "proposal",
-    "node",
-    "express",
-    "mongodb"
+    "opportunity-intelligence",
+    "funding-intelligence",
+    "contract-analysis",
+    "lender-matching",
+    "business-financing",
+    "document-analysis"
   ],
   "author": "",
   "license": "ISC",
