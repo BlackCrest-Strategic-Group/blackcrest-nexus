@@ -76,7 +76,7 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/version", (req, res) => {
   res.status(200).json({
-    product: "BlackCrest Procurement Intelligence Engine",
+    product: "BlackCrest Opportunity & Funding Intelligence Engine",
     version: "3.0",
   });
 });
@@ -97,25 +97,13 @@ async function mountRoute(path, candidates) {
   }
 }
 
-await mountRoute("/api/opportunities", ["./backend/routes/opportunities.js", "./routes/opportunities.js"]);
-await mountRoute("/api/sam-search", ["./backend/routes/samSearch.js", "./routes/samSearch.js"]);
+await mountRoute("/api/opportunities", ["./backend/routes/opportunities.js"]);
+await mountRoute("/api/funding", ["./backend/routes/funding.js"]);
 await mountRoute("/api/auth", ["./backend/routes/auth.js", "./routes/auth.js"]);
 await mountRoute("/api/mfa", ["./backend/routes/mfa.js"]);
-await mountRoute("/api/capacity", ["./backend/routes/capacity.js"]);
-await mountRoute("/api/workflows", ["./backend/routes/workflows.js"]);
-await mountRoute("/api/suppliers", ["./backend/routes/suppliers.js"]);
-await mountRoute("/api/find-suppliers", ["./backend/routes/findSuppliers.js"]);
-await mountRoute("/api/opportunity/evaluate", ["./backend/routes/opportunityEvaluate.js"]);
-await mountRoute("/api/opportunity/score", ["./backend/routes/opportunityScoring.js"]);
-await mountRoute("/api/opportunity-intelligence", ["./backend/routes/opportunityIntelligence.js"]);
-await mountRoute("/api/margins", ["./backend/routes/margins.js"]);
-await mountRoute("/api/proposals", ["./backend/routes/proposals.js"]);
-await mountRoute("/api/erp", ["./backend/routes/erp.js"]);
 await mountRoute("/api/email", ["./backend/routes/email.js"]);
 await mountRoute("/api/dashboard", ["./backend/routes/dashboard.js"]);
-await mountRoute("/api/admin", ["./backend/routes/admin.js"]);
 await mountRoute("/api/docs", ["./backend/routes/docs.js"]);
-await mountRoute("/api/blanket-po", ["./backend/routes/blanketPoRoutes.js"]);
 await mountRoute("/api-docs", ["./routes/docs.js"]);
 
 /**
