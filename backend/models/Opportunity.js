@@ -15,25 +15,25 @@ const opportunitySchema = new mongoose.Schema(
     setAside: { type: String, default: null },
     noticeType: { type: String, default: null },
     contractType: { type: String, default: null },
+    description: { type: String, default: "" },
+    estimatedValue: { type: Number, default: 0 },
     placeOfPerformance: { type: mongoose.Schema.Types.Mixed, default: null },
     uiLink: { type: String, default: null },
+    source: { type: String, enum: ["sam-gov", "seed", "manual"], default: "sam-gov" },
+    ingestBatchAt: { type: Date, default: Date.now },
 
-    // Analysis fields (populated when a user analyzes this opportunity)
     bidScore: { type: Number, default: null },
     recommendation: { type: String, default: null },
     analysisFlags: { type: [String], default: [] },
-
-    // Tracking which users saved/analyzed this opportunity
     savedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-
-    // Cache metadata
     cachedAt: { type: Date, default: Date.now }
   },
   { timestamps: true }
 );
 
 opportunitySchema.index({ naicsCode: 1, postedDate: -1 });
-opportunitySchema.index({ cachedAt: 1 }, { expireAfterSeconds: 86400 }); // 24-hour TTL
+opportunitySchema.index({ agency: 1, postedDate: -1 });
+opportunitySchema.index({ ingestBatchAt: -1 });
 
 const Opportunity = mongoose.model("Opportunity", opportunitySchema);
 
