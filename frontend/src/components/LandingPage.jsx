@@ -1,11 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
-const bullets = [
-  "Upload contracts, RFPs, SOWs, and deal packages",
-  "Get AI opportunity intelligence and viability scoring",
-  "See funding readiness and curated lender matches",
-  "Submit an intro request from the same workflow"
+const features = [
+  "Opportunity Discovery",
+  "Win Probability Scoring",
+  "Truth Serum Recommendations",
+  "Margin & Risk Signals",
+  "Compliance Analysis",
+  "Personalized Intelligence Feed"
 ];
 
 export default function LandingPage() {
@@ -13,26 +15,47 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <p className="text-xs uppercase tracking-[0.18em] text-cyan-300">BlackCrest Opportunity & Funding Intelligence Engine</p>
-        <h1 className="mt-4 text-4xl font-bold leading-tight md:text-5xl">Opportunity → Decision → Funding</h1>
-        <p className="mt-5 max-w-3xl text-lg text-slate-300">
-          Analyze new opportunities in minutes, estimate execution viability, and map practical funding pathways with curated lender matches.
-        </p>
+      <div className="mx-auto max-w-6xl px-6 py-16 space-y-16">
+        <section className="space-y-6">
+          <p className="text-xs uppercase tracking-[0.22em] text-cyan-300">Truth Serum AI</p>
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight">Procurement intelligence that finds revenue before your competitors do.</h1>
+          <p className="max-w-3xl text-slate-300 text-lg">Truth Serum AI continuously scans federal opportunities, scores win probability, margin, and strategic fit, then tells your team exactly what to pursue, partner, or ignore.</p>
+          <div className="flex gap-3 flex-wrap">
+            <button className="btn-primary" onClick={() => navigate('/login?mode=register')}>Start Free</button>
+            <button className="btn-secondary" onClick={() => navigate('/login')}>Log In</button>
+            <button className="btn-secondary" onClick={() => navigate('/login')}>Watch Demo</button>
+          </div>
+        </section>
 
-        <ul className="mt-8 space-y-3">
-          {bullets.map((item) => (
-            <li key={item} className="flex items-center gap-3 text-slate-200">
-              <span className="inline-block h-2 w-2 rounded-full bg-cyan-400" />
-              {item}
-            </li>
-          ))}
-        </ul>
+        <section>
+          <h2 className="text-2xl font-semibold mb-5">Core intelligence stack</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {features.map((feature) => (
+              <div key={feature} className="rounded-xl border border-slate-800 bg-slate-900 p-5">{feature}</div>
+            ))}
+          </div>
+        </section>
 
-        <div className="mt-10 flex flex-wrap gap-3">
-          <button className="btn-primary" onClick={() => navigate("/login")}>Sign In</button>
-          <button className="btn-secondary" onClick={() => navigate("/app")}>Open App</button>
-        </div>
+        <section className="rounded-2xl border border-cyan-900 bg-slate-900 p-8">
+          <h2 className="text-2xl font-semibold mb-4">How it works</h2>
+          <ol className="space-y-3 text-slate-200">
+            <li>1. Build your profile</li>
+            <li>2. Engine scans & scores</li>
+            <li>3. Act on prioritized opportunities</li>
+          </ol>
+        </section>
+
+        <section className="flex flex-wrap gap-3 text-sm text-slate-300">
+          <span className="px-3 py-2 rounded-full border border-slate-700">Designed for Non-Classified Use Only</span>
+          <span className="px-3 py-2 rounded-full border border-slate-700">Secure login</span>
+          <span className="px-3 py-2 rounded-full border border-slate-700">Built for procurement professionals</span>
+        </section>
+
+        <section className="rounded-2xl bg-cyan-400 text-slate-950 p-8">
+          <h2 className="text-3xl font-bold">Build your intelligence profile.</h2>
+          <p className="mt-2">Register now and launch your personalized opportunity feed.</p>
+          <button className="mt-5 rounded-lg bg-slate-950 text-white px-5 py-3 font-semibold" onClick={() => navigate('/login?mode=register')}>Register</button>
+        </section>
       </div>
     </div>
   );

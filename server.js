@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { connectDB } from "./backend/config/db.js";
+import { startOpportunityIngestionCron } from "./backend/services/opportunityIngestionService.js";
 
 dotenv.config();
 
@@ -104,6 +105,7 @@ await mountRoute("/api/auth", ["./backend/routes/auth.js", "./routes/auth.js"]);
 await mountRoute("/api/mfa", ["./backend/routes/mfa.js"]);
 await mountRoute("/api/email", ["./backend/routes/email.js"]);
 await mountRoute("/api/dashboard", ["./backend/routes/dashboard.js"]);
+await mountRoute("/api/intelligence", ["./backend/routes/intelligence.js"]);
 await mountRoute("/api/docs", ["./backend/routes/docs.js"]);
 await mountRoute("/api/analyze-rfp", ["./server/routes/analyzeRfpRoutes.js"]);
 await mountRoute("/api-docs", ["./routes/docs.js"]);
@@ -150,6 +152,8 @@ app.use((err, req, res, next) => {
     error: err.message || "Internal server error",
   });
 });
+
+startOpportunityIngestionCron();
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

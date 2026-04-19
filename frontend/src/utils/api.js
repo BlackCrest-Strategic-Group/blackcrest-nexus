@@ -265,3 +265,15 @@ export const blanketPoApi = {
 };
 
 export default api;
+
+
+export const intelligenceEngineApi = {
+  getProfile: () => api.get("/api/intelligence/profile"),
+  saveOnboarding: (payload) => api.post("/api/intelligence/onboarding", payload),
+  ingest: (payload) => api.post("/api/intelligence/ingest", payload),
+  listOpportunities: () => api.get("/api/intelligence/opportunities"),
+  complianceAnalyze: (formData) =>
+    api.post("/api/intelligence/compliance/analyze", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    })
+};

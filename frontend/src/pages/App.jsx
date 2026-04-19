@@ -2,7 +2,6 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../components/LoginPage.jsx";
 import LandingPage from "../components/LandingPage.jsx";
-import ProcurementIntelligencePage from "../components/procurement/ProcurementIntelligencePage.jsx";
 import Dashboard from "../components/Dashboard.jsx";
 import ResetPasswordPage from "../components/ResetPasswordPage.jsx";
 import { getToken } from "../utils/auth.js";
@@ -20,9 +19,8 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ProcurementIntelligencePage />} />
-        <Route path="/landing" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<LoginPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route
