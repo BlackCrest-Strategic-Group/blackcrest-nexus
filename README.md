@@ -64,3 +64,30 @@ The platform no longer depends on SAM.gov search configuration.
 ## Disclaimer
 
 Outputs are decision-support estimates for opportunity planning and capital access workflows. They are not legal, financial, or underwriting decisions.
+
+## Procurement Intelligence & Risk Detection SaaS (MVP 2.0)
+
+New capability for executive-level RFP risk detection:
+
+- **Urgency Detection Engine** (0–100)
+- **Scope Volatility Engine** (0–100)
+- **Post-Award Risk Engine** (0–100)
+- **Intelligence Score** and bid recommendation
+
+### API
+
+- `POST /api/analyze-rfp` (multipart form-data)
+  - `rfp`: PDF file (optional)
+  - `text`: raw RFP text (optional)
+- `GET /api/analyze-rfp/history`
+
+### OpenAI configuration
+
+Add to `.env`:
+
+```bash
+OPENAI_API_KEY=your_key
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+If no OpenAI key is available, the platform automatically runs deterministic heuristic scoring.

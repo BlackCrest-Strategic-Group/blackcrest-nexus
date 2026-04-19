@@ -1,0 +1,163 @@
+.pi-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  color: #0f172a;
+}
+
+.pi-hero h1 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.pi-hero p {
+  color: #334155;
+  margin-bottom: 1.25rem;
+}
+
+.pi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #dbe1ea;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.upload-box {
+  border: 2px dashed #94a3b8;
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.upload-box input {
+  display: none;
+}
+
+textarea {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.75rem;
+  width: 100%;
+}
+
+button {
+  background: #0f172a;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.risk-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.risk-card strong {
+  font-size: 1.5rem;
+}
+
+.risk-card.high {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.risk-card.medium {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.risk-card.low {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.intelligence-score {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #e2e8f0;
+  padding: 0.7rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.intelligence-score strong {
+  font-size: 1.4rem;
+}
+
+.summary,
+.recommendation {
+  background: #f8fafc;
+  border-left: 4px solid #0f172a;
+  padding: 0.65rem;
+  border-radius: 6px;
+}
+
+.error-msg {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.history {
+  margin-top: 1rem;
+}
+
+.history-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.history-item {
+  border: 1px solid #dbe1ea;
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+
+.history-item header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+@media (max-width: 960px) {
+  .pi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .risk-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -105,6 +105,7 @@ await mountRoute("/api/mfa", ["./backend/routes/mfa.js"]);
 await mountRoute("/api/email", ["./backend/routes/email.js"]);
 await mountRoute("/api/dashboard", ["./backend/routes/dashboard.js"]);
 await mountRoute("/api/docs", ["./backend/routes/docs.js"]);
+await mountRoute("/api/analyze-rfp", ["./server/routes/analyzeRfpRoutes.js"]);
 await mountRoute("/api-docs", ["./routes/docs.js"]);
 
 /**
