@@ -277,3 +277,13 @@ export const intelligenceEngineApi = {
       headers: { "Content-Type": "multipart/form-data" }
     })
 };
+
+
+export const procurementApi = {
+  analyzeOpportunity: (payload) => api.post("/api/analyze-opportunity", payload),
+  analyzeText: (payload) => api.post("/api/analyze-text", payload),
+  listOpportunities: () => api.get("/api/opportunities"),
+  listSuppliers: (params) => api.get("/api/suppliers", { params }),
+  decisionScore: (payload) => api.post("/api/decision-score", payload),
+  truthInsights: () => api.get("/api/truth-insights")
+};

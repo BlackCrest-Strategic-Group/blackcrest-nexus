@@ -1,93 +1,98 @@
-# BlackCrest Opportunity & Funding Intelligence Engine
+# BlackCrest Procurement Intelligence Operating System
 
-Cross-industry AI workflow for opportunity analysis and funding path recommendations.
+Enterprise SaaS platform for procurement teams and defense contractors to make **bid/no-bid**, **win-probability**, **supplier**, **risk**, and **financial** decisions.
 
-## What it does
+## Core Decision Outcomes
 
-1. Upload an opportunity document (PDF, DOCX, TXT) or paste text.
-2. Generate opportunity intelligence:
-   - Opportunity summary
-   - Estimated value range
-   - Complexity level
-   - Timeline risk
-   - Execution risk
-   - Margin potential band
-   - Go / No-Go score
-3. Generate funding intelligence:
-   - Funding readiness score
-   - Recommended funding types
-   - Curated lender matches
-4. Submit an "Explore Funding Options" request for follow-up.
+The platform returns actionable recommendations for:
 
-## Architecture
+- Should we pursue this opportunity?
+- What is the probability of winning?
+- What will it cost?
+- What margin can we achieve?
+- Which suppliers should we use?
+- What risks exist?
+- What strategy improves win probability?
+
+## Platform Architecture
 
 - **Backend:** Node.js + Express + MongoDB (Mongoose)
-- **Frontend:** React + Vite + Tailwind CSS
-- **Core Services:** document parsing, opportunity analysis, scoring, curated lender matching
+- **Frontend:** React + Vite
+- **Security:** JWT auth, bcrypt password hashing, rate limiting, helmet, input validation
+- **Decision Stack:**
+  - `samService.js` opportunity context ingestion
+  - `aiService.js` narrative/heuristic scoring
+  - `supplierService.js` supplier intelligence scoring
+  - `decisionEngine.js` bid/no-bid + financial model
+  - `truthEngine.js` persistent historical insights
 
-## Key API Endpoints
+## API Endpoints (Core)
 
-- `POST /api/opportunities/analyze`
-- `POST /api/opportunities/score`
-- `POST /api/funding/match`
-- `POST /api/funding/request`
-- `POST /api/auth/login`
-- `GET /health`
+All endpoints below require JWT unless otherwise noted.
 
-## Quick start
+- `POST /api/analyze-opportunity`
+- `POST /api/analyze-text`
+- `GET /api/opportunities`
+- `GET /api/suppliers`
+- `POST /api/decision-score`
+- `GET /api/truth-insights`
+- `POST /api/auth/register` (public)
+- `POST /api/auth/login` (public)
+
+## Local Setup
 
 ```bash
 npm install
-cp .env.example .env
+cp .env.example .env   # create manually if not present
 npm run build:frontend
 npm start
 ```
 
-Then open `http://localhost:3000`.
+Open: `http://localhost:3000`
 
-## Environment notes
+### Minimum environment variables
 
-Required in production:
+```bash
+NODE_ENV=development
+PORT=3000
+MONGODB_URI=mongodb://127.0.0.1:27017/blackcrest
+JWT_SECRET=replace-with-long-random-secret
+JWT_REFRESH_SECRET=replace-with-another-long-random-secret
+```
 
-- `MONGODB_URI`
-- `JWT_SECRET`
+## Render Deployment
 
-The platform no longer depends on SAM.gov search configuration.
+1. Create a new Render Web Service connected to this repo.
+2. Configure environment variables from the list above.
+3. Build command:
+   ```bash
+   npm install && npm run build:frontend
+   ```
+4. Start command:
+   ```bash
+   npm start
+   ```
+5. Ensure MongoDB connection string is reachable from Render.
 
-## Render deployment
+## Product Experience
 
-`render.yaml` compatibility is preserved. Build/start commands remain:
+- **Public users:** see a gated landing page with locked preview metrics.
+- **Authenticated users:** access full dashboard with live decision analysis.
+- **Dashboard outputs:** recommendation, win probability, risk score, estimated cost, expected margin, supplier recommendations, and strategy actions.
 
-- Build: `npm install && npm run build:frontend`
-- Start: `npm start`
+## Security Controls
+
+- JWT-based access control (`Authorization: Bearer <token>`)
+- Password hashing via `bcryptjs`
+- Request rate limiting (`express-rate-limit`)
+- Secure headers via `helmet`
+- API input validation and centralized error handling
+
+## Operational Notes
+
+- Background opportunity ingestion cron starts on server boot.
+- If `MONGODB_URI` is unset, persistence features are unavailable.
 
 ## Disclaimer
 
-Outputs are decision-support estimates for opportunity planning and capital access workflows. They are not legal, financial, or underwriting decisions.
-
-## Procurement Intelligence & Risk Detection SaaS (MVP 2.0)
-
-New capability for executive-level RFP risk detection:
-
-- **Urgency Detection Engine** (0–100)
-- **Scope Volatility Engine** (0–100)
-- **Post-Award Risk Engine** (0–100)
-- **Intelligence Score** and bid recommendation
-
-### API
-
-- `POST /api/analyze-rfp` (multipart form-data)
-  - `rfp`: PDF file (optional)
-  - `text`: raw RFP text (optional)
-- `GET /api/analyze-rfp/history`
-
-### OpenAI configuration
-
-Add to `.env`:
-
-```bash
-OPENAI_API_KEY=your_key
-OPENAI_MODEL=gpt-4.1-mini
-```
-
-If no OpenAI key is available, the platform automatically runs deterministic heuristic scoring.
+Decision outputs are advisory analytics for procurement planning and should be validated against organizational compliance, legal, and finance controls.
