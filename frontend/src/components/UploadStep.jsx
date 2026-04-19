@@ -7,7 +7,7 @@
  * parent workflow can advance to Step 2.
  */
 import React, { useRef, useState } from "react";
-import { opportunitiesApi } from "../utils/api.js";
+import { truthSerumApi } from "../utils/api.js";
 
 export default function UploadStep({ onComplete }) {
   // "file" | "text" toggle
@@ -37,11 +37,10 @@ export default function UploadStep({ onComplete }) {
     try {
       let res;
       if (payload instanceof FormData) {
-        // File upload – multipart/form-data (existing backend endpoint)
-        res = await opportunitiesApi.analyze(payload, { analysisMode });
+        payload.append("analysisMode", analysisMode);
+        res = await truthSerumApi.analyze(payload);
       } else {
-        // Pasted text – JSON body (existing backend endpoint)
-        res = await opportunitiesApi.analyzeText({ text: payload, analysisMode });
+        res = await truthSerumApi.analyzeText({ text: payload, analysisMode });
       }
       onComplete(res.data);
     } catch (err) {
@@ -75,7 +74,7 @@ export default function UploadStep({ onComplete }) {
           <div>
             <h2 className="section-title">Upload Opportunity</h2>
             <p className="section-subtitle">
-              Upload a solicitation document or paste the text to begin AI-powered analysis
+              Upload a solicitation package or paste text to run Truth Serum procurement intelligence
             </p>
           </div>
           {/* Mode toggle */}
@@ -119,7 +118,7 @@ export default function UploadStep({ onComplete }) {
             ))}
           </div>
           <p className="text-xs text-slate-400 mt-2">
-            Select how BlackCrest AI should evaluate clauses and risk rules.
+            Select the operating context for the Truth Serum decision model.
           </p>
         </div>
         {/* Error banner */}

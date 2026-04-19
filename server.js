@@ -98,6 +98,7 @@ async function mountRoute(path, candidates) {
 }
 
 await mountRoute("/api/opportunities", ["./backend/routes/opportunities.js"]);
+await mountRoute("/api/truth-serum", ["./backend/routes/truthSerum.js"]);
 await mountRoute("/api/funding", ["./backend/routes/funding.js"]);
 await mountRoute("/api/auth", ["./backend/routes/auth.js", "./routes/auth.js"]);
 await mountRoute("/api/mfa", ["./backend/routes/mfa.js"]);
