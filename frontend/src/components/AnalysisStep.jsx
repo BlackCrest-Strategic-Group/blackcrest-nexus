@@ -7,6 +7,7 @@
  */
 import React from "react";
 import AnalysisResults from "./AnalysisResults.jsx";
+import TruthSerumResults from "./TruthSerumResults.jsx";
 
 export default function AnalysisStep({ analysisResult, onNext, onBack }) {
   return (
@@ -17,7 +18,7 @@ export default function AnalysisStep({ analysisResult, onNext, onBack }) {
           <div>
             <h2 className="section-title">BlackCrest Opportunity Analysis</h2>
             <p className="section-subtitle">
-              Review the multi-market assessment before moving to execution planning
+              Truth Serum reveals execution reality, margin pressure, and hidden bid risk
             </p>
           </div>
           {/* Bid score badge from result */}
@@ -35,7 +36,11 @@ export default function AnalysisStep({ analysisResult, onNext, onBack }) {
       </div>
 
       {/* ── Existing AnalysisResults component – unchanged backend integration ── */}
-      <AnalysisResults result={analysisResult} />
+      {analysisResult?.decision ? (
+        <TruthSerumResults result={analysisResult} />
+      ) : (
+        <AnalysisResults result={analysisResult} />
+      )}
 
       {/* ── Navigation ── */}
       <div className="flex justify-between pt-2">

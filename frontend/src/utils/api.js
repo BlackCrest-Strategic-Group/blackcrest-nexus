@@ -126,6 +126,14 @@ export const opportunitiesApi = {
   score: (payload) => api.post("/api/opportunities/score", payload)
 };
 
+export const truthSerumApi = {
+  analyze: (formData) =>
+    api.post("/api/truth-serum/analyze", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }),
+  analyzeText: (payload) => api.post("/api/truth-serum/analyze-text", payload)
+};
+
 export const fundingApi = {
   match: (payload) => api.post("/api/funding/match", payload),
   request: (payload) => api.post("/api/funding/request", payload)
@@ -257,4 +265,3 @@ export const blanketPoApi = {
 };
 
 export default api;
-
