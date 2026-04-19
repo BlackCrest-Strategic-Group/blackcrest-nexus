@@ -1,6 +1,3 @@
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-
 /**
  * Parse a document buffer and return its text content.
  * Supports PDF (application/pdf) and plain text (text/plain).
@@ -12,7 +9,7 @@ export async function parseDocument(buffer, mimetype = "", filename = "") {
 
   // PDF
   if (type === "application/pdf" || name.endsWith(".pdf")) {
-    import pdfParse from "pdf-parse";
+    const { default: pdfParse } = await import("pdf-parse");
     const data = await pdfParse(buffer);
     return data.text || "";
   }
