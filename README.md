@@ -1,98 +1,108 @@
-# BlackCrest Procurement Intelligence Operating System
+# BLACKCREST PROCUREMENT INTELLIGENCE PLATFORM
 
-Enterprise SaaS platform for procurement teams and defense contractors to make **bid/no-bid**, **win-probability**, **supplier**, **risk**, and **financial** decisions.
+Production-style SaaS platform for upstream category intelligence, midstream supplier/opportunity intelligence, and downstream decision support.
 
-## Core Decision Outcomes
+## Core Modules
+- Category Intelligence (analysis + save snapshots + history)
+- Supplier Intelligence (profiles, evaluation, comparison-ready scoring)
+- Opportunity / RFP Intelligence (PDF in-memory processing + text paste)
+- Decision Center dashboard (integrated widgets + actions)
+- Watchlist system (category/supplier/opportunity with statuses)
 
-The platform returns actionable recommendations for:
+## Privacy-First Architecture
+- No default document storage (PDF uploads handled in memory via multer memory storage)
+- Stateless analysis responses by default
+- User-controlled storage only for structured outputs (Save actions)
+- Token-based auth via environment variables (`JWT_SECRET`, API keys)
+- Data segregation using dedicated models
+- Delete capability available by module APIs
+- Minimal metadata-oriented logging expectation
+- Product disclaimer: **Designed for Non-Classified Use Only**
 
-- Should we pursue this opportunity?
-- What is the probability of winning?
-- What will it cost?
-- What margin can we achieve?
-- Which suppliers should we use?
-- What risks exist?
-- What strategy improves win probability?
+## Tech Stack
+- Node.js + Express
+- MongoDB + Mongoose
+- React + Vite frontend
 
-## Platform Architecture
+## Project Structure
+```
+/server
+  routes/
+  controllers/
+  services/
+  models/
+  middleware/
+/frontend/src
+  pages/
+  components/
+  layouts/
+  services/
+  context/
+```
 
-- **Backend:** Node.js + Express + MongoDB (Mongoose)
-- **Frontend:** React + Vite
-- **Security:** JWT auth, bcrypt password hashing, rate limiting, helmet, input validation
-- **Decision Stack:**
-  - `samService.js` opportunity context ingestion
-  - `aiService.js` narrative/heuristic scoring
-  - `supplierService.js` supplier intelligence scoring
-  - `decisionEngine.js` bid/no-bid + financial model
-  - `truthEngine.js` persistent historical insights
-
-## API Endpoints (Core)
-
-All endpoints below require JWT unless otherwise noted.
-
-- `POST /api/analyze-opportunity`
-- `POST /api/analyze-text`
-- `GET /api/opportunities`
-- `GET /api/suppliers`
-- `POST /api/decision-score`
-- `GET /api/truth-insights`
-- `POST /api/auth/register` (public)
-- `POST /api/auth/login` (public)
+## Required Environment Variables
+Create `.env` in repo root:
+```
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/blackcrest
+JWT_SECRET=replace-with-strong-secret
+OPENAI_API_KEY=optional-for-future-ai-service
+```
 
 ## Local Setup
-
-```bash
-npm install
-cp .env.example .env   # create manually if not present
-npm run build:frontend
-npm start
-```
-
-Open: `http://localhost:3000`
-
-### Minimum environment variables
-
-```bash
-NODE_ENV=development
-PORT=3000
-MONGODB_URI=mongodb://127.0.0.1:27017/blackcrest
-JWT_SECRET=replace-with-long-random-secret
-JWT_REFRESH_SECRET=replace-with-another-long-random-secret
-```
-
-## Render Deployment
-
-1. Create a new Render Web Service connected to this repo.
-2. Configure environment variables from the list above.
-3. Build command:
+1. Install dependencies:
    ```bash
-   npm install && npm run build:frontend
+   npm install
+   cd frontend && npm install && cd ..
    ```
-4. Start command:
+2. Start frontend + backend in dev:
    ```bash
+   npm run dev:full
+   ```
+3. Or production build:
+   ```bash
+   npm run build:frontend
    npm start
    ```
-5. Ensure MongoDB connection string is reachable from Render.
 
-## Product Experience
+## Database Models
+- User
+- UserPreferences
+- CategorySnapshot
+- SupplierProfile
+- SupplierAnalysis
+- OpportunityAnalysis
+- WatchlistItem
+- ActionItem
 
-- **Public users:** see a gated landing page with locked preview metrics.
-- **Authenticated users:** access full dashboard with live decision analysis.
-- **Dashboard outputs:** recommendation, win probability, risk score, estimated cost, expected margin, supplier recommendations, and strategy actions.
+Only structured outputs are persisted.
 
-## Security Controls
+## Demo Readiness
+- Demo data is seeded automatically on first successful user auth.
+- Includes sample category snapshot, suppliers, opportunity analysis, and action items.
 
-- JWT-based access control (`Authorization: Bearer <token>`)
-- Password hashing via `bcryptjs`
-- Request rate limiting (`express-rate-limit`)
-- Secure headers via `helmet`
-- API input validation and centralized error handling
+## Key Routes
+Frontend:
+- `/`
+- `/login`
+- `/register`
+- `/dashboard`
+- `/category-intelligence`
+- `/supplier-intelligence`
+- `/opportunity-intelligence`
+- `/watchlist`
+- `/history`
+- `/profile`
+- `/settings`
+- `/privacy`
 
-## Operational Notes
-
-- Background opportunity ingestion cron starts on server boot.
-- If `MONGODB_URI` is unset, persistence features are unavailable.
-
-## Disclaimer
-
-Decision outputs are advisory analytics for procurement planning and should be validated against organizational compliance, legal, and finance controls.
+API:
+- `/api/auth/*`
+- `/api/dashboard`
+- `/api/category-intelligence/*`
+- `/api/supplier-intelligence/*`
+- `/api/opportunity-intelligence/*`
+- `/api/watchlist/*`
+- `/api/profile`
+- `/api/settings`
+- `/api/history`
