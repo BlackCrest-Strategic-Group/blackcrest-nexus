@@ -1,9 +1,8 @@
 import React from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import AppShell from '../layouts/AppShell';
 import LandingPage from './LandingPage';
-import LoginPage from './LoginPage';
 import RegisterPage from './RegisterPage';
 import DashboardPage from './DashboardPage';
 import CategoryPage from './CategoryPage';
@@ -14,11 +13,36 @@ import HistoryPage from './HistoryPage';
 import ProfilePage from './ProfilePage';
 import SettingsPage from './SettingsPage';
 import PrivacyPage from './PrivacyPage';
+import LoginPage from '../components/LoginPage';
+import MFASettingsPage from '../components/MFASettingsPage';
+import MFASetupPage from '../components/MFASetupPage';
 
-function Protected({ children }) {
-  const { user } = useAuth();
+function AuthLoadingScreen() {
+  return (
+    <div className="shell" style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
+      <div className="card" style={{ textAlign: 'center', maxWidth: 320 }}>
+        <p style={{ marginBottom: 8 }}>Checking your secure session…</p>
+        <small className="muted">Please wait</small>
+      </div>
+    </div>
+  );
+}
+
+function ProtectedLayout() {
+  const { user, authLoading } = useAuth();
+  if (authLoading) return <AuthLoadingScreen />;
   if (!user) return <Navigate to="/login" replace />;
-  return <AppShell>{children}</AppShell>;
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
+  );
+}
+
+function AuthEntryRedirect() {
+  const { user, authLoading } = useAuth();
+  if (authLoading) return <AuthLoadingScreen />;
+  return <Navigate to={user ? '/dashboard' : '/'} replace />;
 }
 
 export default function App() {
@@ -29,16 +53,24 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
-          <Route path="/dashboard" element={<Protected><DashboardPage /></Protected>} />
-          <Route path="/category-intelligence" element={<Protected><CategoryPage /></Protected>} />
-          <Route path="/supplier-intelligence" element={<Protected><SupplierPage /></Protected>} />
-          <Route path="/opportunity-intelligence" element={<Protected><OpportunityPage /></Protected>} />
-          <Route path="/watchlist" element={<Protected><WatchlistPage /></Protected>} />
-          <Route path="/history" element={<Protected><HistoryPage /></Protected>} />
-          <Route path="/profile" element={<Protected><ProfilePage /></Protected>} />
-          <Route path="/settings" element={<Protected><SettingsPage /></Protected>} />
+
+          <Route element={<ProtectedLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/app" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/category-intelligence" element={<CategoryPage />} />
+            <Route path="/supplier-intelligence" element={<SupplierPage />} />
+            <Route path="/opportunity-intelligence" element={<OpportunityPage />} />
+            <Route path="/watchlist" element={<WatchlistPage />} />
+            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/security" element={<MFASettingsPage />} />
+            <Route path="/mfa-settings" element={<MFASettingsPage />} />
+            <Route path="/mfa-setup" element={<MFASetupPage />} />
+          </Route>
+
           <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<AuthEntryRedirect />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

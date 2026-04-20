@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
@@ -11,11 +11,19 @@ const navItems = [
   ['History', '/history'],
   ['Profile', '/profile'],
   ['Settings', '/settings'],
+  ['Security', '/security'],
   ['Privacy', '/privacy']
 ];
 
 export default function AppShell({ children }) {
   const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogout() {
+    await logout();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -26,7 +34,7 @@ export default function AppShell({ children }) {
             <NavLink key={path} to={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>{label}</NavLink>
           ))}
         </nav>
-        <button className="btn ghost" onClick={logout}>Log out</button>
+        <button className="btn ghost" onClick={handleLogout}>Log out</button>
         <small>Designed for Non-Classified Use Only</small>
       </aside>
       <main className="content">{children}</main>
