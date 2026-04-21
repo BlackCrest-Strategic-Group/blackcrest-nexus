@@ -228,7 +228,7 @@ async function generateExplanations(suppliers, opportunitySummary) {
   const results = await Promise.all(
     suppliers.map(async (s) => {
       try {
-        const prompt = `You are a GovCon analyst. In one sentence (max 25 words), explain why "${s.name}" located in ${s.location} is a good fit for this government opportunity: "${opportunitySummary || "government services contract"}". Focus on their capabilities: ${s.capabilities.join(", ")}.`;
+        const prompt = `Base analysis only on provided input and publicly available procurement knowledge. Do not infer or assume access to proprietary or internal company data. You are a GovCon analyst. In one sentence (max 25 words), explain why "${s.name}" located in ${s.location} is a good fit for this government opportunity: "${opportunitySummary || "government services contract"}". Focus on their capabilities: ${s.capabilities.join(", ")}.`;
 
         const completion = await openai.chat.completions.create({
           model: "gpt-4o-mini",

@@ -17,6 +17,18 @@ import LoginPage from '../components/LoginPage';
 import MFASettingsPage from '../components/MFASettingsPage';
 import MFASetupPage from '../components/MFASetupPage';
 
+
+function CleanRoomDisclosure() {
+  return (
+    <>
+      <div className="cleanroom-banner">
+        This platform operates exclusively on publicly available data and user-provided inputs. No proprietary or confidential employer data is accessed, stored, or processed.
+      </div>
+      <div className="cleanroom-watermark" aria-hidden="true">NON-CLASSIFIED USE ONLY</div>
+    </>
+  );
+}
+
 function AuthLoadingScreen() {
   return (
     <div className="shell" style={{ display: 'grid', placeItems: 'center', minHeight: '100vh' }}>
@@ -48,6 +60,7 @@ function AuthEntryRedirect() {
 export default function App() {
   return (
     <AuthProvider>
+      <CleanRoomDisclosure />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />

@@ -31,7 +31,7 @@ function parseStructuredPayload(content) {
       post_award_risk: clampScore(parsed?.scores?.post_award_risk),
     },
     insights: Array.isArray(parsed.insights) ? parsed.insights.slice(0, 6) : [],
-    recommendation: parsed.recommendation || "Do NOT bid / High risk engagement",
+    recommendation: parsed.recommendation || "Advisory: review feasibility with user-defined assumptions before proceeding",
   };
 }
 
@@ -46,20 +46,20 @@ function heuristicFallback(text) {
   const postAwardRisk = clampScore(Math.max(20, 90 - postAwardGap * 10));
 
   return {
-    summary: "Risk engines identified structural procurement weaknesses with financial downside exposure.",
+    summary: "Advisory risk profile generated from provided text and public procurement heuristics.",
     scores: {
       urgency,
       scope_volatility: scopeVolatility,
       post_award_risk: postAwardRisk,
     },
     insights: [
-      "Reactive procurement environment detected from urgency-heavy language and compressed deadlines.",
-      "High likelihood of mid-process change and delivery failure due to unstable requirement framing.",
-      "No post-award management discipline detected; value leakage and margin erosion are likely.",
+      "Urgency-heavy wording may indicate compressed procurement timelines.",
+      "Requirement volatility language suggests elevated change-management risk.",
+      "Limited performance-management references may increase post-award delivery risk.",
     ],
     recommendation: postAwardRisk > 70 || scopeVolatility > 70
-      ? "Do NOT bid / High risk engagement"
-      : "Bid only with strict commercial protections and governance controls",
+      ? "Advisory: proceed only after additional clarification and risk controls."
+      : "Advisory: suitable to pursue with documented controls and assumptions.",
   };
 }
 
@@ -68,10 +68,9 @@ export async function analyzeProcurementRisk(documentText) {
     return heuristicFallback(documentText);
   }
 
-  const prompt = `You are a procurement intelligence and risk detection expert advising executives.
-You MUST detect procurement failure patterns and business impact.
-Do not summarize. Do not use generic language.
-Always tie findings to financial or execution impact.
+  const prompt = `You are a procurement intelligence and risk detection expert.
+Base analysis only on provided input and publicly available procurement knowledge. Do not infer or assume access to proprietary or internal company data.
+Use neutral, advisory language and avoid authoritative directives.
 
 Return STRICT JSON with this schema only:
 {

@@ -29,9 +29,8 @@ export async function analyzeSupplier(req, res) {
   return res.json({ supplier, output });
 }
 
-export async function saveSupplierAnalysis(req, res) {
-  const analysis = await SupplierAnalysis.create({ userId: req.user._id, ...req.body });
-  return res.status(201).json(analysis);
+export async function saveSupplierAnalysis(_req, res) {
+  return res.status(410).json({ message: 'Persistent storage is disabled in clean-room mode.' });
 }
 
 export async function compareSuppliers(req, res) {

@@ -6,6 +6,11 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 export const uploadMemoryPdf = upload.single('file');
 
 export async function analyzeOpportunity(req, res) {
+  const source = req.body.source || 'user_input';
+  if (!['user_input', 'public_rfp_upload'].includes(source)) {
+    return res.status(400).json({ error: 'Unsupported input source. Only public RFP uploads and user text inputs are allowed.' });
+  }
+
   const title = req.body.title || 'Untitled Opportunity';
   const text = req.body.text || '';
   const fileName = req.file?.originalname || null;
@@ -22,17 +27,14 @@ export async function analyzeOpportunity(req, res) {
   });
 }
 
-export async function saveOpportunity(req, res) {
-  const item = await OpportunityAnalysis.create({ userId: req.user._id, ...req.body });
-  return res.status(201).json(item);
+export async function saveOpportunity(_req, res) {
+  return res.status(410).json({ message: 'Persistent storage is disabled in clean-room mode.' });
 }
 
-export async function listOpportunities(req, res) {
-  const items = await OpportunityAnalysis.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(50);
-  return res.json(items);
+export async function listOpportunities(_req, res) {
+  return res.json({ history: [] });
 }
 
-export async function deleteOpportunity(req, res) {
-  await OpportunityAnalysis.deleteOne({ _id: req.params.id, userId: req.user._id });
+export async function deleteOpportunity(_req, res) {
   return res.json({ success: true });
 }

@@ -9,7 +9,7 @@ export default function Dashboard() {
     text: "",
     competitorCount: 4,
     teamCapacity: 70,
-    internalCostRatio: 0.72,
+    publicCostRatio: 0.72,
     riskTolerance: "balanced",
   });
   const [result, setResult] = useState(null);
@@ -26,7 +26,7 @@ export default function Dashboard() {
         contractValue: Number(form.contractValue),
         competitorCount: Number(form.competitorCount),
         teamCapacity: Number(form.teamCapacity),
-        internalCostRatio: Number(form.internalCostRatio),
+        publicCostRatio: Number(form.publicCostRatio),
       });
       setResult(data);
     } catch (err) {

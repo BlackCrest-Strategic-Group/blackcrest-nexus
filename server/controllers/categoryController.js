@@ -4,25 +4,24 @@ import { buildCategoryOutput } from '../services/analysisService.js';
 export async function analyzeCategory(req, res) {
   const { categoryName, product, notes, geography } = req.body;
   const output = buildCategoryOutput({ categoryName, product, geography });
+  const assumptions = req.body?.assumptions || [];
   return res.json({
-    input: { categoryName, product, notes: notes || '', geography: geography || '' },
+    input: { categoryName, product, notes: notes || '', geography: geography || '', assumptions },
     output,
     privacy: 'Raw inputs are processed statelessly and not stored unless you click Save.'
   });
 }
 
-export async function saveCategorySnapshot(req, res) {
-  const { categoryName, product, notes, geography, output } = req.body;
-  const item = await CategorySnapshot.create({ userId: req.user._id, categoryName, product, notes, geography, output });
-  return res.status(201).json(item);
+export async function saveCategorySnapshot(_req, res) {
+  return res.status(410).json({
+    message: 'Persistent storage of analysis inputs is disabled in clean-room mode.'
+  });
 }
 
-export async function listCategorySnapshots(req, res) {
-  const items = await CategorySnapshot.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(50);
-  return res.json(items);
+export async function listCategorySnapshots(_req, res) {
+  return res.json({ history: [] });
 }
 
-export async function deleteCategorySnapshot(req, res) {
-  await CategorySnapshot.deleteOne({ _id: req.params.id, userId: req.user._id });
+export async function deleteCategorySnapshot(_req, res) {
   return res.json({ success: true });
 }

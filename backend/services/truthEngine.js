@@ -7,7 +7,7 @@ export async function persistAnalysis(record) {
 export async function generateTruthInsights(userId) {
   const history = await AnalysisRecord.find({ userId }).sort({ createdAt: -1 }).limit(300);
   if (!history.length) {
-    return ["No historical outcomes yet. Track wins/losses to unlock benchmarking insights."];
+    return ["No prior-cycle outcomes yet. Track wins/losses to unlock benchmarking insights."];
   }
 
   const losses = history.filter((r) => r.outcome === "lost");
@@ -23,7 +23,7 @@ export async function generateTruthInsights(userId) {
     : "Your win/loss spread suggests execution risk, not pricing, is the top loss driver.";
 
   const naicsInsight = under5mWins541330 > 0
-    ? `You win more under $5M contracts in NAICS 541330 (${under5mWins541330} historical wins).`
+    ? `You win more under $5M contracts in NAICS 541330 (${under5mWins541330} prior-cycle wins).`
     : "NAICS 541330 under-$5M pattern is not yet statistically significant.";
 
   const riskySupplier = history
