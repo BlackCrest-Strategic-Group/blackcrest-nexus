@@ -263,7 +263,7 @@ async function fetchUSASpending(naicsCodes, daysBack) {
     }
     const data = await resp.json();
     return (data.results || []).map((item) => {
-      const awardId = item["Award ID"] || item.generated_internal_id;
+      const awardId = item["Award ID"] || item.generated_public_id;
       return normalize(
         {
           ...item,

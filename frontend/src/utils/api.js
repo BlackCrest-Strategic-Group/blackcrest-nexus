@@ -168,17 +168,7 @@ export const intelligenceApi = {
       : api.post("/api/opportunity-intelligence/refresh", data),
 };
 
-// ERP Connectors
-export const erpApi = {
-  list: () => api.get("/api/erp"),
-  create: (data) => api.post("/api/erp", data),
-  remove: (id) => api.delete(`/api/erp/${id}`),
-  test: (id) => api.post(`/api/erp/${id}/test`),
-  reconnect: (id, data) => api.post(`/api/erp/${id}/reconnect`, data),
-  getPurchaseOrders: (id, params) => api.get(`/api/erp/${id}/purchase-orders`, { params }),
-  getSuppliers: (id, params) => api.get(`/api/erp/${id}/suppliers`, { params }),
-  getInvoices: (id, params) => api.get(`/api/erp/${id}/invoices`, { params })
-};
+// Internal enterprise connectors removed in clean-room compliance mode.
 
 // Workflows
 export const workflowsApi = {

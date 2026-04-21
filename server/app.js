@@ -9,6 +9,8 @@ import supplierRoutes from './routes/supplierRoutes.js';
 import opportunityRoutes from './routes/opportunityRoutes.js';
 import watchlistRoutes from './routes/watchlistRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
+import demoRoutes from './routes/demoRoutes.js';
+import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 
 const app = express();
 
@@ -17,6 +19,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 400 }));
+app.use('/api', cleanRoomCompliance);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 app.use('/api/auth', authRoutes);
@@ -26,6 +29,7 @@ app.use('/api/supplier-intelligence', supplierRoutes);
 app.use('/api/opportunity-intelligence', opportunityRoutes);
 app.use('/api/watchlist', watchlistRoutes);
 app.use('/api', profileRoutes);
+app.use('/api/demo-mode', demoRoutes);
 
 app.use((err, _req, res, _next) => {
   if (err) {

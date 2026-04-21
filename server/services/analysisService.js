@@ -4,48 +4,51 @@ function confidence() {
 
 export function buildCategoryOutput({ categoryName, product, geography }) {
   return {
-    summary: `${categoryName} for ${product} shows moderate competition and tightening lead times${geography ? ` in ${geography}` : ''}.`,
+    summary: `Suggested sourcing approach based on industry-standard practices for ${categoryName} and ${product}${geography ? ` in ${geography}` : ''}.`,
     signals: [
-      'Supplier lead-time volatility is rising in the past 2 quarters.',
-      'Price pressure is flattening after prior inflationary spikes.',
-      'Demand forecasts indicate stable-to-growing public sector buying.'
+      'Public market indicators suggest moderate supplier lead-time variability.',
+      'Published commodity and labor trends indicate mixed pricing pressure.',
+      'Open procurement notices show steady public-sector demand in this category.'
     ],
-    risks: ['Single-source concentration in tier-2 suppliers.', 'Contracting delays due to compliance bottlenecks.', 'Budget cycle timing mismatch with award cadence.'],
-    demandSupplyTrend: 'Demand is outpacing supply in specialized SKUs; broaden qualified supplier pool.',
-    procurementStance: 'Dual-track sourcing with pre-qualified alternates and indexed pricing clauses.',
-    supplierOutreachStrategy: 'Prioritize incumbent + 2 challenger suppliers with capability validation calls.',
-    recommendations: ['Run early market sounding', 'Issue supplier capability survey', 'Create contingency sourcing matrix'],
+    risks: ['Potential supplier concentration risk in specialized sub-tiers.', 'Procurement timeline delays from documentation gaps.', 'Budget-cycle timing may not align with award windows.'],
+    demandSupplyTrend: 'Estimated ranges based on user inputs or general market patterns suggest balanced-to-tight supply.',
+    procurementStance: 'Suggested sourcing approach based on industry-standard practices: phased competition with alternates.',
+    supplierOutreachStrategy: 'Illustrative supplier options should include incumbents and challengers validated through public records.',
+    recommendations: ['Run public market sounding', 'Issue capability questionnaires', 'Prepare contingency sourcing matrix'],
     confidenceScore: confidence(),
+    advisoryNote: 'Advisory output only; validate with contracting and legal teams before execution.',
     timestamp: new Date().toISOString()
   };
 }
 
 export function buildSupplierOutput({ supplier }) {
   return {
-    summary: `${supplier.name} is a ${supplier.category} supplier with ${supplier.relationshipScore}/100 relationship depth.`,
+    summary: `Illustrative supplier option: ${supplier.name} in ${supplier.category}.`,
     fitScore: Math.max(45, Math.min(95, supplier.relationshipScore + 10)),
-    strengths: ['Relevant capabilities mapped to category needs', 'Operational responsiveness observed in prior cycles', 'Tagged strategic fit for diversification'],
-    risks: supplier.risks?.length ? supplier.risks : ['Limited redundant capacity', 'Compliance package refresh needed'],
-    diversificationValue: 'Medium-high; expands geographic and operational coverage.',
-    recommendations: ['Schedule capability review', 'Validate quality/compliance documents', 'Pilot a scoped sourcing package'],
-    nextAction: 'Book supplier review meeting within 7 days.',
+    strengths: ['Capabilities appear aligned to user-provided requirements.', 'Regional coverage may support supply continuity.', 'Option may improve supplier portfolio diversification.'],
+    risks: supplier.risks?.length ? supplier.risks : ['Capacity constraints may emerge during peak demand.', 'Compliance artifacts may need periodic refresh.'],
+    diversificationValue: 'Estimated from user inputs and public market patterns.',
+    recommendations: ['Conduct capability validation', 'Request compliance documents', 'Pilot a limited-scope sourcing package'],
+    nextAction: 'Advisory next step: schedule a supplier qualification review.',
     confidenceScore: confidence(),
+    advisoryNote: 'This is a neutral recommendation, not an internal performance determination.',
     timestamp: new Date().toISOString()
   };
 }
 
 export function buildOpportunityOutput({ title }) {
   return {
-    summary: `${title} appears viable with moderate compliance and delivery complexity.`,
-    requirements: ['Scope clarity and statement of work alignment', 'Past performance evidence', 'Pricing model with risk-adjusted assumptions'],
-    complianceFlags: ['Validate FAR/DFARS clause matrix', 'Confirm cybersecurity/controls attestations'],
-    risks: ['Aggressive timeline may impact proposal quality', 'Under-scoped staffing assumptions', 'Potential subcontractor dependency'],
-    effortEstimate: '3-5 weeks cross-functional effort',
-    bidRecommendation: 'Bid with conditions',
-    implications: ['Category demand likely increases in next quarter', 'Top 2 suppliers need early alignment'],
-    nextSteps: ['Launch bid/no-bid review', 'Assign compliance owner', 'Issue supplier RFIs'],
-    recommendations: ['Build red-team review cycle', 'Reserve surge staffing capacity', 'Set executive go/no-go checkpoint'],
+    summary: `${title} appears addressable based on provided materials and public procurement practices.`,
+    requirements: ['Scope and statement-of-work alignment', 'Publicly acceptable qualification evidence', 'Estimated ranges based on user inputs or general market patterns'],
+    complianceFlags: ['Validate clause matrix against solicitation text', 'Confirm required security/control attestations'],
+    risks: ['Compressed timeline could reduce proposal quality.', 'Ambiguous staffing assumptions could affect delivery.', 'Subcontractor dependency may introduce schedule variance.'],
+    effortEstimate: 'Illustrative estimate: 3–5 weeks cross-functional effort',
+    bidRecommendation: 'Advisory recommendation: pursue with defined conditions',
+    implications: ['Industry demand may rise in coming cycles.', 'Early supplier alignment is advisable.'],
+    nextSteps: ['Run bid/no-bid review', 'Assign compliance owner', 'Issue targeted RFIs'],
+    recommendations: ['Establish red-team review cadence', 'Plan surge staffing contingencies', 'Set governance checkpoints'],
     confidenceScore: confidence(),
+    advisoryNote: 'Output is informational and non-authoritative.',
     timestamp: new Date().toISOString()
   };
 }

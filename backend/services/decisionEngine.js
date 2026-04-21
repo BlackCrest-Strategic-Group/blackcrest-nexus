@@ -10,7 +10,7 @@ export function buildDecisionScore(payload) {
     contractValue = 0,
     competitorCount = 4,
     teamCapacity = 70,
-    internalCostRatio = 0.72,
+    publicCostRatio = 0.72,
     riskTolerance = "balanced",
     supplierScore = 70,
   } = payload;
@@ -23,9 +23,9 @@ export function buildDecisionScore(payload) {
   const winProbabilityPct = clamp(Math.round(ai.aiScore - competitionPenalty + capacityBoost + toleranceBoost));
   const riskScore = clamp(Math.round(ai.executionComplexity * 0.55 + ai.competitiveIntensity * 0.45 - (Number(teamCapacity) - 50) * 0.2));
 
-  const estimatedCost = Math.round(Number(contractValue || 0) * Number(internalCostRatio || 0.72));
+  const estimatedCost = Math.round(Number(contractValue || 0) * Number(publicCostRatio || 0.72));
   const supplierEffect = (Number(supplierScore) - 65) * 0.0015;
-  const expectedMarginPct = clamp(Math.round((1 - Number(internalCostRatio) + supplierEffect) * 100));
+  const expectedMarginPct = clamp(Math.round((1 - Number(publicCostRatio) + supplierEffect) * 100));
   const capitalRequirement = Math.round(estimatedCost * 0.35);
 
   const recommendation = winProbabilityPct >= 68 && riskScore <= 62 && expectedMarginPct >= 14

@@ -35,7 +35,7 @@ export default function AppShell({ children }) {
           ))}
         </nav>
         <button className="btn ghost" onClick={handleLogout}>Log out</button>
-        <small>Designed for Non-Classified Use Only</small>
+        <small>Demonstration Environment – Uses synthetic and public data only</small>
       </aside>
       <main className="content">{children}</main>
     </div>

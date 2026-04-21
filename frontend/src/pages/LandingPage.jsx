@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 export default function LandingPage() {
   return (
     <div className="landing">
+      <section className="card"><strong>Demonstration Environment – Uses synthetic and public data only</strong></section>
       <section className="hero card">
         <h1>Intelligence Before Procurement Starts</h1>
         <p>AI-powered procurement intelligence for category managers, sourcing teams, and procurement leaders.</p>
