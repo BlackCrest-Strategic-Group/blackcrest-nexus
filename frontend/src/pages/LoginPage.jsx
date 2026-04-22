@@ -14,13 +14,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (location.state?.reason === 'session-expired') {
-      setNote('Your session expired. Please sign in again.');
+      setNote('Your secure session expired. Re-authenticate to continue into BlackCrest OS.');
     }
   }, [location.state]);
 
-  if (!authLoading && user) {
-    return <Navigate to="/app" replace />;
-  }
+  if (!authLoading && user) return <Navigate to="/app" replace />;
 
   const submit = async (e) => {
     e.preventDefault();
@@ -29,16 +27,13 @@ export default function LoginPage() {
     setNote('');
 
     try {
-      if (typeof login !== 'function') {
-        throw new Error('Sign-in handler is unavailable.');
-      }
       const data = await login(form);
       if (data?.authStorage?.startsWith('memory')) {
         setNote('Signed in with temporary in-memory session due to browser storage restrictions.');
       }
       nav('/app', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || err.message || 'Unable to sign in. Please verify your credentials and try again.');
+      setError(err.response?.data?.error || err.message || 'Unable to sign in. Verify your credentials and try again.');
     } finally {
       setSubmitting(false);
     }
@@ -63,11 +58,12 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="auth-page" data-testid="login-page">
+    <main className="auth-page command-theme" data-testid="login-page">
+      <div className="auth-intel-bg" />
       <div className="auth-card" data-testid="login-card">
-        <img src="/assets/logo.png" alt="BlackCrest Procurement Engine" className="auth-logo" />
-        <h1>Secure Sign In</h1>
-        <p className="auth-subtitle">Authorized users only. External/public-data workflows for non-classified procurement analysis.</p>
+        <p className="landing-kicker">BlackCrest OS Access Gateway</p>
+        <h1>Secure Command Authentication</h1>
+        <p className="auth-subtitle">MFA-ready enterprise sign-in for procurement, supplier, and executive intelligence workflows.</p>
 
         {error && <div className="auth-alert auth-alert-error">{error}</div>}
         {note && <div className="auth-alert auth-alert-note">{note}</div>}
@@ -104,15 +100,15 @@ export default function LoginPage() {
                 checked={form.rememberMe}
                 onChange={(e) => setForm({ ...form, rememberMe: e.target.checked })}
               />
-              Remember me
+              Remember secure session
             </label>
             <button type="button" className="link-btn" onClick={sendReset} disabled={submitting}>Forgot password?</button>
           </div>
 
-          <button type="submit" className="btn" disabled={submitting} data-testid="login-submit">{submitting ? 'Signing in…' : 'Sign In'}</button>
+          <button type="submit" className="btn" disabled={submitting} data-testid="login-submit">{submitting ? 'Authenticating…' : 'Access Platform'}</button>
         </form>
 
-        <p className="auth-footer">Need an account? <Link to="/register">Create one</Link></p>
+        <p className="auth-footer">Need an account? <Link to="/register">Request enterprise access</Link></p>
       </div>
     </main>
   );

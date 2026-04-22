@@ -31,8 +31,8 @@ export default function AppShell({ children }) {
   return (
     <div className="shell" data-testid="shell-root">
       <aside className="sidebar" data-testid="sidebar-nav">
-        <Link to="/dashboard" className="brand" data-testid="brand-link">BlackCrest OpportunityOS</Link>
-        <p className="muted">Powered by Truth Serum AI</p>
+        <Link to="/dashboard" className="brand" data-testid="brand-link">BlackCrest OS</Link>
+        <p className="muted">AI-Powered Procurement Intelligence</p>
         <nav>
           {safeNavItems.map(([label, path]) => (
             <NavLink

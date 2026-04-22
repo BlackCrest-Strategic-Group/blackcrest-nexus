@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
+const fieldLabels = {
+  name: 'Full name',
+  email: 'Work email',
+  password: 'Password',
+  company: 'Organization',
+  role: 'Role',
+  procurementFocus: 'Primary procurement focus'
+};
+
 export default function RegisterPage() {
   const nav = useNavigate();
   const { user, authLoading, register } = useAuth();
@@ -16,9 +25,6 @@ export default function RegisterPage() {
     setSubmitting(true);
     setError('');
     try {
-      if (typeof register !== 'function') {
-        throw new Error('Registration handler is unavailable.');
-      }
       await register({ ...form, marketType: 'mixed', categoriesOfInterest: [] });
       nav('/app', { replace: true });
     } catch (err) {
@@ -29,16 +35,18 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="auth-page">
+    <main className="auth-page command-theme" data-testid="register-page">
+      <div className="auth-intel-bg" />
       <div className="auth-card auth-card-wide">
-        <h1>Create Account</h1>
-        <p className="auth-subtitle">Set up access to BlackCrest Procurement Intelligence.</p>
+        <p className="landing-kicker">BlackCrest OS Onboarding</p>
+        <h1>Request Enterprise Platform Access</h1>
+        <p className="auth-subtitle">Provision your secure workspace for procurement intelligence, Sentinel monitoring, and executive briefings.</p>
         {error && <div className="auth-alert auth-alert-error">{error}</div>}
 
         <form className="auth-form" onSubmit={submit}>
-          {['name', 'email', 'password', 'company', 'role', 'procurementFocus'].map((k) => (
+          {Object.keys(fieldLabels).map((k) => (
             <label key={k}>
-              {k}
+              {fieldLabels[k]}
               <input
                 type={k === 'password' ? 'password' : k === 'email' ? 'email' : 'text'}
                 value={form[k]}
@@ -47,10 +55,10 @@ export default function RegisterPage() {
               />
             </label>
           ))}
-          <button className="btn" type="submit" disabled={submitting}>{submitting ? 'Creating account…' : 'Create Account'}</button>
+          <button className="btn" type="submit" disabled={submitting}>{submitting ? 'Provisioning access…' : 'Create Account'}</button>
         </form>
 
-        <p className="auth-footer">Already have an account? <Link to="/login">Sign in</Link></p>
+        <p className="auth-footer">Already provisioned? <Link to="/login">Sign in</Link></p>
       </div>
     </main>
   );
