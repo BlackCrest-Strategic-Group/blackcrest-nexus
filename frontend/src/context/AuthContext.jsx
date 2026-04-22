@@ -37,9 +37,8 @@ export function AuthProvider({ children }) {
 
   const login = async (payload) => {
     const { data } = await authApi.login(payload);
-    // Legacy pages still call useAuth().login directly and expect immediate session.
     if (data?.accessToken || data?.token) {
-      saveAuth(
+      const persistence = saveAuth(
         {
           accessToken: data.accessToken || data.token,
           refreshToken: data.refreshToken,
@@ -47,6 +46,7 @@ export function AuthProvider({ children }) {
         },
         !!payload?.rememberMe
       );
+      data.authStorage = persistence.storage;
       setUser(data.user || null);
     }
     return data;
@@ -55,7 +55,7 @@ export function AuthProvider({ children }) {
   const register = async (payload) => {
     const { data } = await authApi.register(payload);
     if (data?.accessToken || data?.token) {
-      saveAuth(
+      const persistence = saveAuth(
         {
           accessToken: data.accessToken || data.token,
           refreshToken: data.refreshToken,
@@ -63,6 +63,7 @@ export function AuthProvider({ children }) {
         },
         false
       );
+      data.authStorage = persistence.storage;
       setUser(data.user || null);
     }
     return data;
