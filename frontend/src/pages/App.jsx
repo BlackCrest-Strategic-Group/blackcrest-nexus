@@ -8,6 +8,7 @@ import DashboardPage from './DashboardPage';
 import CategoryPage from './CategoryPage';
 import SupplierPage from './SupplierPage';
 import OpportunityPage from './OpportunityPage';
+import IntelligencePage from './IntelligencePage';
 import WatchlistPage from './WatchlistPage';
 import HistoryPage from './HistoryPage';
 import ProfilePage from './ProfilePage';
@@ -64,6 +65,7 @@ export default function App() {
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/app" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/intelligence" element={<IntelligencePage />} />
             <Route path="/category-intelligence" element={<CategoryPage />} />
             <Route path="/supplier-intelligence" element={<SupplierPage />} />
             <Route path="/opportunity-intelligence" element={<OpportunityPage />} />

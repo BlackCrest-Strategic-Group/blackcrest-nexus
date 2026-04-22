@@ -55,3 +55,27 @@ textarea { min-height: 140px; }
   .grid.two, .grid.three { grid-template-columns: 1fr; }
   .landing-page { padding-top: 20px; }
 }
+
+.intelligence-header h1 { margin: 0 0 8px; }
+.intelligence-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.intelligence-tab-btn {
+  background: #13233a;
+  color: #c6d3ea;
+  border: 1px solid #2b3d58;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.intelligence-tab-btn.active {
+  background: linear-gradient(135deg, #5f8bff, #34b7ff);
+  color: #081225;
+  border-color: transparent;
+}
+.intelligence-error {
+  border: 1px solid #6a1f30;
+  background: #3b1520;
+  color: #ffccd7;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
