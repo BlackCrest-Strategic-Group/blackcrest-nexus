@@ -102,6 +102,9 @@ export default function MFASettingsPage() {
     padding: "20px"
   };
 
+  const mfaMethods = Array.isArray(status?.mfaMethods) ? status.mfaMethods : [];
+  const safeNewBackupCodes = Array.isArray(newBackupCodes) ? newBackupCodes : [];
+
   return (
     <div className="min-h-screen" style={{ background: "#f7fafe" }}>
       <Header />
@@ -172,10 +175,10 @@ export default function MFASettingsPage() {
                     <p className="text-xs" style={{ color: "#5d6b7c" }}>Receive codes via email</p>
                   </div>
                 </div>
-                <StatusBadge enabled={status?.mfaMethods?.includes("email")} />
+                <StatusBadge enabled={mfaMethods.includes("email")} />
               </div>
               <div className="mt-3 flex gap-2">
-                {status?.mfaMethods?.includes("email") ? (
+                {mfaMethods.includes("email") ? (
                   <button
                     onClick={() => handleDisable("email")}
                     disabled={disabling === "email"}
@@ -214,10 +217,10 @@ export default function MFASettingsPage() {
                     </p>
                   </div>
                 </div>
-                <StatusBadge enabled={status?.mfaMethods?.includes("sms")} />
+                <StatusBadge enabled={mfaMethods.includes("sms")} />
               </div>
               <div className="mt-3 flex gap-2">
-                {status?.mfaMethods?.includes("sms") ? (
+                {mfaMethods.includes("sms") ? (
                   <button
                     onClick={() => handleDisable("sms")}
                     disabled={disabling === "sms"}
@@ -268,10 +271,10 @@ export default function MFASettingsPage() {
                       </div>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-semibold" style={{ color: "#5d6b7c" }}>NEW BACKUP CODES</span>
-                        <CopyButton text={newBackupCodes.join("\n")} />
+                        <CopyButton text={safeNewBackupCodes.join("\n")} />
                       </div>
                       <div className="grid grid-cols-2 gap-2">
-                        {newBackupCodes.map((code) => (
+                        {safeNewBackupCodes.map((code) => (
                           <code key={code} className="text-sm font-mono py-1 px-2 rounded text-center" style={{ background: "#ffffff", color: "#14243a", border: "1px solid #c8d5e6" }}>
                             {code}
                           </code>

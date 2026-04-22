@@ -36,6 +36,7 @@ export default function MFASetupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [savedCodes, setSavedCodes] = useState(false);
+  const safeBackupCodes = Array.isArray(backupCodes) ? backupCodes : [];
 
   async function handleStartEmail() {
     setError("");
@@ -319,10 +320,10 @@ export default function MFASetupPage() {
               <div className="rounded-xl p-4 mb-4" style={{ background: "#f1f5f9", border: "1px solid #c8d5e6" }}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-semibold" style={{ color: "#5d6b7c" }}>BACKUP CODES</span>
-                  <CopyButton text={backupCodes.join("\n")} />
+                  <CopyButton text={safeBackupCodes.join("\n")} />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {backupCodes.map((code) => (
+                  {safeBackupCodes.map((code) => (
                     <code key={code} className="text-sm font-mono py-1 px-2 rounded text-center" style={{ background: "#ffffff", color: "#14243a", border: "1px solid #c8d5e6" }}>
                       {code}
                     </code>

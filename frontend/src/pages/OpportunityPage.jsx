@@ -15,14 +15,21 @@ export default function OpportunityPage() {
   };
 
   const save = async () => {
+    const safeOutput = result && typeof result.output === 'object' && result.output !== null ? result.output : {};
     await api.post('/opportunity-intelligence/save', {
       title: form.title,
       linkedCategorySnapshotId: form.linkedCategorySnapshotId || null,
       linkedSupplierIds: form.linkedSupplierIds ? form.linkedSupplierIds.split(',').map((x) => x.trim()) : [],
-      output: result.output
+      output: safeOutput
     });
     alert('Opportunity analysis saved.');
   };
 
-  return <div><h1>Opportunity / RFP Intelligence</h1><div className="card form"><input placeholder="Opportunity title" onChange={(e)=>setForm({...form,title:e.target.value})} /><textarea placeholder="Paste RFP text" onChange={(e)=>setForm({...form,text:e.target.value})} /><input type="file" accept="application/pdf" onChange={(e)=>setFile(e.target.files?.[0] || null)} /><input placeholder="Link category snapshot id (optional)" onChange={(e)=>setForm({...form,linkedCategorySnapshotId:e.target.value})} /><input placeholder="Link supplier ids comma-separated (optional)" onChange={(e)=>setForm({...form,linkedSupplierIds:e.target.value})} /><div className="row"><button className="btn" onClick={analyze}>Analyze Opportunity</button>{result && <button className="btn ghost" onClick={save}>Save Analysis</button>}</div></div>{result && <section className="card"><h3>{result.output.summary}</h3><p><b>Requirements:</b> {result.output.requirements.join(' | ')}</p><p><b>Compliance Flags:</b> {result.output.complianceFlags.join(' | ')}</p><p><b>Risk Factors:</b> {result.output.risks.join(' | ')}</p><p><b>Effort:</b> {result.output.effortEstimate}</p><p><b>Bid/No-Bid:</b> {result.output.bidRecommendation}</p><p><b>Next Steps:</b> {result.output.nextSteps.join(' | ')}</p></section>}</div>;
+  const output = result && typeof result.output === 'object' && result.output !== null ? result.output : null;
+  const safeRequirements = Array.isArray(output?.requirements) ? output.requirements : [];
+  const safeComplianceFlags = Array.isArray(output?.complianceFlags) ? output.complianceFlags : [];
+  const safeRisks = Array.isArray(output?.risks) ? output.risks : [];
+  const safeNextSteps = Array.isArray(output?.nextSteps) ? output.nextSteps : [];
+
+  return <div><h1>Opportunity / RFP Intelligence</h1><div className="card form"><input placeholder="Opportunity title" onChange={(e)=>setForm({...form,title:e.target.value})} /><textarea placeholder="Paste RFP text" onChange={(e)=>setForm({...form,text:e.target.value})} /><input type="file" accept="application/pdf" onChange={(e)=>setFile(e.target.files?.[0] || null)} /><input placeholder="Link category snapshot id (optional)" onChange={(e)=>setForm({...form,linkedCategorySnapshotId:e.target.value})} /><input placeholder="Link supplier ids comma-separated (optional)" onChange={(e)=>setForm({...form,linkedSupplierIds:e.target.value})} /><div className="row"><button className="btn" onClick={analyze}>Analyze Opportunity</button>{result && <button className="btn ghost" onClick={save}>Save Analysis</button>}</div></div>{output && <section className="card"><h3>{output.summary || 'Analysis complete'}</h3><p><b>Requirements:</b> {safeRequirements.join(' | ')}</p><p><b>Compliance Flags:</b> {safeComplianceFlags.join(' | ')}</p><p><b>Risk Factors:</b> {safeRisks.join(' | ')}</p><p><b>Effort:</b> {output.effortEstimate || 'N/A'}</p><p><b>Bid/No-Bid:</b> {output.bidRecommendation || 'Pending review'}</p><p><b>Next Steps:</b> {safeNextSteps.join(' | ')}</p></section>}</div>;
 }

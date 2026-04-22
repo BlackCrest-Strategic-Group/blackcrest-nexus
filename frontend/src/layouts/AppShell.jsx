@@ -18,9 +18,12 @@ const navItems = [
 export default function AppShell({ children }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const safeNavItems = Array.isArray(navItems) ? navItems : [];
 
   async function handleLogout() {
-    await logout();
+    if (typeof logout === 'function') {
+      await logout();
+    }
     navigate('/login', { replace: true });
   }
 
@@ -30,7 +33,7 @@ export default function AppShell({ children }) {
         <Link to="/dashboard" className="brand">BLACKCREST</Link>
         <p className="muted">Procurement Intelligence Platform</p>
         <nav>
-          {navItems.map(([label, path]) => (
+          {safeNavItems.map(([label, path]) => (
             <NavLink key={path} to={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>{label}</NavLink>
           ))}
         </nav>
