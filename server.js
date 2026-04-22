@@ -4,12 +4,14 @@ import { fileURLToPath } from 'url';
 import { connectDB } from './backend/config/db.js';
 import express from 'express';
 import app from './server/app.js';
+import { seedRoleDemoUsers } from './server/services/demoUserService.js';
 
 dotenv.config();
 
 if (process.env.MONGODB_URI) {
   try {
     await connectDB();
+    await seedRoleDemoUsers();
   } catch (error) {
     console.warn(`Mongo connection unavailable: ${error.message}`);
   }

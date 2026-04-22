@@ -23,6 +23,7 @@ import InsightsPage from './marketing/InsightsPage';
 import InsightArticlePage from './marketing/InsightArticlePage';
 import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
+import { hasPermission } from '../config/roleConfig';
 
 function AuthLoadingScreen() {
   return <div className="auth-page"><div className="auth-card"><h2>Validating session…</h2></div></div>;
@@ -51,6 +52,12 @@ function ProtectedLayout() {
   if (authLoading) return <AuthLoadingScreen />;
   if (!user) return <Navigate to="/login" replace />;
   return <><NoIndex /><AppShell><Outlet /></AppShell></>;
+}
+
+function RoleProtectedRoute({ permissions = [], children }) {
+  const { user } = useAuth();
+  if (!permissions.length || permissions.some((permission) => hasPermission(user, permission))) return children;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function PublicOnlyRoute({ children }) {
@@ -89,11 +96,11 @@ export default function App() {
             <Route path="/reset-password" element={<><NoIndex /><ResetPasswordPage /></>} />
 
             <Route element={<ProtectedLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/opportunities" element={<OpportunityPage />} />
-              <Route path="/suppliers" element={<SupplierPage />} />
-              <Route path="/intelligence" element={<IntelligencePage />} />
-              <Route path="/analytics" element={<CategoryPage />} />
+              <Route path="/dashboard" element={<RoleProtectedRoute permissions={['dashboard:view']}><DashboardPage /></RoleProtectedRoute>} />
+              <Route path="/opportunities" element={<RoleProtectedRoute permissions={['briefings:view', 'tasks:view', 'rfq:manage', 'ops_visibility:view']}><OpportunityPage /></RoleProtectedRoute>} />
+              <Route path="/suppliers" element={<RoleProtectedRoute permissions={['alerts:view', 'suppliers:view', 'purchase_orders:view', 'kpis:view']}><SupplierPage /></RoleProtectedRoute>} />
+              <Route path="/intelligence" element={<RoleProtectedRoute permissions={['briefings:view', 'tasks:view', 'rfq:manage', 'ops_visibility:view']}><IntelligencePage /></RoleProtectedRoute>} />
+              <Route path="/analytics" element={<RoleProtectedRoute permissions={['kpis:view', 'category_intelligence:view', 'audit_logs:view', 'compliance:view']}><CategoryPage /></RoleProtectedRoute>} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
               <Route path="/mfa-setup" element={<MFASetupPage />} />
