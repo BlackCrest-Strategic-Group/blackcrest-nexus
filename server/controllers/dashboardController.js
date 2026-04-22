@@ -6,47 +6,68 @@ import WatchlistItem from '../models/WatchlistItem.js';
 import ActionItem from '../models/ActionItem.js';
 import UserPreferences from '../models/UserPreferences.js';
 
-function deriveExecutiveCenter({ opportunities, actions, suppliers, categories }) {
-  const pursueCandidates = opportunities.filter((opportunity) => opportunity?.output?.bidRecommendation === 'Bid').length;
-  const openActionCount = actions.length;
-  const supplierCount = suppliers.length;
-  const riskSignals = categories.length;
+function roleContentByGroup(group, totals) {
+  const shared = {
+    kpis: [
+      { label: 'Open Workflows', value: String(totals.actions || 0) },
+      { label: 'Supplier Signals', value: String(totals.suppliers || 0) },
+      { label: 'Active Opportunities', value: String(totals.opportunities || 0) },
+      { label: 'Category Risk Nodes', value: String(totals.categories || 0) }
+    ],
+    workflows: [
+      { name: 'RFQ Creation', status: 'in_progress' },
+      { name: 'Supplier Evaluation', status: 'queued' },
+      { name: 'Contract Tracking', status: 'active' }
+    ]
+  };
 
-  const procurementHealthScore = Math.max(52, Math.min(98, 72 + pursueCandidates * 2 - openActionCount + supplierCount));
+  if (group === 'executive') {
+    return {
+      dashboardTitle: 'Executive Procurement Command Center',
+      briefing: 'Financial exposure remains elevated in two categories. Recommended action: diversify suppliers and accelerate renewal planning.',
+      alerts: ['Margin exposure increased by 2.1%.', 'Supplier dependency threshold exceeded in semiconductor category.', 'Sourcing disruption risk detected for APAC route.'],
+      intelligence: ['Procurement health score: 83/100', 'Enterprise pipeline: 14 strategic pursuits', 'Forecasted EBIT protection: $3.2M'],
+      ...shared
+    };
+  }
+
+  if (group === 'director') {
+    return {
+      dashboardTitle: 'Director Operations Intelligence',
+      briefing: 'Team throughput improved this week, but compliance cycle time slipped in two business units.',
+      alerts: ['KPI deviation in PO cycle time (+8%).', 'Three contract renewals require leadership escalation.', 'Compliance warning triggered for missing supplier attestations.'],
+      intelligence: ['Sourcing performance index: 78', 'Operational bottlenecks: 5 active', 'Team productivity trend: +6.4%'],
+      ...shared
+    };
+  }
+
+  if (group === 'manager') {
+    return {
+      dashboardTitle: 'Manager Sourcing Workbench',
+      briefing: 'Two category events are ready for negotiation. Savings opportunity identified in packaging and IT peripherals.',
+      alerts: ['RFQ-229 response window closes in 18 hours.', 'Supplier risk moved to high for Delta Logistics.', 'Negotiation variance exceeds target by 3.7%.'],
+      intelligence: ['Commodity movement index: +1.3%', 'Sourcing events in flight: 9', 'Modeled savings pipeline: $1.1M'],
+      ...shared
+    };
+  }
+
+  if (group === 'admin') {
+    return {
+      dashboardTitle: 'Platform Administration Command Center',
+      briefing: 'Sentinel monitors are healthy. One API dependency is degraded and requires remediation tracking.',
+      alerts: ['Audit log volume spike detected.', 'Two stale user sessions auto-terminated.', 'External integration latency above SLA threshold.'],
+      intelligence: ['Users online: 42', 'API availability: 99.4%', 'Sentinel monitors active: 12'],
+      ...shared
+    };
+  }
 
   return {
-    procurementHealthScore,
-    liveSupplierRiskAlerts: `${Math.max(1, riskSignals)} active alerts`,
-    commodityPriceMovement: '+1.8% blended commodity index (7d)',
-    opportunityScoring: `${pursueCandidates || opportunities.length || 0} high-conviction opportunities`,
-    contractExpirationTracking: `${Math.max(2, openActionCount)} contracts expiring within 120 days`,
-    proposalWinProbability: `${Math.max(48, 58 + pursueCandidates * 3)}% weighted win probability`,
-    marginForecasting: `+${(1.8 + pursueCandidates * 0.4).toFixed(1)} pts projected gross margin`,
-    inventorySourcingDisruptions: `${Math.max(1, Math.floor(riskSignals / 2) || 1)} disruption events require mitigation`,
-    geopoliticalImpacts: 'Sanctions and tariff watchlist elevated in APAC + Eastern Europe',
-    supplierDiversificationWarnings: `${Math.max(1, Math.floor(supplierCount / 2) || 1)} concentration warnings`,
-    executiveRecommendations: [
-      'Diversify single-source categories flagged by the Risk Agent within 30 days.',
-      'Prioritize pursuits with win probability above 65% and positive margin deltas.',
-      'Launch renegotiation workflow for contracts exposed to upcoming tariff changes.'
-    ],
-    financialImpactProjection: `$${(2.4 + pursueCandidates * 0.35).toFixed(1)}M modeled EBIT protection over the next 2 quarters`
+    dashboardTitle: 'Buyer Execution Workspace',
+    briefing: 'Focus on expediting delayed POs and clearing pending approvals before 3:00 PM cut-off.',
+    alerts: ['5 overdue procurement actions.', '2 purchase orders delayed in transit.', '4 approvals pending manager sign-off.'],
+    intelligence: ['Daily tasks due: 11', 'Supplier updates pending: 3', 'Expediting alerts: 2'],
+    ...shared
   };
-}
-
-function buildAgentStatuses() {
-  return [
-    { name: 'Capture Agent', status: 'active', summary: 'Monitoring SAM.gov, pipeline updates, and proposal timing signals.' },
-    { name: 'Supplier Agent', status: 'active', summary: 'Tracking supplier performance drift, quality flags, and lead-time volatility.' },
-    { name: 'Compliance Agent', status: 'active', summary: 'Watching NAICS/regulatory fit, sanction updates, and documentation readiness.' },
-    { name: 'Risk Agent', status: 'warning', summary: 'Detected supplier concentration and geopolitical exposure in critical categories.' },
-    { name: 'Commodity Agent', status: 'active', summary: 'Ingesting commodity, shipping, and FX trend data for should-cost forecasts.' },
-    { name: 'Margin Agent', status: 'active', summary: 'Highlighting margin leakage and renegotiation opportunities by contract.' },
-    { name: 'Forecasting Agent', status: 'active', summary: 'Projecting demand/supply imbalance and procurement cycle timing.' },
-    { name: 'Executive Briefing Agent', status: 'active', summary: 'Generating concise daily strategy briefs with financial impacts.' },
-    { name: 'Contract Agent', status: 'active', summary: 'Monitoring renewals, expirations, and auto-renewal risk triggers.' },
-    { name: 'Cost Reduction Agent', status: 'active', summary: 'Recommending consolidation, outsourcing, and sourcing optimization levers.' }
-  ];
 }
 
 export async function getDashboard(req, res) {
@@ -60,9 +81,22 @@ export async function getDashboard(req, res) {
     UserPreferences.findOne({ userId: req.user._id })
   ]);
 
+  const roleDashboard = roleContentByGroup(req.user.roleGroup, {
+    categories: categories.length,
+    suppliers: suppliers.length,
+    opportunities: opportunities.length,
+    actions: actions.length
+  });
+
   return res.json({
-    platform: 'BlackCrest OpportunityOS',
-    engine: 'Truth Serum AI',
+    platform: 'BlackCrest ProcurementOS',
+    role: {
+      id: req.user.role,
+      label: req.user.roleLabel,
+      group: req.user.roleGroup,
+      permissions: req.user.permissions,
+      navigation: req.user.navigation
+    },
     personalization: {
       name: req.user.name,
       company: req.user.company,
@@ -71,19 +105,12 @@ export async function getDashboard(req, res) {
       marketType: req.user.marketType,
       moduleOrder: preferences?.moduleOrder || []
     },
-    executiveCommandCenter: deriveExecutiveCenter({ opportunities, actions, suppliers, categories }),
-    procurementMemoryGraph: {
-      nodesTracked: {
-        suppliers: suppliers.length,
-        contracts: actions.length,
-        commodities: categories.length,
-        agencies: opportunities.length,
-        naics: categories.length,
-        geopoliticalRegions: 6
-      },
-      learningMode: 'continuous'
+    roleDashboard,
+    sentinel: {
+      monitoringStatus: 'active',
+      anomalyDetection: 'enabled',
+      escalationWorkflows: ['supplier_dependency', 'rfq_deadline', 'compliance_breach']
     },
-    agentStatuses: buildAgentStatuses(),
     widgets: {
       highPriorityActions: actions,
       suppliersToReview: suppliers,
