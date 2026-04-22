@@ -15,13 +15,29 @@ export default function ContactPage() {
       <main className="container">
         <section className="hero-section no-bg">
           <h1>Request a Demo</h1>
-          <p>Tell us about your procurement priorities and we will tailor a BlackCrest OS walkthrough for your team.</p>
+          <p>Tell us about your procurement priorities and we will tailor an executive BlackCrest OS walkthrough for your team.</p>
         </section>
         <section className="marketing-card">
           <form className="auth-form">
             <label>Full Name<input type="text" name="name" autoComplete="name" /></label>
             <label>Work Email<input type="email" name="email" autoComplete="email" /></label>
             <label>Company<input type="text" name="company" autoComplete="organization" /></label>
+            <label>Primary Industry
+              <select name="industry" defaultValue="Defense / GovCon">
+                <option>Defense / GovCon</option>
+                <option>Manufacturing</option>
+                <option>Enterprise Procurement</option>
+                <option>Sourcing Services</option>
+              </select>
+            </label>
+            <label>Team Size
+              <select name="teamSize" defaultValue="25-100">
+                <option>1-25</option>
+                <option>25-100</option>
+                <option>100-500</option>
+                <option>500+</option>
+              </select>
+            </label>
             <label>How can we help?<textarea name="message" rows="5" /></label>
             <button type="submit" className="btn">Book a Demo</button>
           </form>

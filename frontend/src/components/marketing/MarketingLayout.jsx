@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 const navLinks = [
   ['Features', '/features'],
+  ['Security', '/security'],
   ['Supplier Intelligence', '/supplier-intelligence'],
   ['Opportunity Intelligence', '/opportunity-intelligence'],
   ['Sourcing Intelligence', '/sourcing-intelligence'],
@@ -58,6 +59,8 @@ export default function MarketingLayout({ children }) {
               <li><Link to="/about">About</Link></li>
               <li><Link to="/contact">Contact</Link></li>
               <li><Link to="/privacy">Privacy</Link></li>
+              <li><Link to="/terms">Terms</Link></li>
+              <li><Link to="/security">Security</Link></li>
               <li><Link to="/government-contracting">GovCon</Link></li>
             </ul>
           </div>
