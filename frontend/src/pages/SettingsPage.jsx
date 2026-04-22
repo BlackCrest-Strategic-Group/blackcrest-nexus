@@ -1,67 +1,17 @@
-import React, { useMemo, useState } from 'react';
-import api from '../services/api';
-
-const DEFAULT_MODULE_ORDER = 'dashboard,category-intelligence,supplier-intelligence,opportunity-intelligence,watchlist';
+import React from 'react';
+import SeoHead from '../components/SeoHead';
 
 export default function SettingsPage() {
-  const [moduleOrder, setModuleOrder] = useState(DEFAULT_MODULE_ORDER);
-  const [autoPrioritizeHighMargin, setAutoPrioritizeHighMargin] = useState(true);
-  const [showProfitSignals, setShowProfitSignals] = useState(true);
-  const [message, setMessage] = useState('');
-
-  const parsedModules = useMemo(
-    () => moduleOrder.split(',').map((x) => x.trim()).filter(Boolean),
-    [moduleOrder]
-  );
-
-  const save = async () => {
-    setMessage('');
-    try {
-      await api.put('/settings', {
-        moduleOrder: parsedModules,
-        profitabilityPreferences: {
-          autoPrioritizeHighMargin,
-          showProfitSignals
-        }
-      });
-      setMessage('Settings saved.');
-    } catch (err) {
-      setMessage(err?.response?.data?.message || 'Could not save settings right now.');
-    }
-  };
-
   return (
-    <div className="card">
-      <h1>Settings</h1>
-      <p>Personalize module order and profitability defaults for cleaner demos.</p>
-      <label htmlFor="moduleOrder">Module order (comma-separated)</label>
-      <input
-        id="moduleOrder"
-        value={moduleOrder}
-        onChange={(e) => setModuleOrder(e.target.value)}
-      />
-
-      <label>
-        <input
-          type="checkbox"
-          checked={autoPrioritizeHighMargin}
-          onChange={(e) => setAutoPrioritizeHighMargin(e.target.checked)}
-        />
-        Auto-prioritize high-margin opportunities
-      </label>
-
-      <label>
-        <input
-          type="checkbox"
-          checked={showProfitSignals}
-          onChange={(e) => setShowProfitSignals(e.target.checked)}
-        />
-        Show profitability indicators across pages
-      </label>
-
-      <p className="muted">Modules detected: {parsedModules.length || 0}</p>
-      {message ? <p className="muted">{message}</p> : null}
-      <button className="btn" onClick={save}>Save</button>
-    </div>
+    <section>
+      <SeoHead title="Settings | BlackCrest OS" description="Profile, integrations, MFA controls, notifications, and audit logs." canonicalPath="/settings" />
+      <div className="page-header"><h1>Settings</h1><p>User profile, organization controls, integrations, and trust configuration.</p></div>
+      <div className="grid three">
+        <article className="card"><h3>User & organization</h3><p>Profile, organization settings, and subscription management.</p></article>
+        <article className="card"><h3>Security controls</h3><p>MFA settings, session management, and notification controls.</p></article>
+        <article className="card"><h3>Integration architecture</h3><p>Token-based API integrations and read-only ERP connector patterns.</p></article>
+      </div>
+      <article className="card"><h3>Trust notice</h3><p>Designed with security-first architecture principles. Built for non-classified procurement workflows.</p></article>
+    </section>
   );
 }

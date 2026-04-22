@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://blackcrest.ai/sitemap.xml
