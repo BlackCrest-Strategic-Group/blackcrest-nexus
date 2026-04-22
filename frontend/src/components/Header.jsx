@@ -4,7 +4,7 @@ import { authApi } from "../utils/api.js";
 import { clearAuth, getUser } from "../utils/auth.js";
 
 function UserAvatar({ user }) {
-  const initials = user?.name
+  const initials = typeof user?.name === "string" && user.name
     ? user.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
     : user?.email?.[0]?.toUpperCase() ?? "U";
   return (

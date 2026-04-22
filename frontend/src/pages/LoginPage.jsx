@@ -29,13 +29,16 @@ export default function LoginPage() {
     setNote('');
 
     try {
+      if (typeof login !== 'function') {
+        throw new Error('Sign-in handler is unavailable.');
+      }
       const data = await login(form);
       if (data?.authStorage?.startsWith('memory')) {
         setNote('Signed in with temporary in-memory session due to browser storage restrictions.');
       }
       nav('/app', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || 'Unable to sign in. Please verify your credentials and try again.');
+      setError(err.response?.data?.error || err.message || 'Unable to sign in. Please verify your credentials and try again.');
     } finally {
       setSubmitting(false);
     }

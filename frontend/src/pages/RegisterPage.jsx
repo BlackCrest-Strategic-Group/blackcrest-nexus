@@ -16,10 +16,13 @@ export default function RegisterPage() {
     setSubmitting(true);
     setError('');
     try {
+      if (typeof register !== 'function') {
+        throw new Error('Registration handler is unavailable.');
+      }
       await register({ ...form, marketType: 'mixed', categoriesOfInterest: [] });
       nav('/app', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || 'Unable to create account right now.');
+      setError(err.response?.data?.error || err.message || 'Unable to create account right now.');
     } finally {
       setSubmitting(false);
     }
