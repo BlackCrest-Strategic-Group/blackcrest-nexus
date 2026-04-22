@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://blackcrest.ai/</loc></url>
-  <url><loc>https://blackcrest.ai/procurement-intelligence</loc></url>
+  <url><loc>https://blackcrest.ai/features</loc></url>
   <url><loc>https://blackcrest.ai/supplier-intelligence</loc></url>
-  <url><loc>https://blackcrest.ai/strategic-sourcing-software</loc></url>
-  <url><loc>https://blackcrest.ai/govcon-opportunity-analysis</loc></url>
-  <url><loc>https://blackcrest.ai/procurement-operating-system</loc></url>
-  <url><loc>https://blackcrest.ai/supplier-risk-monitoring</loc></url>
+  <url><loc>https://blackcrest.ai/opportunity-intelligence</loc></url>
+  <url><loc>https://blackcrest.ai/sourcing-intelligence</loc></url>
+  <url><loc>https://blackcrest.ai/proposal-intelligence</loc></url>
+  <url><loc>https://blackcrest.ai/government-contracting</loc></url>
+  <url><loc>https://blackcrest.ai/about</loc></url>
+  <url><loc>https://blackcrest.ai/contact</loc></url>
+  <url><loc>https://blackcrest.ai/insights</loc></url>
+  <url><loc>https://blackcrest.ai/insights/what-is-procurement-intelligence</loc></url>
+  <url><loc>https://blackcrest.ai/insights/procurement-intelligence-vs-spend-analytics</loc></url>
+  <url><loc>https://blackcrest.ai/insights/how-ai-improves-supplier-intelligence</loc></url>
+  <url><loc>https://blackcrest.ai/insights/how-to-evaluate-procurement-opportunities-faster</loc></url>
+  <url><loc>https://blackcrest.ai/privacy</loc></url>
 </urlset>

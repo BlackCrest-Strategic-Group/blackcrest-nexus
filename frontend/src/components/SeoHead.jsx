@@ -1,16 +1,24 @@
 import { useEffect } from 'react';
 
-export default function SeoHead({ title, description, canonicalPath, image = '/assets/logo.png', schema }) {
+export default function SeoHead({
+  title,
+  description,
+  canonicalPath,
+  image = '/assets/logo.png',
+  robots = 'index, follow',
+  schemas = []
+}) {
   useEffect(() => {
     if (title) document.title = title;
 
-    const upsert = (selector, attr, value) => {
+    const upsertMeta = (selector, attr, value, content) => {
       let el = document.head.querySelector(selector);
       if (!el) {
         el = document.createElement('meta');
         document.head.appendChild(el);
       }
       el.setAttribute(attr, value);
+      if (content !== undefined) el.setAttribute('content', content);
       return el;
     };
 
@@ -29,36 +37,35 @@ export default function SeoHead({ title, description, canonicalPath, image = '/a
     setLink('canonical', canonical);
 
     if (description) {
-      upsert('meta[name="description"]', 'name', 'description').setAttribute('content', description);
+      upsertMeta('meta[name="description"]', 'name', 'description', description);
     }
+    upsertMeta('meta[name="robots"]', 'name', 'robots', robots);
 
-    upsert('meta[property="og:title"]', 'property', 'og:title').setAttribute('content', title || 'BlackCrest OS');
-    upsert('meta[property="og:description"]', 'property', 'og:description').setAttribute('content', description || 'Procurement Intelligence Operating System');
-    upsert('meta[property="og:type"]', 'property', 'og:type').setAttribute('content', 'website');
-    upsert('meta[property="og:url"]', 'property', 'og:url').setAttribute('content', canonical);
-    upsert('meta[property="og:image"]', 'property', 'og:image').setAttribute('content', `${origin}${image}`);
+    upsertMeta('meta[property="og:title"]', 'property', 'og:title', title || 'BlackCrest OS');
+    upsertMeta('meta[property="og:description"]', 'property', 'og:description', description || 'AI Procurement Intelligence Platform');
+    upsertMeta('meta[property="og:type"]', 'property', 'og:type', 'website');
+    upsertMeta('meta[property="og:url"]', 'property', 'og:url', canonical);
+    upsertMeta('meta[property="og:image"]', 'property', 'og:image', `${origin}${image}`);
 
-    upsert('meta[name="twitter:card"]', 'name', 'twitter:card').setAttribute('content', 'summary_large_image');
-    upsert('meta[name="twitter:title"]', 'name', 'twitter:title').setAttribute('content', title || 'BlackCrest OS');
-    upsert('meta[name="twitter:description"]', 'name', 'twitter:description').setAttribute('content', description || 'Procurement Intelligence Operating System');
-    upsert('meta[name="twitter:image"]', 'name', 'twitter:image').setAttribute('content', `${origin}${image}`);
+    upsertMeta('meta[name="twitter:card"]', 'name', 'twitter:card', 'summary_large_image');
+    upsertMeta('meta[name="twitter:title"]', 'name', 'twitter:title', title || 'BlackCrest OS');
+    upsertMeta('meta[name="twitter:description"]', 'name', 'twitter:description', description || 'AI Procurement Intelligence Platform');
+    upsertMeta('meta[name="twitter:image"]', 'name', 'twitter:image', `${origin}${image}`);
 
-    let schemaEl = document.head.querySelector('script[data-schema="blackcrest"]');
-    if (!schemaEl) {
-      schemaEl = document.createElement('script');
+    Array.from(document.head.querySelectorAll('script[data-schema="blackcrest"]')).forEach((el) => el.remove());
+
+    schemas.forEach((schema) => {
+      const schemaEl = document.createElement('script');
       schemaEl.type = 'application/ld+json';
       schemaEl.dataset.schema = 'blackcrest';
+      schemaEl.textContent = JSON.stringify(schema);
       document.head.appendChild(schemaEl);
-    }
-    schemaEl.textContent = JSON.stringify(schema || {
-      '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
-      name: 'BlackCrest OS',
-      applicationCategory: 'BusinessApplication',
-      operatingSystem: 'Web',
-      description: description || 'AI-Powered Procurement, Supplier, and Opportunity Intelligence'
     });
-  }, [title, description, canonicalPath, image, schema]);
+
+    return () => {
+      Array.from(document.head.querySelectorAll('script[data-schema="blackcrest"]')).forEach((el) => el.remove());
+    };
+  }, [title, description, canonicalPath, image, robots, schemas]);
 
   return null;
 }

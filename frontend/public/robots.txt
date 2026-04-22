@@ -1,3 +1,16 @@
 User-agent: *
 Allow: /
+Disallow: /dashboard
+Disallow: /opportunities
+Disallow: /suppliers
+Disallow: /intelligence
+Disallow: /analytics
+Disallow: /settings
+Disallow: /mfa-settings
+Disallow: /mfa-setup
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+
 Sitemap: https://blackcrest.ai/sitemap.xml
