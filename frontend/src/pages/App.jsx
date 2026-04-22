@@ -21,6 +21,8 @@ import ModulePage from './marketing/ModulePage';
 import ContactPage from './marketing/ContactPage';
 import InsightsPage from './marketing/InsightsPage';
 import InsightArticlePage from './marketing/InsightArticlePage';
+import TermsPage from './marketing/TermsPage';
+import SecurityPage from './marketing/SecurityPage';
 
 function AuthLoadingScreen() {
   return <div className="auth-page"><div className="auth-card"><h2>Validating session…</h2></div></div>;
@@ -73,6 +75,8 @@ export default function App() {
             <Route path="/government-contracting" element={<ModulePage pageKey="govcon" />} />
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/terms" element={<TermsPage />} />
+            <Route path="/security" element={<SecurityPage />} />
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/insights/what-is-procurement-intelligence" element={<InsightArticlePage slug="what-is-procurement-intelligence" />} />
             <Route path="/insights/procurement-intelligence-vs-spend-analytics" element={<InsightArticlePage slug="procurement-intelligence-vs-spend-analytics" />} />

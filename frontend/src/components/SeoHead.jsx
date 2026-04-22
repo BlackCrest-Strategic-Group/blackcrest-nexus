@@ -6,6 +6,7 @@ export default function SeoHead({
   canonicalPath,
   image = '/assets/logo.png',
   robots = 'index, follow',
+  keywords,
   schemas = []
 }) {
   useEffect(() => {
@@ -39,6 +40,9 @@ export default function SeoHead({
     if (description) {
       upsertMeta('meta[name="description"]', 'name', 'description', description);
     }
+    if (keywords) {
+      upsertMeta('meta[name="keywords"]', 'name', 'keywords', keywords);
+    }
     upsertMeta('meta[name="robots"]', 'name', 'robots', robots);
 
     upsertMeta('meta[property="og:title"]', 'property', 'og:title', title || 'BlackCrest OS');
@@ -65,7 +69,7 @@ export default function SeoHead({
     return () => {
       Array.from(document.head.querySelectorAll('script[data-schema="blackcrest"]')).forEach((el) => el.remove());
     };
-  }, [title, description, canonicalPath, image, robots, schemas]);
+  }, [title, description, canonicalPath, image, robots, keywords, schemas]);
 
   return null;
 }
