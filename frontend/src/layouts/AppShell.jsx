@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 const navItems = [
   ['Dashboard', '/dashboard'],
+  ['Intelligence', '/intelligence'],
   ['Category Intelligence', '/category-intelligence'],
   ['Supplier Intelligence', '/supplier-intelligence'],
   ['Opportunity Intelligence', '/opportunity-intelligence'],
