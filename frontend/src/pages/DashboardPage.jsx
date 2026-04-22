@@ -32,10 +32,17 @@ const FALLBACK_DASHBOARD = {
     highPriorityActions: [
       { title: 'Initiate renegotiation with Atlas Materials before tariff update.' },
       { title: 'Escalate alternate supplier qualification for avionics casting.' }
-    ],
-    opportunitiesWorthPursuing: [{ title: 'USAF Sustainment Analytics BPA', output: { bidRecommendation: 'Pursue' } }]
+    ]
   }
 };
+
+const heatmapData = [
+  ['Aerospace Components', 91],
+  ['Electronics', 78],
+  ['IT Infrastructure', 66],
+  ['Logistics', 84],
+  ['Industrial Metals', 72]
+];
 
 function MetricCard({ title, value }) {
   return (
@@ -79,44 +86,64 @@ export default function DashboardPage() {
   const actions = useMemo(() => data?.widgets?.highPriorityActions || [], [data]);
   const agents = useMemo(() => data?.agentStatuses || [], [data]);
 
-  if (loading) return <p>Loading BlackCrest OpportunityOS command center…</p>;
+  if (loading) return <p>Loading BlackCrest OS command center…</p>;
 
   const keyMetrics = [
     ['Procurement Health Score', `${center.procurementHealthScore}/100`],
     ['Commodity Price Movement', center.commodityPriceMovement],
     ['Opportunity Scoring', center.opportunityScoring],
-    ['Contract Expiration Tracking', center.contractExpirationTracking],
-    ['Proposal Win Probability', center.proposalWinProbability],
-    ['Margin Forecasting', center.marginForecasting],
-    ['Inventory + Sourcing Disruptions', center.inventorySourcingDisruptions],
-    ['Geopolitical Procurement Impacts', center.geopoliticalImpacts],
-    ['Supplier Diversification Warnings', center.supplierDiversificationWarnings],
-    ['Financial Impact Projection', center.financialImpactProjection]
+    ['Contract Expiration Tracking', center.contractExpirationTracking]
   ];
 
   return (
-    <div className="command-theme" data-testid="dashboard-command-center">
+    <div className="command-theme dashboard-command" data-testid="dashboard-command-center">
       <section className="card cinematic-panel">
-        <p className="landing-kicker">BlackCrest OpportunityOS · Powered by Truth Serum AI</p>
-        <h1>Executive Procurement Command Center</h1>
-        <p>Welcome {personalization.name || 'Executive User'}. Focus: {personalization.procurementFocus || 'Enterprise Procurement'}.</p>
+        <p className="landing-kicker">BlackCrest OS · Command Center</p>
+        <h1>Procurement Intelligence Command Center</h1>
+        <p>Welcome {personalization.name || 'Executive User'}. Focus area: {personalization.procurementFocus || 'Enterprise Procurement'}.</p>
         {error ? <p className="muted">{error}</p> : null}
       </section>
 
-      <section className="grid three">
-        {keyMetrics.map(([title, value]) => <MetricCard key={title} title={title} value={value} />)}
+      <section className="grid two">
+        <div className="grid two">
+          {keyMetrics.map(([title, value]) => <MetricCard key={title} title={title} value={value} />)}
+        </div>
+        <article className="card intelligence-card live-indicators">
+          <h2>AI Activity</h2>
+          <p><span className="pulse-dot" /> Sentinel monitoring active</p>
+          <p><span className="pulse-dot" /> Executive briefing cycle updated</p>
+          <p><span className="pulse-dot" /> Opportunity ranking model refreshed</p>
+          <p className="muted">{center.financialImpactProjection}</p>
+        </article>
       </section>
 
-      <section className="grid two">
+      <section className="grid three">
         <article className="card intelligence-card">
-          <h2>Truth Serum AI Executive Recommendations</h2>
+          <h2>Supplier Risk Heatmap</h2>
+          <div className="heatmap-list">
+            {heatmapData.map(([name, score]) => (
+              <div key={name} className="heat-row">
+                <span>{name}</span>
+                <div className="heat-bar"><i style={{ width: `${score}%` }} /></div>
+                <strong>{score}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="card intelligence-card">
+          <h2>Executive Summaries</h2>
           <ul>
-            {(center.executiveRecommendations || []).map((item) => <li key={item}>{item}</li>)}
+            <li>Proposal viability: {center.proposalWinProbability}</li>
+            <li>Margin forecasting: {center.marginForecasting}</li>
+            <li>Disruptions: {center.inventorySourcingDisruptions}</li>
+            <li>Geopolitical impacts: {center.geopoliticalImpacts}</li>
+            <li>Diversification warnings: {center.supplierDiversificationWarnings}</li>
           </ul>
         </article>
 
         <article className="card intelligence-card">
-          <h2>AI Procurement Agent Activity</h2>
+          <h2>AI Agent Status</h2>
           <ul>
             {agents.map((agent) => (
               <li key={agent.name}>
@@ -129,11 +156,20 @@ export default function DashboardPage() {
         </article>
       </section>
 
-      <section className="card intelligence-card">
-        <h2>Priority Operational Queue</h2>
-        <ul>
-          {actions.length ? actions.map((item) => <li key={item.title}>{item.title}</li>) : <li className="muted">No immediate actions.</li>}
-        </ul>
+      <section className="grid two">
+        <article className="card intelligence-card">
+          <h2>Priority Operational Queue</h2>
+          <ul>
+            {actions.length ? actions.map((item) => <li key={item.title}>{item.title}</li>) : <li className="muted">No immediate actions.</li>}
+          </ul>
+        </article>
+
+        <article className="card intelligence-card">
+          <h2>AI Recommendations</h2>
+          <ul>
+            {(center.executiveRecommendations || []).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </article>
       </section>
     </div>
   );
