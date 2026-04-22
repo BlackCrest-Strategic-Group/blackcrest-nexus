@@ -1,0 +1,22 @@
+{
+  "Demo Dan": {
+    "email": "demo+dan@blackcrest.local",
+    "password": "Sentinel!Pass123"
+  },
+  "Buyer Becky": {
+    "email": "demo+becky@blackcrest.local",
+    "password": "Sentinel!Pass123"
+  },
+  "Admin Allen": {
+    "email": "demo+allen@blackcrest.local",
+    "password": "Sentinel!Pass123"
+  },
+  "Chaos Carl": {
+    "email": "demo+carl@blackcrest.local",
+    "password": "Sentinel!Pass123"
+  },
+  "Mobile Mike": {
+    "email": "demo+mike@blackcrest.local",
+    "password": "Sentinel!Pass123"
+  }
+}

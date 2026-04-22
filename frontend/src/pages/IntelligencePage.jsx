@@ -168,16 +168,17 @@ export default function IntelligencePage({ initialTab = 'category-intelligence' 
 
   return (
     <div>
-      <header className="intelligence-header card">
+      <header className="intelligence-header card" data-testid="intelligence-header">
         <h1>Intelligence Workspace</h1>
         <p className="muted">Each intelligence category runs independent fetch, transform, and rendering logic.</p>
 
-        <div className="intelligence-tabs" role="tablist" aria-label="Intelligence categories">
+        <div className="intelligence-tabs" role="tablist" aria-label="Intelligence categories" data-testid="intelligence-tablist">
           {INTELLIGENCE_TABS.map((tab) => (
             <button
               key={tab.id}
               role="tab"
               aria-selected={tab.id === activeTab}
+              data-testid={`intelligence-tab-${tab.id}`}
               className={`intelligence-tab-btn ${tab.id === activeTab ? 'active' : ''}`}
               onClick={() => setActiveTab(tab.id)}
             >
@@ -188,7 +189,13 @@ export default function IntelligencePage({ initialTab = 'category-intelligence' 
       </header>
 
       {activeTabConfig ? (
-        <section key={activeTabConfig.id} className="card" role="tabpanel" aria-labelledby={activeTabConfig.id}>
+        <section
+          key={activeTabConfig.id}
+          className="card"
+          role="tabpanel"
+          aria-labelledby={activeTabConfig.id}
+          data-testid={`tabpanel-${activeTabConfig.id}`}
+        >
           <h2>{activeTabConfig.label}</h2>
           <p className="muted">{activeTabConfig.description}</p>
 
@@ -221,18 +228,19 @@ function CategoryIntelligenceTab({ tabData, tabAnalysis, categoryForm, setCatego
   const history = Array.isArray(tabData?.history) ? tabData.history : [];
   const output = tabAnalysis?.output;
   return (
-    <div>
+    <div data-testid="category-panel">
       <div className="card form">
         {['categoryName', 'product', 'notes', 'geography'].map((field) => (
           <input
             key={field}
+            data-testid={`category-${field}`}
             placeholder={field}
             value={categoryForm[field]}
             onChange={(e) => setCategoryForm((prev) => ({ ...prev, [field]: e.target.value }))}
           />
         ))}
         <div className="row">
-          <button className="btn" onClick={actions.analyzeCategory}>Analyze Category</button>
+          <button className="btn" onClick={actions.analyzeCategory} data-testid="analyze-category">Analyze Category</button>
           {output ? <button className="btn ghost" onClick={actions.saveCategory}>Save Snapshot</button> : null}
         </div>
       </div>
@@ -271,7 +279,7 @@ function SupplierIntelligenceTab({ tabData, tabAnalysis, supplierForm, setSuppli
   const suppliers = Array.isArray(tabData?.suppliers) ? tabData.suppliers : [];
   const output = tabAnalysis?.output || {};
   return (
-    <div>
+    <div data-testid="supplier-panel">
       <div className="card form">
         {['name', 'category', 'location', 'capabilities', 'notes', 'risks', 'tags'].map((field) => (
           <input
@@ -281,7 +289,7 @@ function SupplierIntelligenceTab({ tabData, tabAnalysis, supplierForm, setSuppli
             onChange={(e) => setSupplierForm((prev) => ({ ...prev, [field]: e.target.value }))}
           />
         ))}
-        <button className="btn" onClick={actions.createSupplier}>Add Supplier</button>
+        <button className="btn" onClick={actions.createSupplier} data-testid="add-supplier">Add Supplier</button>
       </div>
 
       {!suppliers.length ? (
@@ -326,20 +334,22 @@ function OpportunityIntelligenceTab({
 }) {
   const output = tabAnalysis?.output;
   return (
-    <div>
+    <div data-testid="opportunity-panel">
       <div className="card form">
         <input
+          data-testid="opportunity-title"
           placeholder="Opportunity title"
           value={opportunityForm.title}
           onChange={(e) => setOpportunityForm((prev) => ({ ...prev, title: e.target.value }))}
         />
         <textarea
+          data-testid="opportunity-text"
           placeholder="Paste RFP text"
           value={opportunityForm.text}
           onChange={(e) => setOpportunityForm((prev) => ({ ...prev, text: e.target.value }))}
         />
-        <input type="file" accept="application/pdf" onChange={(e) => setOpportunityFile(e.target.files?.[0] || null)} />
-        {opportunityFile ? <small>Selected file: {opportunityFile.name}</small> : null}
+        <input data-testid="opportunity-upload" type="file" accept="application/pdf" onChange={(e) => setOpportunityFile(e.target.files?.[0] || null)} />
+        {opportunityFile ? <small data-testid="opportunity-file-selected">Selected file: {opportunityFile.name}</small> : null}
         <input
           placeholder="Link category snapshot id (optional)"
           value={opportunityForm.linkedCategorySnapshotId}
@@ -351,7 +361,7 @@ function OpportunityIntelligenceTab({
           onChange={(e) => setOpportunityForm((prev) => ({ ...prev, linkedSupplierIds: e.target.value }))}
         />
         <div className="row">
-          <button className="btn" onClick={actions.analyzeOpportunity}>Analyze Opportunity</button>
+          <button className="btn" onClick={actions.analyzeOpportunity} data-testid="analyze-opportunity">Analyze Opportunity</button>
           {output ? <button className="btn ghost" onClick={actions.saveOpportunity}>Save Analysis</button> : null}
         </div>
       </div>

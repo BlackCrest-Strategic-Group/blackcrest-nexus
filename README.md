@@ -81,6 +81,79 @@ Only structured outputs are persisted.
 - Demo data is seeded automatically on first successful user auth.
 - Includes sample category snapshot, suppliers, opportunity analysis, and action items.
 
+## BlackCrest Sentinel (Internal QA + Digital Beta Tester)
+BlackCrest Sentinel is the internal automated QA subsystem that continuously tests the product like a real user and creates a demo-readiness signal for the May 11, 2026 live demo.
+
+### What Sentinel covers
+- Landing page load and blank-screen checks
+- Login flow, protected route enforcement, session persistence, and logout
+- Major app navigation and intelligence tab rendering integrity
+- Intelligence sub-tab uniqueness validation (to catch reused/duplicate tab state)
+- Upload + analysis workflow smoke coverage
+- Mobile viewport smoke test
+- Monitoring for console errors, page errors, failed API responses, and stuck loading states
+
+### Sentinel structure
+```
+/qa
+  /playwright
+    /tests
+  /fixtures
+  /reports
+    /screenshots
+    /videos
+    /summaries
+  /utils
+```
+
+### Install + run
+```bash
+# root dependencies
+npm install
+
+# install Playwright browser binaries (first-time setup)
+npx playwright install
+
+# full Sentinel suite
+npm run sentinel
+
+# smoke suite only
+npm run sentinel:smoke
+
+# regenerate summary from latest reports
+npm run sentinel:report
+
+# print Markdown summary to terminal
+npm run sentinel:summary
+```
+
+### Sentinel environment variables
+- `SENTINEL_BASE_URL` (default: `http://127.0.0.1:3000`)
+- Optional persona credential overrides:
+  - `SENTINEL_DEMO_DAN_EMAIL`, `SENTINEL_DEMO_DAN_PASSWORD`
+  - `SENTINEL_BUYER_BECKY_EMAIL`, `SENTINEL_BUYER_BECKY_PASSWORD`
+  - `SENTINEL_ADMIN_ALLEN_EMAIL`, `SENTINEL_ADMIN_ALLEN_PASSWORD`
+  - `SENTINEL_CHAOS_CARL_EMAIL`, `SENTINEL_CHAOS_CARL_PASSWORD`
+  - `SENTINEL_MOBILE_MIKE_EMAIL`, `SENTINEL_MOBILE_MIKE_PASSWORD`
+
+### Where Sentinel reports live
+- Failure screenshots: `qa/reports/screenshots`
+- Failure videos (on failure): `qa/reports/videos` (Playwright artifact output)
+- Structured error JSON logs: `qa/reports/summaries/*.error.json`
+- Run-level summary:
+  - `qa/reports/summaries/demo-readiness.json`
+  - `qa/reports/summaries/demo-readiness.md`
+
+### Demo Readiness scoring (0–100)
+Sentinel computes a weighted score each run:
+- Auth reliability: 30%
+- Navigation stability: 25%
+- Upload/analysis success: 20%
+- Console/network cleanliness: 15%
+- Mobile/UI sanity: 10%
+
+Lower scores indicate increased demo risk. The summary output includes plain-English recommendations for both technical and non-technical reviewers.
+
 ## Key Routes
 Frontend:
 - `/`
