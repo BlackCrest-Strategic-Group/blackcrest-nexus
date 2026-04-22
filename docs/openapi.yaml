@@ -1,13 +1,13 @@
 openapi: "3.0.3"
 
 info:
-  title: GovCon AI Scanner API
+  title: BlackCrest OpportunityOS API
   version: "1.0.0"
   description: |
-    Minimal OpenAPI spec for GovCon AI Scanner.
+    Minimal OpenAPI spec for BlackCrest OpportunityOS.
 
 servers:
-  - url: https://govcon-ai-scanner.onrender.com
+  - url: https://blackcrest-opportunityos.onrender.com
     description: Production
   - url: http://localhost:3000
     description: Local development

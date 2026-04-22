@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: govcon-ai-scanner
+    name: blackcrest-opportunityos
     runtime: node
     buildCommand: npm cache clean --force && npm ci && npm run build:frontend
     startCommand: npm start
