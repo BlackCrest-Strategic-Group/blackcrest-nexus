@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const navItems = [
-  ['Dashboard', '/dashboard'],
+  ['Command Center', '/dashboard'],
   ['Intelligence', '/intelligence'],
   ['Category Intelligence', '/category-intelligence'],
   ['Supplier Intelligence', '/supplier-intelligence'],
@@ -31,8 +31,8 @@ export default function AppShell({ children }) {
   return (
     <div className="shell" data-testid="shell-root">
       <aside className="sidebar" data-testid="sidebar-nav">
-        <Link to="/dashboard" className="brand" data-testid="brand-link">BLACKCREST</Link>
-        <p className="muted">Procurement Intelligence Platform</p>
+        <Link to="/dashboard" className="brand" data-testid="brand-link">BlackCrest OpportunityOS</Link>
+        <p className="muted">Powered by Truth Serum AI</p>
         <nav>
           {safeNavItems.map(([label, path]) => (
             <NavLink

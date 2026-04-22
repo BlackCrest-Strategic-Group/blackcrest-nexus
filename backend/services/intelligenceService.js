@@ -479,7 +479,7 @@ function buildSummary(analysis, trendScore) {
     trendScore >= 20 ? "low" : "minimal";
 
   const parts = [
-    `The GovCon scanner analyzed ${total.toLocaleString()} records across ${sources.length} federal database(s) (${sources.join(", ") || "none"}).`,
+    `BlackCrest OpportunityOS analyzed ${total.toLocaleString()} records across ${sources.length} federal database(s) (${sources.join(", ") || "none"}).`,
   ];
 
   if (topAgencies.length) {

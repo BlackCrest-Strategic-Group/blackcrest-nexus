@@ -24,7 +24,7 @@ if (isEnabled) {
     // ----------------------------------------------------------------
     // Core identity – shown in every trace, log, and metric in Datadog
     // ----------------------------------------------------------------
-    service: process.env.DD_SERVICE || "govcon-ai-scanner",
+    service: process.env.DD_SERVICE || "blackcrest-opportunityos",
     env: process.env.DD_ENV || process.env.NODE_ENV || "development",
     version: process.env.DD_VERSION || "1.0.0",
 
@@ -53,7 +53,7 @@ if (isEnabled) {
   });
 
   console.log(
-    `[Datadog] APM enabled — service="${process.env.DD_SERVICE || "govcon-ai-scanner"}" env="${process.env.DD_ENV || process.env.NODE_ENV || "development"}"`
+    `[Datadog] APM enabled — service="${process.env.DD_SERVICE || "blackcrest-opportunityos"}" env="${process.env.DD_ENV || process.env.NODE_ENV || "development"}"`
   );
 } else {
   console.log(

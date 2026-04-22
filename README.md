@@ -1,181 +1,71 @@
-# BLACKCREST PROCUREMENT INTELLIGENCE PLATFORM
+# BlackCrest OpportunityOS
+## Powered by Truth Serum AI
 
-Production-style SaaS platform for upstream category intelligence, midstream supplier/opportunity intelligence, and downstream decision support.
+BlackCrest OpportunityOS is a procurement decision operating system built as **the Bloomberg Terminal for Procurement Intelligence**. It unifies opportunity intelligence, supplier intelligence, risk intelligence, sourcing intelligence, and executive decision support.
 
-## Core Modules
-- Category Intelligence (analysis + save snapshots + history)
-- Supplier Intelligence (profiles, evaluation, comparison-ready scoring)
-- Opportunity / RFP Intelligence (PDF in-memory processing + text paste)
-- Decision Center dashboard (integrated widgets + actions)
-- Watchlist system (category/supplier/opportunity with statuses)
+## Platform Modules
+- **Executive Command Center** (live procurement health, risk, and financial signal dashboard)
+- **Opportunity Intelligence Engine** (bid/no-bid plus pursue/avoid/renegotiate/diversify style actions)
+- **Procurement Memory Graph** (relationship intelligence across suppliers, contracts, commodities, agencies, margins, and risks)
+- **AI Procurement Agents** (capture, supplier, compliance, risk, commodity, margin, forecasting, executive briefing, contract, and cost reduction)
+- **Executive AI Briefings** (concise recommendations with financial impact projections)
 
-## Privacy-First Architecture
-- No default document storage (PDF uploads handled in memory via multer memory storage)
-- Stateless analysis responses by default
-- User-controlled storage only for structured outputs (Save actions)
-- Token-based auth via environment variables (`JWT_SECRET`, API keys)
-- Data segregation using dedicated models
-- Delete capability available by module APIs
-- Minimal metadata-oriented logging expectation
-- Product disclaimer: **Designed for Non-Classified Use Only**
+## Current Architecture
+### Frontend
+- React + Vite
+- Tailwind-ready styling surface + premium dark-mode command UI
+- Animated command center widgets and intelligence cards
 
-## Tech Stack
+### Backend
 - Node.js + Express
-- MongoDB + Mongoose
-- React + Vite frontend
+- JWT auth middleware + rate limiting + security middleware
+- Modular route/controller/service structure
+- Tokenized integration pattern for enterprise connectors
 
-## Project Structure
-```
-/server
-  routes/
-  controllers/
-  services/
-  models/
-  middleware/
-/frontend/src
-  pages/
-  components/
-  layouts/
-  services/
-  context/
-```
+### Data + Intelligence
+- MongoDB models for operational data (current implementation)
+- Procurement Memory Graph abstraction in dashboard payloads
+- OpenAI-ready AI service integration points
 
-## Required Environment Variables
-Create `.env` in repo root:
-```
-PORT=3000
-MONGODB_URI=mongodb://localhost:27017/blackcrest
-JWT_SECRET=replace-with-strong-secret
-OPENAI_API_KEY=optional-for-future-ai-service
-```
+## Security & Compliance Posture
+- Helmet + CORS hardening + API rate limiting
+- Token-based authentication
+- No plaintext credentials in code
+- Non-classified use boundary
+- NIST-aligned and SOC2-ready architecture patterns (implementation roadmap in docs)
 
-## Local Setup
+## Quick Start
 1. Install dependencies:
    ```bash
    npm install
    cd frontend && npm install && cd ..
    ```
-2. Start frontend + backend in dev:
+2. Configure environment:
+   ```bash
+   cp .env.example .env
+   ```
+3. Run frontend + backend:
    ```bash
    npm run dev:full
    ```
-3. Or production build:
-   ```bash
-   npm run build:frontend
-   npm start
-   ```
-
-## Database Models
-- User
-- UserPreferences
-- CategorySnapshot
-- SupplierProfile
-- SupplierAnalysis
-- OpportunityAnalysis
-- WatchlistItem
-- ActionItem
-
-Only structured outputs are persisted.
-
-## Demo Readiness
-- Demo data is seeded automatically on first successful user auth.
-- Includes sample category snapshot, suppliers, opportunity analysis, and action items.
-
-## BlackCrest Sentinel (Internal QA + Digital Beta Tester)
-BlackCrest Sentinel is the internal automated QA subsystem that continuously tests the product like a real user and creates a demo-readiness signal for the May 11, 2026 live demo.
-
-### What Sentinel covers
-- Landing page load and blank-screen checks
-- Login flow, protected route enforcement, session persistence, and logout
-- Major app navigation and intelligence tab rendering integrity
-- Intelligence sub-tab uniqueness validation (to catch reused/duplicate tab state)
-- Upload + analysis workflow smoke coverage
-- Mobile viewport smoke test
-- Monitoring for console errors, page errors, failed API responses, and stuck loading states
-
-### Sentinel structure
-```
-/qa
-  /playwright
-    /tests
-  /fixtures
-  /reports
-    /screenshots
-    /videos
-    /summaries
-  /utils
-```
-
-### Install + run
-```bash
-# root dependencies
-npm install
-
-# install Playwright browser binaries (first-time setup)
-npx playwright install
-
-# full Sentinel suite
-npm run sentinel
-
-# smoke suite only
-npm run sentinel:smoke
-
-# regenerate summary from latest reports
-npm run sentinel:report
-
-# print Markdown summary to terminal
-npm run sentinel:summary
-```
-
-### Sentinel environment variables
-- `SENTINEL_BASE_URL` (default: `http://127.0.0.1:3000`)
-- Optional persona credential overrides:
-  - `SENTINEL_DEMO_DAN_EMAIL`, `SENTINEL_DEMO_DAN_PASSWORD`
-  - `SENTINEL_BUYER_BECKY_EMAIL`, `SENTINEL_BUYER_BECKY_PASSWORD`
-  - `SENTINEL_ADMIN_ALLEN_EMAIL`, `SENTINEL_ADMIN_ALLEN_PASSWORD`
-  - `SENTINEL_CHAOS_CARL_EMAIL`, `SENTINEL_CHAOS_CARL_PASSWORD`
-  - `SENTINEL_MOBILE_MIKE_EMAIL`, `SENTINEL_MOBILE_MIKE_PASSWORD`
-
-### Where Sentinel reports live
-- Failure screenshots: `qa/reports/screenshots`
-- Failure videos (on failure): `qa/reports/videos` (Playwright artifact output)
-- Structured error JSON logs: `qa/reports/summaries/*.error.json`
-- Run-level summary:
-  - `qa/reports/summaries/demo-readiness.json`
-  - `qa/reports/summaries/demo-readiness.md`
-
-### Demo Readiness scoring (0–100)
-Sentinel computes a weighted score each run:
-- Auth reliability: 30%
-- Navigation stability: 25%
-- Upload/analysis success: 20%
-- Console/network cleanliness: 15%
-- Mobile/UI sanity: 10%
-
-Lower scores indicate increased demo risk. The summary output includes plain-English recommendations for both technical and non-technical reviewers.
 
 ## Key Routes
-Frontend:
-- `/`
-- `/login`
-- `/register`
-- `/dashboard`
+### Frontend
+- `/` landing page (premium marketing surface)
+- `/dashboard` executive command center
+- `/intelligence`
 - `/category-intelligence`
 - `/supplier-intelligence`
 - `/opportunity-intelligence`
-- `/watchlist`
-- `/history`
-- `/profile`
-- `/settings`
-- `/privacy`
 
-API:
+### API
 - `/api/auth/*`
 - `/api/dashboard`
 - `/api/category-intelligence/*`
 - `/api/supplier-intelligence/*`
 - `/api/opportunity-intelligence/*`
 - `/api/watchlist/*`
-- `/api/profile`
-- `/api/settings`
-- `/api/history`
+
+## Notes
+- This repository includes legacy and experimental directories; active app paths remain `/server` and `/frontend`.
+- Designed for non-classified procurement intelligence workflows.

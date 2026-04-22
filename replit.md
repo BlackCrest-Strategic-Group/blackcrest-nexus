@@ -1,6 +1,6 @@
-# GovCon AI Scanner v2.0
+# BlackCrest OpportunityOS v2.0
 
-AI-powered federal contracting opportunity scanner for government contractors. Search SAM.gov opportunities, perform bid/no-bid analysis, and receive daily email digests.
+AI-powered procurement opportunity intelligence operating system for federal and commercial teams. Evaluate opportunities, suppliers, and risks with Truth Serum AI decision support.
 
 ## Architecture
 
@@ -48,7 +48,7 @@ Set via Replit secrets/env vars:
 
 ## Demo Account
 
-Seeded automatically on startup: `demo@govconscanner.com`
+Seeded automatically on startup: `demo@blackcrestopportunityos.com`
 
 ## API Docs
 

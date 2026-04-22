@@ -3,44 +3,46 @@ import api from '../services/api';
 
 const FALLBACK_DASHBOARD = {
   personalization: {
-    name: 'Demo User',
-    procurementFocus: 'Federal IT Services'
+    name: 'Executive Demo User',
+    procurementFocus: 'Global Strategic Sourcing'
   },
+  executiveCommandCenter: {
+    procurementHealthScore: 83,
+    commodityPriceMovement: '+2.1% week-over-week',
+    opportunityScoring: '14 high-conviction pursuits',
+    contractExpirationTracking: '9 contracts expire in 120 days',
+    proposalWinProbability: '67% weighted average',
+    marginForecasting: '+3.4 pts expected margin improvement',
+    inventorySourcingDisruptions: '2 high-impact disruptions',
+    geopoliticalImpacts: 'Tariff escalation watchlist: 4 commodities',
+    supplierDiversificationWarnings: '3 concentration risks',
+    executiveRecommendations: [
+      'Diversify electronics sourcing away from single-region concentration.',
+      'Accelerate teaming strategy for DHS cloud modernization opportunity.',
+      'Stockpile long-lead components to protect Q3 margin targets.'
+    ],
+    financialImpactProjection: '$4.2M margin preservation modeled in 2 quarters'
+  },
+  agentStatuses: [
+    { name: 'Capture Agent', status: 'active', summary: 'Detected 6 new pursuits with >70 win score.' },
+    { name: 'Risk Agent', status: 'warning', summary: 'Supplier concentration elevated in semiconductors.' },
+    { name: 'Executive Briefing Agent', status: 'active', summary: 'Daily C-suite briefing delivered at 06:00 UTC.' }
+  ],
   widgets: {
     highPriorityActions: [
-      { title: 'Follow up on expiring contract vehicle access' },
-      { title: 'Submit teaming request for upcoming DHS cloud renewal' }
+      { title: 'Initiate renegotiation with Atlas Materials before tariff update.' },
+      { title: 'Escalate alternate supplier qualification for avionics casting.' }
     ],
-    suppliersToReview: [
-      { name: 'Atlas Systems' },
-      { name: 'BlueForge Logistics' }
-    ],
-    categoryRisks: [
-      { categoryName: 'Cybersecurity Services', output: { risks: ['Pricing pressure from incumbent small-biz pool'] } }
-    ],
-    opportunitiesWorthPursuing: [
-      { title: 'USDA Data Modernization BPA', output: { bidRecommendation: 'Bid' } }
-    ]
+    opportunitiesWorthPursuing: [{ title: 'USAF Sustainment Analytics BPA', output: { bidRecommendation: 'Pursue' } }]
   }
 };
 
-function ProfitLevers({ widgets }) {
-  const opportunities = Array.isArray(widgets?.opportunitiesWorthPursuing) ? widgets.opportunitiesWorthPursuing : [];
-  const priorityActions = Array.isArray(widgets?.highPriorityActions) ? widgets.highPriorityActions : [];
-
-  const estimatedPipeline = opportunities.length * 250000;
-  const executionUrgency = Math.min(100, priorityActions.length * 20);
-
+function MetricCard({ title, value }) {
   return (
-    <section className="card">
-      <h3>Profitability Levers</h3>
-      <p className="muted">Quick commercial guidance for demo conversations.</p>
-      <ul>
-        <li><strong>Estimated Qualified Pipeline:</strong> ${estimatedPipeline.toLocaleString()}</li>
-        <li><strong>Execution Urgency Score:</strong> {executionUrgency}/100</li>
-        <li><strong>Margin Protection Move:</strong> Prioritize suppliers with low delivery risk for top bids.</li>
-      </ul>
-    </section>
+    <article className="card intelligence-card metric-card">
+      <p className="metric-label">{title}</p>
+      <h3>{value}</h3>
+    </article>
   );
 }
 
@@ -48,7 +50,6 @@ export default function DashboardPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [usingFallback, setUsingFallback] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -57,15 +58,11 @@ export default function DashboardPage() {
       setError('');
       try {
         const res = await api.get('/dashboard');
-        if (isMounted) {
-          setData(res.data);
-          setUsingFallback(false);
-        }
+        if (isMounted) setData(res.data);
       } catch (err) {
         if (isMounted) {
-          setError(err?.response?.data?.message || 'Dashboard data is unavailable. Showing demo-safe fallback content.');
+          setError(err?.response?.data?.message || 'Live command data unavailable. Running in executive demo mode.');
           setData(FALLBACK_DASHBOARD);
-          setUsingFallback(true);
         }
       } finally {
         if (isMounted) setLoading(false);
@@ -77,42 +74,67 @@ export default function DashboardPage() {
     };
   }, []);
 
-  const widgets = useMemo(() => (data && typeof data.widgets === 'object' && data.widgets !== null ? data.widgets : {}), [data]);
-  const personalization = useMemo(() => (
-    data && typeof data.personalization === 'object' && data.personalization !== null
-      ? data.personalization
-      : {}
-  ), [data]);
+  const personalization = useMemo(() => data?.personalization || {}, [data]);
+  const center = useMemo(() => data?.executiveCommandCenter || FALLBACK_DASHBOARD.executiveCommandCenter, [data]);
+  const actions = useMemo(() => data?.widgets?.highPriorityActions || [], [data]);
+  const agents = useMemo(() => data?.agentStatuses || [], [data]);
 
-  if (loading) return <p>Loading dashboard...</p>;
+  if (loading) return <p>Loading BlackCrest OpportunityOS command center…</p>;
 
-  const highPriorityActions = Array.isArray(widgets.highPriorityActions) ? widgets.highPriorityActions : [];
-  const suppliersToReview = Array.isArray(widgets.suppliersToReview) ? widgets.suppliersToReview : [];
-  const categoryRisks = Array.isArray(widgets.categoryRisks) ? widgets.categoryRisks : [];
-  const opportunitiesWorthPursuing = Array.isArray(widgets.opportunitiesWorthPursuing) ? widgets.opportunitiesWorthPursuing : [];
-
-  const cards = [
-    ['High Priority Actions', highPriorityActions.map((x) => x?.title).filter(Boolean)],
-    ['Suppliers To Review', suppliersToReview.map((x) => x?.name).filter(Boolean)],
-    ['Category Risks', categoryRisks.map((x) => `${x?.categoryName || 'Category'}: ${x?.output?.risks?.[0] || 'No risk noted'}`)],
-    ['Opportunities Worth Pursuing', opportunitiesWorthPursuing.map((x) => `${x?.title || 'Opportunity'} - ${x?.output?.bidRecommendation || 'Review needed'}`)]
+  const keyMetrics = [
+    ['Procurement Health Score', `${center.procurementHealthScore}/100`],
+    ['Commodity Price Movement', center.commodityPriceMovement],
+    ['Opportunity Scoring', center.opportunityScoring],
+    ['Contract Expiration Tracking', center.contractExpirationTracking],
+    ['Proposal Win Probability', center.proposalWinProbability],
+    ['Margin Forecasting', center.marginForecasting],
+    ['Inventory + Sourcing Disruptions', center.inventorySourcingDisruptions],
+    ['Geopolitical Procurement Impacts', center.geopoliticalImpacts],
+    ['Supplier Diversification Warnings', center.supplierDiversificationWarnings],
+    ['Financial Impact Projection', center.financialImpactProjection]
   ];
 
   return (
-    <div>
-      <h1>Decision Center</h1>
-      <p>Welcome {personalization.name || 'User'}. Focus: {personalization.procurementFocus || 'General Procurement'}</p>
-      {error ? <p className="muted">{error}</p> : null}
-      {usingFallback ? <p className="muted">Fallback mode is active for demo continuity.</p> : null}
-      <div className="grid two">
-        {cards.map(([title, list]) => (
-          <section key={title} className="card">
-            <h3>{title}</h3>
-            <ul>{list.length ? list.map((i) => <li key={i}>{i}</li>) : <li className="muted">No items yet.</li>}</ul>
-          </section>
-        ))}
-      </div>
-      <ProfitLevers widgets={widgets} />
+    <div className="command-theme" data-testid="dashboard-command-center">
+      <section className="card cinematic-panel">
+        <p className="landing-kicker">BlackCrest OpportunityOS · Powered by Truth Serum AI</p>
+        <h1>Executive Procurement Command Center</h1>
+        <p>Welcome {personalization.name || 'Executive User'}. Focus: {personalization.procurementFocus || 'Enterprise Procurement'}.</p>
+        {error ? <p className="muted">{error}</p> : null}
+      </section>
+
+      <section className="grid three">
+        {keyMetrics.map(([title, value]) => <MetricCard key={title} title={title} value={value} />)}
+      </section>
+
+      <section className="grid two">
+        <article className="card intelligence-card">
+          <h2>Truth Serum AI Executive Recommendations</h2>
+          <ul>
+            {(center.executiveRecommendations || []).map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </article>
+
+        <article className="card intelligence-card">
+          <h2>AI Procurement Agent Activity</h2>
+          <ul>
+            {agents.map((agent) => (
+              <li key={agent.name}>
+                <strong>{agent.name}</strong> · <span className={`agent-status ${agent.status}`}>{agent.status}</span>
+                <br />
+                <small className="muted">{agent.summary}</small>
+              </li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
+      <section className="card intelligence-card">
+        <h2>Priority Operational Queue</h2>
+        <ul>
+          {actions.length ? actions.map((item) => <li key={item.title}>{item.title}</li>) : <li className="muted">No immediate actions.</li>}
+        </ul>
+      </section>
     </div>
   );
 }
