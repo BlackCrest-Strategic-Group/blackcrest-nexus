@@ -29,16 +29,23 @@ export default function AppShell({ children }) {
   }
 
   return (
-    <div className="shell">
-      <aside className="sidebar">
-        <Link to="/dashboard" className="brand">BLACKCREST</Link>
+    <div className="shell" data-testid="shell-root">
+      <aside className="sidebar" data-testid="sidebar-nav">
+        <Link to="/dashboard" className="brand" data-testid="brand-link">BLACKCREST</Link>
         <p className="muted">Procurement Intelligence Platform</p>
         <nav>
           {safeNavItems.map(([label, path]) => (
-            <NavLink key={path} to={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>{label}</NavLink>
+            <NavLink
+              key={path}
+              to={path}
+              data-testid={`nav-${path.replace('/', '') || 'home'}`}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+            >
+              {label}
+            </NavLink>
           ))}
         </nav>
-        <button className="btn ghost" onClick={handleLogout}>Log out</button>
+        <button className="btn ghost" onClick={handleLogout} data-testid="logout-button">Log out</button>
         <small>Demonstration Environment – Uses synthetic and public data only</small>
       </aside>
       <main className="content">{children}</main>

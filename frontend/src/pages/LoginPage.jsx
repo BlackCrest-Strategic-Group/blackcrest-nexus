@@ -63,8 +63,8 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="auth-page">
-      <div className="auth-card">
+    <main className="auth-page" data-testid="login-page">
+      <div className="auth-card" data-testid="login-card">
         <img src="/assets/logo.png" alt="BlackCrest Procurement Engine" className="auth-logo" />
         <h1>Secure Sign In</h1>
         <p className="auth-subtitle">Authorized users only. External/public-data workflows for non-classified procurement analysis.</p>
@@ -72,11 +72,12 @@ export default function LoginPage() {
         {error && <div className="auth-alert auth-alert-error">{error}</div>}
         {note && <div className="auth-alert auth-alert-note">{note}</div>}
 
-        <form onSubmit={submit} className="auth-form">
+        <form onSubmit={submit} className="auth-form" data-testid="login-form">
           <label>
             Email
             <input
               type="email"
+              data-testid="login-email"
               autoComplete="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
@@ -88,6 +89,7 @@ export default function LoginPage() {
             Password
             <input
               type="password"
+              data-testid="login-password"
               autoComplete="current-password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
@@ -107,7 +109,7 @@ export default function LoginPage() {
             <button type="button" className="link-btn" onClick={sendReset} disabled={submitting}>Forgot password?</button>
           </div>
 
-          <button type="submit" className="btn" disabled={submitting}>{submitting ? 'Signing in…' : 'Sign In'}</button>
+          <button type="submit" className="btn" disabled={submitting} data-testid="login-submit">{submitting ? 'Signing in…' : 'Sign In'}</button>
         </form>
 
         <p className="auth-footer">Need an account? <Link to="/register">Create one</Link></p>

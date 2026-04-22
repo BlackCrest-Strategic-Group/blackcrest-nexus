@@ -10,8 +10,8 @@ const capabilities = [
 
 export default function LandingPage() {
   return (
-    <main className="landing-page">
-      <section className="landing-hero card">
+    <main className="landing-page" data-testid="landing-page">
+      <section className="landing-hero card" data-testid="landing-hero">
         <p className="landing-kicker">BlackCrest Procurement Intelligence Engine</p>
         <h1>Intelligence Before Procurement Starts</h1>
         <p>
@@ -19,8 +19,8 @@ export default function LandingPage() {
           with clear, defensible workflows for sourcing, category, and purchasing teams.
         </p>
         <div className="row">
-          <Link className="btn" to="/login">Sign In</Link>
-          <Link className="btn ghost" to="/register">Create Account</Link>
+          <Link className="btn" to="/login" data-testid="landing-signin">Sign In</Link>
+          <Link className="btn ghost" to="/register" data-testid="landing-register">Create Account</Link>
         </div>
       </section>
 
