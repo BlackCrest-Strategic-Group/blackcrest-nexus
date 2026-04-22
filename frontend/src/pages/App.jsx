@@ -13,21 +13,9 @@ import HistoryPage from './HistoryPage';
 import ProfilePage from './ProfilePage';
 import SettingsPage from './SettingsPage';
 import PrivacyPage from './PrivacyPage';
-import LoginPage from '../components/LoginPage';
+import LoginPage from './LoginPage';
 import MFASettingsPage from '../components/MFASettingsPage';
 import MFASetupPage from '../components/MFASetupPage';
-
-
-function CleanRoomDisclosure() {
-  return (
-    <>
-      <div className="cleanroom-banner">
-        This platform operates exclusively on publicly available data and user-provided inputs. No proprietary or confidential employer data is accessed, stored, or processed.
-      </div>
-      <div className="cleanroom-watermark" aria-hidden="true">NON-CLASSIFIED USE ONLY</div>
-    </>
-  );
-}
 
 function AuthLoadingScreen() {
   return (
@@ -51,21 +39,27 @@ function ProtectedLayout() {
   );
 }
 
+function PublicOnlyRoute({ children }) {
+  const { user, authLoading } = useAuth();
+  if (authLoading) return <AuthLoadingScreen />;
+  if (user) return <Navigate to="/app" replace />;
+  return children;
+}
+
 function AuthEntryRedirect() {
   const { user, authLoading } = useAuth();
   if (authLoading) return <AuthLoadingScreen />;
-  return <Navigate to={user ? '/dashboard' : '/'} replace />;
+  return <Navigate to={user ? '/app' : '/'} replace />;
 }
 
 export default function App() {
   return (
     <AuthProvider>
-      <CleanRoomDisclosure />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
+          <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
 
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />

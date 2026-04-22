@@ -1,17 +1,114 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { authApi } from '../utils/api.js';
 import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { user, authLoading, login } = useAuth();
   const nav = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const location = useLocation();
+  const [form, setForm] = useState({ email: '', password: '', rememberMe: true });
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [note, setNote] = useState('');
+
+  useEffect(() => {
+    if (location.state?.reason === 'session-expired') {
+      setNote('Your session expired. Please sign in again.');
+    }
+  }, [location.state]);
+
+  if (!authLoading && user) {
+    return <Navigate to="/app" replace />;
+  }
 
   const submit = async (e) => {
     e.preventDefault();
-    await login(form);
-    nav('/dashboard');
+    setSubmitting(true);
+    setError('');
+    setNote('');
+
+    try {
+      const data = await login(form);
+      if (data?.authStorage?.startsWith('memory')) {
+        setNote('Signed in with temporary in-memory session due to browser storage restrictions.');
+      }
+      nav('/app', { replace: true });
+    } catch (err) {
+      setError(err.response?.data?.error || 'Unable to sign in. Please verify your credentials and try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  return <form className="form card auth" onSubmit={submit}><h2>Log In</h2><input placeholder="Email" onChange={(e) => setForm({ ...form, email: e.target.value })} /><input type="password" placeholder="Password" onChange={(e) => setForm({ ...form, password: e.target.value })} /><button className="btn">Log In</button><Link to="/register">Create account</Link></form>;
+  const sendReset = async () => {
+    if (!form.email) {
+      setError('Enter your email first, then use forgot password.');
+      return;
+    }
+
+    setSubmitting(true);
+    setError('');
+    try {
+      await authApi.forgotPassword(form.email);
+      setNote('If your account exists, we sent a reset link to your email.');
+    } catch {
+      setNote('If your account exists, we sent a reset link to your email.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="auth-page">
+      <div className="auth-card">
+        <img src="/assets/logo.png" alt="BlackCrest Procurement Engine" className="auth-logo" />
+        <h1>Secure Sign In</h1>
+        <p className="auth-subtitle">Authorized users only. External/public-data workflows for non-classified procurement analysis.</p>
+
+        {error && <div className="auth-alert auth-alert-error">{error}</div>}
+        {note && <div className="auth-alert auth-alert-note">{note}</div>}
+
+        <form onSubmit={submit} className="auth-form">
+          <label>
+            Email
+            <input
+              type="email"
+              autoComplete="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+            />
+          </label>
+
+          <label>
+            Password
+            <input
+              type="password"
+              autoComplete="current-password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+            />
+          </label>
+
+          <div className="auth-row">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={form.rememberMe}
+                onChange={(e) => setForm({ ...form, rememberMe: e.target.checked })}
+              />
+              Remember me
+            </label>
+            <button type="button" className="link-btn" onClick={sendReset} disabled={submitting}>Forgot password?</button>
+          </div>
+
+          <button type="submit" className="btn" disabled={submitting}>{submitting ? 'Signing in…' : 'Sign In'}</button>
+        </form>
+
+        <p className="auth-footer">Need an account? <Link to="/register">Create one</Link></p>
+      </div>
+    </main>
+  );
 }

@@ -1,23 +1,59 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+const capabilities = [
+  'Real-time hybrid opportunity search across commercial and federal markets',
+  'AI-supported bid/no-bid scoring and defensible recommendation workflows',
+  'Cross-market compliance and requirement review support',
+  'Supplier and pricing intelligence for faster sourcing decisions'
+];
+
 export default function LandingPage() {
   return (
-    <div className="landing">
-      <section className="card"><strong>Demonstration Environment – Uses synthetic and public data only</strong></section>
-      <section className="hero card">
+    <main className="landing-page">
+      <section className="landing-hero card">
+        <p className="landing-kicker">BlackCrest Procurement Intelligence Engine</p>
         <h1>Intelligence Before Procurement Starts</h1>
-        <p>AI-powered procurement intelligence for category managers, sourcing teams, and procurement leaders.</p>
-        <div className="row"><Link className="btn" to="/register">Sign Up</Link><Link className="btn ghost" to="/login">Log In</Link><button className="btn ghost">Request Demo</button></div>
+        <p>
+          Make faster commercial and federal procurement decisions with AI. Find, evaluate, and prioritize opportunities in minutes,
+          with clear, defensible workflows for sourcing, category, and purchasing teams.
+        </p>
+        <div className="row">
+          <Link className="btn" to="/login">Sign In</Link>
+          <Link className="btn ghost" to="/register">Create Account</Link>
+        </div>
       </section>
-      <section className="grid three">
-        {['Category Intelligence', 'Supplier Intelligence', 'Opportunity Intelligence'].map((p) => <article key={p} className="card"><h3>{p}</h3><p>Connected insights across upstream, midstream, and downstream procurement workflows.</p></article>)}
+
+      <section className="grid two">
+        <article className="card">
+          <h2>Core Platform Capabilities</h2>
+          <ul className="landing-list">
+            {capabilities.map((item) => <li key={item}>{item}</li>)}
+          </ul>
+        </article>
+        <article className="card">
+          <h2>Who It Supports</h2>
+          <p>Category managers, sourcing managers, procurement leaders, proposal teams, and contracting operations.</p>
+          <p className="muted">Built for hybrid procurement teams and multi-source market intelligence workflows.</p>
+        </article>
       </section>
-      <section className="card"><h2>Who It’s For</h2><p>Category Managers • Sourcing Managers • Procurement Leaders • Subcontracts Teams</p></section>
-      <section className="grid three">{['See Signals', 'Evaluate Options', 'Take Action'].map((h) => <article key={h} className="card"><h3>{h}</h3></article>)}</section>
-      <section className="card"><h2>Benefits</h2><p>Reduce blind spots • Find better suppliers faster • Improve decisions • Reduce risk</p></section>
-      <section className="card"><strong>Designed for Non-Classified Use Only</strong></section>
-      <footer className="row"><Link to="/privacy">Privacy Policy</Link><a href="#">Terms</a></footer>
-    </div>
+
+      <section className="card landing-trust">
+        <h2>Trust, Scope, and Protection Commitments</h2>
+        <p><strong>Demonstration Environment:</strong> Uses synthetic and publicly available data plus user-provided inputs.</p>
+        <p><strong>Clean-room posture:</strong> No proprietary or confidential employer data is accessed, stored, or processed.</p>
+        <p><strong>Usage boundary:</strong> Designed for external/public-data procurement workflows and non-classified use only.</p>
+        <p><strong>Privacy posture:</strong> Access is limited to authorized users and secure session controls.</p>
+      </section>
+
+      <section className="card landing-cta">
+        <h2>Ready to enter the platform?</h2>
+        <p>Sign in to access dashboard workflows, supplier intelligence, opportunity analysis, and decision-support tooling.</p>
+        <div className="row">
+          <Link className="btn" to="/login">Go to Secure Login</Link>
+          <Link className="btn ghost" to="/privacy">Privacy Policy</Link>
+        </div>
+      </section>
+    </main>
   );
 }

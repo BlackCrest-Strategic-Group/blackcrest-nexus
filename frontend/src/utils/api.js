@@ -1,5 +1,5 @@
 import axios from "axios";
-import { getToken, getRefreshToken, saveAuth, clearAuth, TOKEN_KEY } from "./auth.js";
+import { getToken, getRefreshToken, saveAuth, clearAuth, getPersistencePreference } from "./auth.js";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "";
 
@@ -67,7 +67,7 @@ api.interceptors.response.use(
         // Preserve whichever storage held the original token (localStorage → remember=true,
         // sessionStorage → remember=false) so we don't silently upgrade a non-persistent
         // session to a persistent one.
-        const rememberMe = !!localStorage.getItem(TOKEN_KEY);
+        const rememberMe = getPersistencePreference() === "local";
         saveAuth({ accessToken: data.accessToken, refreshToken: data.refreshToken }, rememberMe);
 
         refreshQueue.forEach(({ resolve }) => resolve(data.accessToken));
