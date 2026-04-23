@@ -1,8 +1,10 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import UserPreferences from '../models/UserPreferences.js';
+import Tenant from '../models/Tenant.js';
 import { seedDemoData } from '../services/seedService.js';
 import { getRoleMeta, ROLE_CATALOG } from '../config/rbac.js';
+import Stripe from 'stripe';
 
 function sign(userId) {
   return jwt.sign({ userId }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' });
@@ -15,25 +17,60 @@ function toSafeUser(userDoc) {
   return { ...safeUser, ...getRoleMeta(safeUser.role) };
 }
 
+function createTenantSlug(company = '', email = '') {
+  const base = (company || email.split('@')[0] || 'tenant')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'tenant';
+  return `${base}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function createStripeCustomerForTenant({ tenantName, email }) {
+  if (!process.env.STRIPE_SECRET_KEY) return { stripeCustomerId: '' };
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const customer = await stripe.customers.create({
+      name: tenantName,
+      email,
+      metadata: { source: 'blackcrest-register' }
+    });
+    return { stripeCustomerId: customer.id };
+  } catch (error) {
+    console.warn(`[billing] failed to create stripe customer: ${error.message}`);
+    return { stripeCustomerId: '' };
+  }
+}
+
 export async function register(req, res) {
   const { email, password, name, company, role, procurementFocus, categoriesOfInterest, marketType } = req.body;
   const exists = await User.findOne({ email });
   if (exists) return res.status(409).json({ message: 'Account already exists' });
 
   const normalizedRole = ROLE_CATALOG[role] ? role : 'buyer';
+  const tenantName = company || `${name}'s Workspace`;
+  const { stripeCustomerId } = await createStripeCustomerForTenant({ tenantName, email });
+  const tenant = await Tenant.create({
+    name: tenantName,
+    slug: createTenantSlug(company, email),
+    stripeCustomerId
+  });
+
   const user = await User.create({
     email,
     password,
     name,
     company,
+    tenantId: tenant._id,
+    isTenantAdmin: true,
     role: normalizedRole,
     procurementFocus,
     categoriesOfInterest: Array.isArray(categoriesOfInterest) ? categoriesOfInterest : [],
     marketType: marketType || 'mixed'
   });
 
-  await UserPreferences.create({ userId: user._id, dashboardFocus: user.categoriesOfInterest });
-  await seedDemoData(user._id, normalizedRole);
+  await UserPreferences.create({ userId: user._id, tenantId: tenant._id, dashboardFocus: user.categoriesOfInterest });
+  await seedDemoData(user._id, tenant._id);
   return res.status(201).json({ token: sign(user._id), user: toSafeUser(user) });
 }
 
@@ -44,7 +81,20 @@ export async function login(req, res) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
 
-  await seedDemoData(user._id, user.role);
+  if (!user.tenantId) {
+    const tenantName = user.company || `${user.name}'s Workspace`;
+    const { stripeCustomerId } = await createStripeCustomerForTenant({ tenantName, email: user.email });
+    const tenant = await Tenant.create({
+      name: tenantName,
+      slug: createTenantSlug(user.company, user.email),
+      stripeCustomerId
+    });
+    user.tenantId = tenant._id;
+    user.isTenantAdmin = true;
+    await user.save();
+  }
+
+  await seedDemoData(user._id, user.tenantId);
   return res.json({ token: sign(user._id), user: toSafeUser(user) });
 }
 

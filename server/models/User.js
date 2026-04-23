@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema({
   password: { type: String, required: true, minlength: 8 },
   name: { type: String, required: true, trim: true },
   company: { type: String, default: '' },
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', index: true },
+  isTenantAdmin: { type: Boolean, default: false },
   role: { type: String, enum: Object.keys(ROLE_CATALOG), default: 'buyer' },
   procurementFocus: { type: String, default: '' },
   categoriesOfInterest: { type: [String], default: [] },

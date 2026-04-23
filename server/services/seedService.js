@@ -4,11 +4,12 @@ import OpportunityAnalysis from '../models/OpportunityAnalysis.js';
 import ActionItem from '../models/ActionItem.js';
 import { buildCategoryOutput, buildOpportunityOutput } from './analysisService.js';
 
-export async function seedDemoData(userId) {
-  const hasSeed = await CategorySnapshot.exists({ userId });
+export async function seedDemoData(userId, tenantId) {
+  const hasSeed = await CategorySnapshot.exists({ userId, tenantId });
   if (hasSeed) return;
 
   const category = await CategorySnapshot.create({
+    tenantId,
     userId,
     categoryName: 'IT Hardware',
     product: 'Secure Laptops',
@@ -20,6 +21,7 @@ export async function seedDemoData(userId) {
   const suppliers = await SupplierProfile.insertMany([
     {
       userId,
+      tenantId,
       name: 'Summit Tech Supply',
       category: 'IT Hardware',
       location: 'Virginia, USA',
@@ -30,6 +32,7 @@ export async function seedDemoData(userId) {
     },
     {
       userId,
+      tenantId,
       name: 'Apex Devices Group',
       category: 'IT Hardware',
       location: 'Texas, USA',
@@ -40,6 +43,7 @@ export async function seedDemoData(userId) {
   ]);
 
   await OpportunityAnalysis.create({
+    tenantId,
     userId,
     title: 'Agency Endpoint Modernization RFP',
     linkedCategorySnapshotId: category._id,
@@ -48,7 +52,7 @@ export async function seedDemoData(userId) {
   });
 
   await ActionItem.insertMany([
-    { userId, title: 'Review IT Hardware risk posture', sourceType: 'category', priority: 'high' },
-    { userId, title: 'Evaluate Apex Devices as secondary supplier', sourceType: 'supplier', priority: 'medium' }
+    { tenantId, userId, title: 'Review IT Hardware risk posture', sourceType: 'category', priority: 'high' },
+    { tenantId, userId, title: 'Evaluate Apex Devices as secondary supplier', sourceType: 'supplier', priority: 'medium' }
   ]);
 }

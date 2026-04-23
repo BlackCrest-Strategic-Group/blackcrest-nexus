@@ -44,6 +44,7 @@ BlackCrest OpportunityOS is a procurement decision operating system built as **t
    ```bash
    cp .env.example .env
    ```
+   - Optional: set `BLANKET_PO_BUILDER_URL` to connect the standalone `blackcrest-blanket-ai` backend (for example `http://localhost:4000`). If unset, the built-in blanket PO engine is used.
 3. Run frontend + backend:
    ```bash
    npm run dev:full
@@ -65,7 +66,27 @@ BlackCrest OpportunityOS is a procurement decision operating system built as **t
 - `/api/supplier-intelligence/*`
 - `/api/opportunity-intelligence/*`
 - `/api/watchlist/*`
+- `/api/blanket-po/*`
+  - `GET /api/blanket-po/health` check local/external blanket builder connectivity
+  - `POST /api/blanket-po/upload` upload spreadsheet for blanket PO processing
+  - `POST /api/blanket-po/export/csv` export preview rows as CSV
+  - `POST /api/blanket-po/export/erp/:provider` create ERP adapter payload via connected blanket builder (`sap|oracle|infor|dynamics`)
+- `/api/billing/*`
+  - `GET /api/billing/status` tenant plan + subscription status
+  - `POST /api/billing/portal-session` Stripe billing portal session URL
+  - `POST /api/billing/webhook` Stripe subscription status sync endpoint
+  - webhook idempotency is enforced via persisted `WebhookEvent` records keyed by Stripe event id
 
 ## Notes
 - This repository includes legacy and experimental directories; active app paths remain `/server` and `/frontend`.
 - Designed for non-classified procurement intelligence workflows.
+- Multi-tenant and subscription gating baseline is included for protected SaaS routes; register/login now auto-provisions a tenant workspace and protected data queries are tenant-scoped.
+- Seat enforcement middleware is applied to authenticated product routes to block over-capacity tenants (except tenant admins for recovery operations).
+- Tamper-evident audit logging is enabled using HMAC signatures chained by prior log signatures per tenant.
+
+## Operational Scripts
+- `npm run migrate:tenant` — backfill `tenantId` and sync indexes for remaining models during rollout.
+
+## CI/CD Templates
+- `.github/workflows/ci.yml` — baseline CI checks (syntax + frontend build + migration script syntax).
+- `.github/workflows/deploy-template.yml` — manual deployment template for staging/production with webhook placeholder.

@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const userPreferencesSchema = new mongoose.Schema({
+  tenantId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', required: true, index: true },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
   moduleOrder: {
     type: [String],

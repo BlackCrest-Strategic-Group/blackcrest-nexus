@@ -1,0 +1,41 @@
+name: SaaS CI
+
+on:
+  pull_request:
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Backend syntax checks
+        run: npm run check:syntax
+
+      - name: Frontend build
+        run: npm run build:frontend
+
+      - name: Tenant migration dry-run check
+        env:
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+        run: |
+          if [ -z "$MONGODB_URI" ]; then
+            echo "::warning::MONGODB_URI is not configured. Skipping migration check."
+            exit 0
+          fi
+          node --check server/scripts/migrateTenantScoping.js

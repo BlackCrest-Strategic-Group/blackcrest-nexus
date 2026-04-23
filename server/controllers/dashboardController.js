@@ -72,13 +72,13 @@ function roleContentByGroup(group, totals) {
 
 export async function getDashboard(req, res) {
   const [categories, suppliers, supplierInsights, opportunities, watchlist, actions, preferences] = await Promise.all([
-    CategorySnapshot.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(4),
-    SupplierProfile.find({ userId: req.user._id }).sort({ updatedAt: -1 }).limit(4),
-    SupplierAnalysis.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(4),
-    OpportunityAnalysis.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(4),
-    WatchlistItem.find({ userId: req.user._id }).sort({ updatedAt: -1 }).limit(6),
-    ActionItem.find({ userId: req.user._id, status: 'open' }).sort({ priority: -1, createdAt: -1 }).limit(6),
-    UserPreferences.findOne({ userId: req.user._id })
+    CategorySnapshot.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ createdAt: -1 }).limit(4),
+    SupplierProfile.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ updatedAt: -1 }).limit(4),
+    SupplierAnalysis.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ createdAt: -1 }).limit(4),
+    OpportunityAnalysis.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ createdAt: -1 }).limit(4),
+    WatchlistItem.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ updatedAt: -1 }).limit(6),
+    ActionItem.find({ userId: req.user._id, tenantId: req.user.tenantId, status: 'open' }).sort({ priority: -1, createdAt: -1 }).limit(6),
+    UserPreferences.findOne({ userId: req.user._id, tenantId: req.user.tenantId })
   ]);
 
   const roleDashboard = roleContentByGroup(req.user.roleGroup, {

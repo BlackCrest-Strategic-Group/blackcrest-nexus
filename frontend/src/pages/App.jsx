@@ -15,6 +15,7 @@ import MFASettingsPage from '../components/MFASettingsPage';
 import MFASetupPage from '../components/MFASetupPage';
 import ResetPasswordPage from '../components/ResetPasswordPage';
 import ForgotPasswordPage from './ForgotPasswordPage';
+import BlanketPOBuilderPage from './BlanketPOBuilder';
 import SeoHead from '../components/SeoHead';
 import HomePage from './marketing/HomePage';
 import ModulePage from './marketing/ModulePage';
@@ -102,6 +103,7 @@ export default function App() {
               <Route path="/intelligence" element={<RoleProtectedRoute permissions={['briefings:view', 'tasks:view', 'rfq:manage', 'ops_visibility:view']}><IntelligencePage /></RoleProtectedRoute>} />
               <Route path="/analytics" element={<RoleProtectedRoute permissions={['kpis:view', 'category_intelligence:view', 'audit_logs:view', 'compliance:view']}><CategoryPage /></RoleProtectedRoute>} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['purchase_orders:view', 'suppliers:view', 'rfq:manage']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
               <Route path="/mfa-setup" element={<MFASetupPage />} />
             </Route>
