@@ -1,92 +1,79 @@
-# BlackCrest OpportunityOS
-## Powered by Truth Serum AI
+# BlackCrest Procurement Intelligence Operating System
 
-BlackCrest OpportunityOS is a procurement decision operating system built as **the Bloomberg Terminal for Procurement Intelligence**. It unifies opportunity intelligence, supplier intelligence, risk intelligence, sourcing intelligence, and executive decision support.
+BlackCrest AI is an investor-demo-ready Procurement Intelligence Operating System that turns RFPs, supplier data, purchase history, and ERP exports into executive decisions, buyer actions, margin leak alerts, and sourcing recommendations.
 
-## Platform Modules
-- **Executive Command Center** (live procurement health, risk, and financial signal dashboard)
-- **Opportunity Intelligence Engine** (bid/no-bid plus pursue/avoid/renegotiate/diversify style actions)
-- **Procurement Memory Graph** (relationship intelligence across suppliers, contracts, commodities, agencies, margins, and risks)
-- **AI Procurement Agents** (capture, supplier, compliance, risk, commodity, margin, forecasting, executive briefing, contract, and cost reduction)
-- **Executive AI Briefings** (concise recommendations with financial impact projections)
+## Who it is for
+- CEO
+- Procurement Director
+- Category Manager
+- Sourcing Manager
+- Buyer
+- Purchasing Assistant
 
-## Current Architecture
-### Frontend
-- React + Vite
-- Tailwind-ready styling surface + premium dark-mode command UI
-- Animated command center widgets and intelligence cards
+## Current working demo capabilities
+- Role-based dashboard views for each procurement role.
+- Procurement ingestion engine for CSV/XLS/XLSX uploads (PO history, supplier master, item master, pricing files, RFP pricing sheets, blanket planning files).
+- Margin leak detection and alerting with role ownership.
+- Supplier recommendation engine using public/uploaded/synthetic data.
+- RFP analysis reporting outputs.
+- ERP Connector Center with customer-controlled profile configuration.
+- Report Export Center with preview, JSON export, CSV export (where applicable), and print-friendly output.
+- Investor demo mode with one-click narrative data load.
 
-### Backend
-- Node.js + Express
-- JWT auth middleware + rate limiting + security middleware
-- Modular route/controller/service structure
-- Tokenized integration pattern for enterprise connectors
+## Demo/synthetic vs production-ready
+### Demo/synthetic by default
+- Investor demo seed data.
+- Public/sample/synthetic supplier catalog.
+- Demo ERP connector profiles.
 
-### Data + Intelligence
-- MongoDB models for operational data (current implementation)
-- Procurement Memory Graph abstraction in dashboard payloads
-- OpenAI-ready AI service integration points
+### Production-ready patterns already in place
+- Auth, billing, subscription gates, seat gates.
+- Governance and Sentinel QA routes/workflows.
+- Supplier intelligence, opportunity intelligence, watchlist, and blanket PO builder baseline features.
+- Optional ERP adapter payload preview architecture.
 
-## Security & Compliance Posture
-- Helmet + CORS hardening + API rate limiting
-- Token-based authentication
-- No plaintext credentials in code
-- Non-classified use boundary
-- NIST-aligned and SOC2-ready architecture patterns (implementation roadmap in docs)
+## ERP connector architecture
+Supported providers in Connector Center:
+- SAP
+- Oracle
+- Infor / Syteline
+- Microsoft Dynamics
+- CSV / SFTP export
+- Manual upload
 
-## Quick Start
-1. Install dependencies:
-   ```bash
-   npm install
-   cd frontend && npm install && cd ..
-   ```
-2. Configure environment:
-   ```bash
-   cp .env.example .env
-   ```
-   - Optional: set `BLANKET_PO_BUILDER_URL` to connect the standalone `blackcrest-blanket-ai` backend (for example `http://localhost:4000`). If unset, the built-in blanket PO engine is used.
-3. Run frontend + backend:
-   ```bash
-   npm run dev:full
-   ```
+Default connector posture:
+- read-only by default
+- token-based credential placeholders
+- customer IT/security approval status
+- mapping preview
 
-## Key Routes
-### Frontend
-- `/` landing page (premium marketing surface)
-- `/dashboard` executive command center
-- `/intelligence`
-- `/category-intelligence`
-- `/supplier-intelligence`
-- `/opportunity-intelligence`
+## Security and data boundary statement
+- Public/synthetic demo data by default.
+- Confidential customer data is only ingested when a customer intentionally uploads data or configures approved connectors.
+- Customer-controlled ERP integration model.
+- NIST-aligned design intent.
+- Designed for non-classified procurement workflows.
+- Clean-room architecture principles.
 
-### API
-- `/api/auth/*`
-- `/api/dashboard`
-- `/api/category-intelligence/*`
-- `/api/supplier-intelligence/*`
-- `/api/opportunity-intelligence/*`
-- `/api/watchlist/*`
-- `/api/blanket-po/*`
-  - `GET /api/blanket-po/health` check local/external blanket builder connectivity
-  - `POST /api/blanket-po/upload` upload spreadsheet for blanket PO processing
-  - `POST /api/blanket-po/export/csv` export preview rows as CSV
-  - `POST /api/blanket-po/export/erp/:provider` create ERP adapter payload via connected blanket builder (`sap|oracle|infor|dynamics`)
-- `/api/billing/*`
-  - `GET /api/billing/status` tenant plan + subscription status
-  - `POST /api/billing/portal-session` Stripe billing portal session URL
-  - `POST /api/billing/webhook` Stripe subscription status sync endpoint
-  - webhook idempotency is enforced via persisted `WebhookEvent` records keyed by Stripe event id
+## Local setup
+```bash
+npm install
+npm run check:syntax
+npm test -- --runInBand
+cd frontend && npm install --include=dev && npm run build
+```
 
-## Notes
-- This repository includes legacy and experimental directories; active app paths remain `/server` and `/frontend`.
-- Designed for non-classified procurement intelligence workflows.
-- Multi-tenant and subscription gating baseline is included for protected SaaS routes; register/login now auto-provisions a tenant workspace and protected data queries are tenant-scoped.
-- Seat enforcement middleware is applied to authenticated product routes to block over-capacity tenants (except tenant admins for recovery operations).
-- Tamper-evident audit logging is enabled using HMAC signatures chained by prior log signatures per tenant.
+## Environment variables
+- `JWT_SECRET`
+- `MONGO_URI`
+- `OPENAI_API_KEY` (optional)
+- `STRIPE_SECRET_KEY` (billing)
+- `BLANKET_PO_BUILDER_URL` (optional ERP/blanket export bridge)
 
-## Operational Scripts
-- `npm run migrate:tenant` — backfill `tenantId` and sync indexes for remaining models during rollout.
+## Investor demo walkthrough
+See [`docs/INVESTOR_DEMO_SCRIPT.md`](docs/INVESTOR_DEMO_SCRIPT.md).
 
-## CI/CD Templates
-- `.github/workflows/ci.yml` — baseline CI checks (syntax + frontend build + migration script syntax).
-- `.github/workflows/deploy-template.yml` — manual deployment template for staging/production with webhook placeholder.
+## Roadmap (no overpromises)
+- Expand ERP adapters from profile + payload preview to approved live connectors.
+- Add tenant-level workflow templates and deeper analytics benchmarking.
+- Add enterprise-ready connector key vault workflows.

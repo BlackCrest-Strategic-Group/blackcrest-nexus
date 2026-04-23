@@ -27,6 +27,10 @@ import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
 import GovernancePage from './GovernancePage';
 import GovernancePolicyPage from './GovernancePolicyPage';
+import InvestorDemoPage from './InvestorDemoPage';
+import ReportCenterPage from './ReportCenterPage';
+import ErpConnectorCenterPage from './ErpConnectorCenterPage';
+import DataBoundaryPage from './DataBoundaryPage';
 import { hasPermission } from '../config/roleConfig';
 
 function AuthLoadingScreen() {
@@ -86,6 +90,8 @@ export default function App() {
             <Route path="/government-contracting" element={<ModulePage pageKey="govcon" />} />
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/investor-demo" element={<InvestorDemoPage />} />
+            <Route path="/data-boundary" element={<DataBoundaryPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/security" element={<SecurityPage />} />
             <Route path="/ai-governance-principles" element={<GovernancePolicyPage />} />
@@ -109,6 +115,8 @@ export default function App() {
               <Route path="/analytics" element={<RoleProtectedRoute permissions={['governance:reporting:view', 'compliance:review', 'audit_logs:view']}><CategoryPage /></RoleProtectedRoute>} />
               <Route path="/governance" element={<RoleProtectedRoute permissions={['governance:dashboard:view']}><GovernancePage /></RoleProtectedRoute>} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/report-center" element={<ReportCenterPage />} />
+              <Route path="/erp-connector-center" element={<ErpConnectorCenterPage />} />
               <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
               <Route path="/mfa-setup" element={<MFASetupPage />} />
