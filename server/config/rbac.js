@@ -54,6 +54,7 @@ export const ROLE_NAVIGATION = {
     { label: 'Category Dashboard', path: '/dashboard', permission: 'dashboard:view' },
     { label: 'RFQs', path: '/opportunities', permission: 'rfq:manage' },
     { label: 'Supplier Analysis', path: '/suppliers', permission: 'suppliers:view' },
+    { label: 'Blanket PO Builder', path: '/blanket-po-builder', permission: 'suppliers:view' },
     { label: 'Category Intelligence', path: '/analytics', permission: 'category_intelligence:view' },
     { label: 'Negotiation Tracking', path: '/intelligence', permission: 'workflows:manage' }
   ],
@@ -61,6 +62,7 @@ export const ROLE_NAVIGATION = {
     { label: 'Daily Workflow', path: '/dashboard', permission: 'dashboard:view' },
     { label: 'Tasks', path: '/opportunities', permission: 'tasks:view' },
     { label: 'Purchase Orders', path: '/suppliers', permission: 'purchase_orders:view' },
+    { label: 'Blanket PO Builder', path: '/blanket-po-builder', permission: 'purchase_orders:view' },
     { label: 'Approvals', path: '/intelligence', permission: 'approvals:execute' }
   ],
   admin: [

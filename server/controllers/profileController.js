@@ -5,14 +5,14 @@ import SupplierAnalysis from '../models/SupplierAnalysis.js';
 import OpportunityAnalysis from '../models/OpportunityAnalysis.js';
 
 export async function getProfile(req, res) {
-  const preferences = await UserPreferences.findOne({ userId: req.user._id });
+  const preferences = await UserPreferences.findOne({ userId: req.user._id, tenantId: req.user.tenantId });
   return res.json({ user: req.user, preferences });
 }
 
 export async function updatePreferences(req, res) {
   const preferences = await UserPreferences.findOneAndUpdate(
-    { userId: req.user._id },
-    req.body,
+    { userId: req.user._id, tenantId: req.user.tenantId },
+    { ...req.body, tenantId: req.user.tenantId },
     { upsert: true, new: true }
   );
   return res.json(preferences);
@@ -27,9 +27,9 @@ export async function updateUser(req, res) {
 
 export async function getHistory(req, res) {
   const [categories, supplierAnalyses, opportunities] = await Promise.all([
-    CategorySnapshot.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(50),
-    SupplierAnalysis.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(50).populate('supplierId'),
-    OpportunityAnalysis.find({ userId: req.user._id }).sort({ createdAt: -1 }).limit(50)
+    CategorySnapshot.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ createdAt: -1 }).limit(50),
+    SupplierAnalysis.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ createdAt: -1 }).limit(50).populate('supplierId'),
+    OpportunityAnalysis.find({ userId: req.user._id, tenantId: req.user.tenantId }).sort({ createdAt: -1 }).limit(50)
   ]);
   return res.json({ categories, supplierAnalyses, opportunities });
 }

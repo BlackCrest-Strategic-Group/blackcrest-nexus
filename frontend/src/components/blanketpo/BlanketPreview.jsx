@@ -13,7 +13,7 @@ function formatDate(value) {
   return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
 }
 
-export default function BlanketPreview({ blankets = [], summary, onExportCsv, onExportJson }) {
+export default function BlanketPreview({ blankets = [], summary, onExportCsv, onExportJson, onExportErp, erpExporting }) {
   if (!blankets.length) return null;
 
   return (
@@ -29,6 +29,9 @@ export default function BlanketPreview({ blankets = [], summary, onExportCsv, on
           <div className="flex gap-2">
             <button onClick={onExportJson} className="btn-secondary text-xs py-1.5 px-3">Export JSON</button>
             <button onClick={onExportCsv} className="btn-secondary text-xs py-1.5 px-3">Export CSV</button>
+            <button onClick={onExportErp} className="btn-secondary text-xs py-1.5 px-3" disabled={erpExporting}>
+              {erpExporting ? "Exporting ERP..." : "Export ERP Payload"}
+            </button>
           </div>
         </div>
       </div>

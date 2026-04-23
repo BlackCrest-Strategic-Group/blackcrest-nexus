@@ -16,7 +16,9 @@ function downloadBlob({ content, type, filename }) {
 
 export default function BlanketPOBuilderPage() {
   const [loading, setLoading] = useState(false);
+  const [erpExporting, setErpExporting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [result, setResult] = useState({
     blankets: [],
     validationErrors: [],
@@ -33,6 +35,11 @@ export default function BlanketPOBuilderPage() {
       formData.append("file", file);
 
       const { data } = await blanketPoApi.upload(formData);
+      if (data.engine === "external-blanket-builder") {
+        setStatusMessage("Processed by external blanket PO builder service.");
+      } else {
+        setStatusMessage("Processed by local blanket PO engine.");
+      }
       setResult({
         blankets: data.blankets || [],
         validationErrors: data.validationErrors || [],
@@ -41,6 +48,7 @@ export default function BlanketPOBuilderPage() {
       });
     } catch (error) {
       setSubmitError(error?.response?.data?.error || "Failed to build blanket PO preview.");
+      setStatusMessage("");
       setResult({
         blankets: [],
         validationErrors: [],
@@ -73,6 +81,26 @@ export default function BlanketPOBuilderPage() {
     }
   }
 
+  async function handleExportErp() {
+    const provider = window.prompt("Enter ERP provider (sap, oracle, infor, dynamics):", "sap");
+    if (!provider) return;
+    setSubmitError("");
+    setErpExporting(true);
+    try {
+      const { data } = await blanketPoApi.exportErp(provider.toLowerCase(), { blankets: result.blankets });
+      downloadBlob({
+        content: JSON.stringify(data, null, 2),
+        type: "application/json",
+        filename: `blanket-po-${provider.toLowerCase()}-payload.json`
+      });
+      setStatusMessage(`ERP payload exported for ${provider.toUpperCase()}.`);
+    } catch (error) {
+      setSubmitError(error?.response?.data?.error || "ERP export failed.");
+    } finally {
+      setErpExporting(false);
+    }
+  }
+
   return (
     <div className="space-y-4 animate-fade-in">
       <div className="card">
@@ -83,6 +111,7 @@ export default function BlanketPOBuilderPage() {
         <div className="mt-5">
           <FileUpload onSubmit={handleUpload} loading={loading} />
         </div>
+        {statusMessage && <div className="alert-success mt-4">{statusMessage}</div>}
         {submitError && <div className="alert-error mt-4">{submitError}</div>}
       </div>
 
@@ -96,6 +125,8 @@ export default function BlanketPOBuilderPage() {
         summary={result.summary}
         onExportCsv={handleExportCsv}
         onExportJson={handleExportJson}
+        onExportErp={handleExportErp}
+        erpExporting={erpExporting}
       />
     </div>
   );

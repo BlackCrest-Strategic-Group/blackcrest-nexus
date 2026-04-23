@@ -1,0 +1,47 @@
+name: Deploy Template
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment target"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Build artifacts
+        run: |
+          npm ci
+          npm run check:syntax
+          npm run build:frontend
+
+      - name: Deploy (template placeholder)
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+        run: |
+          if [ -z "$DEPLOY_WEBHOOK_URL" ]; then
+            echo "::warning::DEPLOY_WEBHOOK_URL is not set. Replace this step with Render/AWS/GCP deployment logic."
+            exit 0
+          fi
+          curl -fsSL -X POST "$DEPLOY_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"ref\":\"${GITHUB_SHA}\",\"environment\":\"${{ github.event.inputs.environment }}\"}"

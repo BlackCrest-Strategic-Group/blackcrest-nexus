@@ -251,7 +251,9 @@ export const blanketPoApi = {
     api.post("/api/blanket-po/upload", formData, {
       headers: { "Content-Type": "multipart/form-data" }
     }),
-  exportCsv: (data) => api.post("/api/blanket-po/export/csv", data, { responseType: "text" })
+  exportCsv: (data) => api.post("/api/blanket-po/export/csv", data, { responseType: "text" }),
+  exportErp: (provider, data) => api.post(`/api/blanket-po/export/erp/${provider}`, data),
+  health: () => api.get("/api/blanket-po/health")
 };
 
 export default api;
