@@ -29,8 +29,10 @@ app.get('*', (req, res, next) => {
   return res.sendFile(path.join(frontendDistPath, 'index.html'));
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`BlackCrest Procurement Intelligence Platform running on ${PORT}`);
-});
+const PORT = Number.parseInt(process.env.PORT ?? '3000', 10);
+const HOST = process.env.HOST || '0.0.0.0';
 
+app.listen(PORT, HOST, () => {
+  console.log(`BlackCrest Procurement Intelligence Platform running on ${PORT}`);
+  console.log(`Listening on http://${HOST}:${PORT}`);
+});
