@@ -164,3 +164,22 @@ test('mobile viewport smoke test @mobile @smoke', async ({ page }, testInfo) => 
   await expect(page.getByTestId('intelligence-tablist')).toBeVisible();
   await monitor.assertNoBlankScreen();
 });
+
+test('investor demo and procurement OS centers load @smoke', async ({ page }, testInfo) => {
+  const monitor = monitorByTitle.get(monitorKey(testInfo));
+  await page.goto('/investor-demo');
+  await expect(page.getByText(/Investor Demo Mode/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'CEO' })).toBeVisible();
+
+  await loginAs(page, demoDan);
+  await page.goto('/blanket-po-builder');
+  await expect(page.getByText(/upload/i).first()).toBeVisible();
+
+  await page.goto('/report-center');
+  await expect(page.getByText(/Report Export Center/i)).toBeVisible();
+
+  await page.goto('/erp-connector-center');
+  await expect(page.getByText(/ERP Connector Center/i)).toBeVisible();
+
+  await monitor.assertNoBlankScreen();
+});
