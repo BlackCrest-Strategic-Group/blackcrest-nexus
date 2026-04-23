@@ -20,12 +20,12 @@ const painPoints = [
 ];
 
 const platformCapabilities = [
-  'Bid/No-Bid Intelligence',
-  'Supplier Risk Monitoring',
-  'Proposal Scoring & Readiness',
-  'Sourcing Visibility Dashboards',
-  'Executive AI Briefings',
-  'Procurement Health Scoring'
+  'Human-in-the-Loop AI Workflows',
+  'Explainable Procurement Recommendations',
+  'Governance-Ready Approval Queues',
+  'Audit-Ready Decision Logging',
+  'Read-Only ERP Integrations',
+  'Procurement Decision Support'
 ];
 
 const erpConnectors = ['SAP', 'Oracle', 'Dynamics 365', 'NetSuite', 'Infor CSI / SyteLine'];
@@ -64,24 +64,23 @@ export default function HomePage() {
   return (
     <MarketingLayout>
       <SeoHead
-        title="BlackCrest OS | AI-Powered Procurement Intelligence for Faster Operational Decisions"
-        description="BlackCrest OS is an AI-powered procurement intelligence operating system for supplier risk monitoring, sourcing visibility, proposal intelligence, and executive procurement decision support."
+        title="BlackCrest OS | Human-Centered Procurement Intelligence"
+        description="BlackCrest OS is an Human-centered procurement intelligence operating system with governance-ready workflows, explainable recommendations, and audit-ready architecture."
         keywords="procurement intelligence,supplier intelligence,procurement AI,sourcing intelligence,procurement analytics,supplier risk monitoring,procurement operating system,AI procurement platform,sourcing visibility,proposal intelligence"
         canonicalPath="/"
         schemas={[
           defaultOrgSchema,
           websiteSchema,
           faqSchema,
-          softwareSchema({ pageUrl: SITE_URL, description: 'AI-Powered Procurement Intelligence for Faster Operational Decisions.' })
+          softwareSchema({ pageUrl: SITE_URL, description: 'Human-Centered Procurement Intelligence.' })
         ]}
       />
       <main>
         <section className="hero-section container enterprise-hero">
-          <p className="eyebrow">BLACKCREST OS</p>
-          <h1>AI-Powered Procurement Intelligence for Faster Operational Decisions</h1>
+          <p className="eyebrow">HUMAN-CENTERED PROCUREMENT INTELLIGENCE</p>
+          <h1>Human-Centered Procurement Intelligence</h1>
           <p>
-            BlackCrest OS helps organizations monitor supplier risk, evaluate procurement opportunities, improve sourcing visibility,
-            and generate AI-driven operational intelligence across federal and commercial environments.
+            BlackCrest OS helps teams run procurement operations with explainable AI recommendations, governance indicators, and human accountability preserved for every critical decision.
           </p>
           <div className="row">
             <Link className="btn" to="/contact">Request Demo</Link>
@@ -116,6 +115,13 @@ export default function HomePage() {
               </article>
             </div>
           </div>
+        </section>
+
+
+        <section className="container section-grid capability-grid">
+          <article className="marketing-card"><h2>Human-in-the-loop AI</h2><p>Recommendations are advisory only; authorized humans approve, override, or escalate critical supplier and sourcing decisions.</p></article>
+          <article className="marketing-card"><h2>Governance-ready workflows</h2><p>Confidence scoring, explainability drawers, and policy-aligned routing are embedded directly into daily procurement operations.</p></article>
+          <article className="marketing-card"><h2>Audit-ready architecture</h2><p>Every approval, override, and escalation is logged with user identity, role context, recommendation snapshot, and confidence metadata.</p></article>
         </section>
 
         <section className="container section-grid three-col">

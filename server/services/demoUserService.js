@@ -3,10 +3,11 @@ import User from '../models/User.js';
 const DEMO_PASSWORD = process.env.DEMO_USER_PASSWORD || 'Blackcrest!2026';
 
 const DEMO_USERS = [
-  { email: 'ceo.demo@blackcrest.local', name: 'Avery CEO', role: 'ceo', company: 'BlackCrest Holdings' },
-  { email: 'director.demo@blackcrest.local', name: 'Jordan Director', role: 'director_procurement', company: 'BlackCrest Procurement' },
-  { email: 'manager.demo@blackcrest.local', name: 'Taylor Category', role: 'category_manager', company: 'BlackCrest Procurement' },
+  { email: 'viewer.demo@blackcrest.local', name: 'Avery Viewer', role: 'viewer', company: 'BlackCrest Holdings' },
   { email: 'buyer.demo@blackcrest.local', name: 'Riley Buyer', role: 'buyer', company: 'BlackCrest Operations' },
+  { email: 'specialist.demo@blackcrest.local', name: 'Jordan Specialist', role: 'procurement_specialist', company: 'BlackCrest Procurement' },
+  { email: 'director.demo@blackcrest.local', name: 'Taylor Director', role: 'procurement_director', company: 'BlackCrest Procurement' },
+  { email: 'compliance.demo@blackcrest.local', name: 'Casey Compliance', role: 'compliance_officer', company: 'BlackCrest Governance' },
   { email: 'admin.demo@blackcrest.local', name: 'Morgan Admin', role: 'system_administrator', company: 'BlackCrest Platform' }
 ];
 

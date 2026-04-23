@@ -13,6 +13,7 @@ import demoRoutes from './routes/demoRoutes.js';
 import blanketPoRoutes from './routes/blanketPoRoutes.js';
 import billingRoutes from './routes/billingRoutes.js';
 import sentinelRoutes from './routes/sentinelRoutes.js';
+import governanceRoutes from './routes/governanceRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import crypto from 'crypto';
@@ -49,6 +50,7 @@ app.use('/api/demo-mode', demoRoutes);
 app.use('/api/blanket-po', blanketPoRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/sentinel', sentinelRoutes);
+app.use('/api/governance', governanceRoutes);
 
 app.use((err, _req, res, _next) => {
   if (err) {
