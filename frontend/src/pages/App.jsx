@@ -21,6 +21,7 @@ import HomePage from './marketing/HomePage';
 import ModulePage from './marketing/ModulePage';
 import ContactPage from './marketing/ContactPage';
 import InsightsPage from './marketing/InsightsPage';
+import SentinelLandingPage from './marketing/SentinelLandingPage';
 import InsightArticlePage from './marketing/InsightArticlePage';
 import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
@@ -86,6 +87,7 @@ export default function App() {
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/security" element={<SecurityPage />} />
             <Route path="/insights" element={<InsightsPage />} />
+            <Route path="/sentinel" element={<SentinelLandingPage />} />
             <Route path="/insights/what-is-procurement-intelligence" element={<InsightArticlePage slug="what-is-procurement-intelligence" />} />
             <Route path="/insights/procurement-intelligence-vs-spend-analytics" element={<InsightArticlePage slug="procurement-intelligence-vs-spend-analytics" />} />
             <Route path="/insights/how-ai-improves-supplier-intelligence" element={<InsightArticlePage slug="how-ai-improves-supplier-intelligence" />} />
