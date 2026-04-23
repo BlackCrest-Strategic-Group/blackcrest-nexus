@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { getSentinelOpportunities, getSentinelOverview, getSentinelSuppliers } from '../controllers/sentinelController.js';
 import { authRequired } from '../middleware/auth.js';
-import { enforceSeatLimits } from '../middleware/subscription.js';
+import { enforceSeatLimits } from '../middleware/seatGate.js';
 
 const router = Router();
 
