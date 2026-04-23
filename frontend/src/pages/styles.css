@@ -207,3 +207,16 @@ input, textarea, select { width: 100%; padding: .65rem .75rem; border-radius: .7
     grid-template-columns: 1fr;
   }
 }
+
+.status-pill {
+  display: inline-flex;
+  padding: 0.28rem 0.58rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--border);
+}
+
+.status-pill.success { background: rgba(46, 204, 113, 0.18); color: #b8f2d1; }
+.status-pill.warning { background: rgba(243, 156, 18, 0.18); color: #f9ddb0; }
+.status-pill.danger { background: rgba(231, 76, 60, 0.18); color: #ffc8bf; }

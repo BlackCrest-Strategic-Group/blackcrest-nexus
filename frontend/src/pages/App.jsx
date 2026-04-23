@@ -25,6 +25,8 @@ import SentinelLandingPage from './marketing/SentinelLandingPage';
 import InsightArticlePage from './marketing/InsightArticlePage';
 import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
+import GovernancePage from './GovernancePage';
+import GovernancePolicyPage from './GovernancePolicyPage';
 import { hasPermission } from '../config/roleConfig';
 
 function AuthLoadingScreen() {
@@ -86,6 +88,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            <Route path="/ai-governance-principles" element={<GovernancePolicyPage />} />
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/sentinel" element={<SentinelLandingPage />} />
             <Route path="/insights/what-is-procurement-intelligence" element={<InsightArticlePage slug="what-is-procurement-intelligence" />} />
@@ -100,12 +103,13 @@ export default function App() {
 
             <Route element={<ProtectedLayout />}>
               <Route path="/dashboard" element={<RoleProtectedRoute permissions={['dashboard:view']}><DashboardPage /></RoleProtectedRoute>} />
-              <Route path="/opportunities" element={<RoleProtectedRoute permissions={['briefings:view', 'tasks:view', 'rfq:manage', 'ops_visibility:view']}><OpportunityPage /></RoleProtectedRoute>} />
-              <Route path="/suppliers" element={<RoleProtectedRoute permissions={['alerts:view', 'suppliers:view', 'purchase_orders:view', 'kpis:view']}><SupplierPage /></RoleProtectedRoute>} />
-              <Route path="/intelligence" element={<RoleProtectedRoute permissions={['briefings:view', 'tasks:view', 'rfq:manage', 'ops_visibility:view']}><IntelligencePage /></RoleProtectedRoute>} />
-              <Route path="/analytics" element={<RoleProtectedRoute permissions={['kpis:view', 'category_intelligence:view', 'audit_logs:view', 'compliance:view']}><CategoryPage /></RoleProtectedRoute>} />
+              <Route path="/opportunities" element={<RoleProtectedRoute permissions={['recommendations:view']}><OpportunityPage /></RoleProtectedRoute>} />
+              <Route path="/suppliers" element={<RoleProtectedRoute permissions={['supplier_risk:view']}><SupplierPage /></RoleProtectedRoute>} />
+              <Route path="/intelligence" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
+              <Route path="/analytics" element={<RoleProtectedRoute permissions={['governance:reporting:view', 'compliance:review', 'audit_logs:view']}><CategoryPage /></RoleProtectedRoute>} />
+              <Route path="/governance" element={<RoleProtectedRoute permissions={['governance:dashboard:view']}><GovernancePage /></RoleProtectedRoute>} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['purchase_orders:view', 'suppliers:view', 'rfq:manage']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
+              <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
               <Route path="/mfa-setup" element={<MFASetupPage />} />
             </Route>

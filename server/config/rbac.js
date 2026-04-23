@@ -1,80 +1,75 @@
 export const ROLE_GROUPS = {
-  executive: ['ceo', 'coo', 'cfo', 'cpo'],
-  director: ['director_procurement', 'director_operations', 'director_strategic_sourcing', 'director_supply_chain'],
-  manager: ['procurement_manager', 'sourcing_manager', 'category_manager', 'commodity_manager'],
-  operational: ['buyer', 'junior_buyer', 'procurement_analyst', 'procurement_coordinator'],
-  admin: ['system_administrator', 'platform_owner']
+  viewer: ['viewer'],
+  buyer: ['buyer'],
+  specialist: ['procurement_specialist'],
+  category: ['category_manager'],
+  sourcing: ['sourcing_manager'],
+  director: ['procurement_director'],
+  executive: ['executive_leadership'],
+  compliance: ['compliance_officer'],
+  admin: ['system_administrator']
 };
 
 export const ROLE_CATALOG = {
-  ceo: { label: 'CEO', group: 'executive' },
-  coo: { label: 'COO', group: 'executive' },
-  cfo: { label: 'CFO', group: 'executive' },
-  cpo: { label: 'CPO', group: 'executive' },
-  director_procurement: { label: 'Director of Procurement', group: 'director' },
-  director_operations: { label: 'Director of Operations', group: 'director' },
-  director_strategic_sourcing: { label: 'Strategic Sourcing Director', group: 'director' },
-  director_supply_chain: { label: 'Supply Chain Director', group: 'director' },
-  procurement_manager: { label: 'Procurement Manager', group: 'manager' },
-  sourcing_manager: { label: 'Sourcing Manager', group: 'manager' },
-  category_manager: { label: 'Category Manager', group: 'manager' },
-  commodity_manager: { label: 'Commodity Manager', group: 'manager' },
-  buyer: { label: 'Buyer', group: 'operational' },
-  junior_buyer: { label: 'Junior Buyer', group: 'operational' },
-  procurement_analyst: { label: 'Procurement Analyst', group: 'operational' },
-  procurement_coordinator: { label: 'Procurement Coordinator', group: 'operational' },
-  system_administrator: { label: 'System Administrator', group: 'admin' },
-  platform_owner: { label: 'Platform Owner', group: 'admin' }
+  viewer: { label: 'Viewer', group: 'viewer' },
+  buyer: { label: 'Buyer', group: 'buyer' },
+  procurement_specialist: { label: 'Procurement Specialist', group: 'specialist' },
+  category_manager: { label: 'Category Manager', group: 'category' },
+  sourcing_manager: { label: 'Sourcing Manager', group: 'sourcing' },
+  procurement_director: { label: 'Procurement Director', group: 'director' },
+  executive_leadership: { label: 'Executive Leadership', group: 'executive' },
+  compliance_officer: { label: 'Compliance Officer', group: 'compliance' },
+  system_administrator: { label: 'System Administrator', group: 'admin' }
+};
+
+const LEGACY_ROLE_ALIASES = {
+  ceo: 'executive_leadership',
+  coo: 'executive_leadership',
+  cfo: 'executive_leadership',
+  cpo: 'executive_leadership',
+  director_procurement: 'procurement_director',
+  director_operations: 'procurement_director',
+  director_strategic_sourcing: 'sourcing_manager',
+  director_supply_chain: 'procurement_director',
+  procurement_manager: 'procurement_specialist',
+  commodity_manager: 'category_manager',
+  junior_buyer: 'buyer',
+  procurement_analyst: 'procurement_specialist',
+  procurement_coordinator: 'procurement_specialist',
+  platform_owner: 'system_administrator'
 };
 
 export const ROLE_PERMISSIONS = {
-  executive: ['dashboard:view', 'briefings:view', 'alerts:view', 'kpis:view', 'forecasting:view', 'financial_exposure:view'],
-  director: ['dashboard:view', 'briefings:view', 'alerts:view', 'kpis:view', 'ops_visibility:view', 'compliance:view', 'team_performance:view'],
-  manager: ['dashboard:view', 'briefings:view', 'alerts:view', 'rfq:manage', 'suppliers:view', 'category_intelligence:view', 'workflows:manage'],
-  operational: ['dashboard:view', 'tasks:view', 'purchase_orders:view', 'approvals:execute', 'workflows:execute', 'alerts:view'],
-  admin: ['dashboard:view', 'users:manage', 'roles:assign', 'audit_logs:view', 'api_status:view', 'system:monitor']
+  viewer: ['dashboard:view', 'recommendations:view'],
+  buyer: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'supplier_risk:view'],
+  specialist: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:request', 'escalation:request', 'export:limited', 'supplier_risk:view'],
+  category: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:execute', 'escalation:request', 'export:full', 'supplier_risk:view', 'governance:reporting:view'],
+  sourcing: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:execute', 'escalation:execute', 'export:full', 'supplier_risk:view', 'governance:dashboard:view'],
+  director: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:execute', 'escalation:execute', 'export:full', 'supplier_risk:view', 'governance:dashboard:view', 'governance:reporting:view'],
+  executive: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:execute', 'escalation:execute', 'export:full', 'supplier_risk:view', 'governance:dashboard:view', 'governance:reporting:view', 'executive:approval'],
+  compliance: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:execute', 'escalation:execute', 'supplier_risk:view', 'governance:dashboard:view', 'governance:reporting:view', 'compliance:review', 'audit_logs:view'],
+  admin: ['dashboard:view', 'recommendations:view', 'recommendations:approve', 'override:execute', 'escalation:execute', 'export:full', 'supplier_risk:view', 'governance:dashboard:view', 'governance:reporting:view', 'audit_logs:view', 'admin:routes']
 };
 
 export const ROLE_NAVIGATION = {
-  executive: [
-    { label: 'Executive Overview', path: '/dashboard', permission: 'dashboard:view' },
-    { label: 'Procurement Intelligence', path: '/intelligence', permission: 'kpis:view' },
-    { label: 'Financial Exposure', path: '/analytics', permission: 'financial_exposure:view' },
-    { label: 'AI Briefings', path: '/opportunities', permission: 'briefings:view' },
-    { label: 'Supplier Risk', path: '/suppliers', permission: 'alerts:view' }
-  ],
-  director: [
-    { label: 'Team Performance', path: '/dashboard', permission: 'team_performance:view' },
-    { label: 'Procurement Operations', path: '/opportunities', permission: 'ops_visibility:view' },
-    { label: 'Compliance', path: '/analytics', permission: 'compliance:view' },
-    { label: 'Supplier Performance', path: '/suppliers', permission: 'kpis:view' },
-    { label: 'Escalations', path: '/intelligence', permission: 'alerts:view' }
-  ],
-  manager: [
-    { label: 'Category Dashboard', path: '/dashboard', permission: 'dashboard:view' },
-    { label: 'RFQs', path: '/opportunities', permission: 'rfq:manage' },
-    { label: 'Supplier Analysis', path: '/suppliers', permission: 'suppliers:view' },
-    { label: 'Blanket PO Builder', path: '/blanket-po-builder', permission: 'suppliers:view' },
-    { label: 'Category Intelligence', path: '/analytics', permission: 'category_intelligence:view' },
-    { label: 'Negotiation Tracking', path: '/intelligence', permission: 'workflows:manage' }
-  ],
-  operational: [
-    { label: 'Daily Workflow', path: '/dashboard', permission: 'dashboard:view' },
-    { label: 'Tasks', path: '/opportunities', permission: 'tasks:view' },
-    { label: 'Purchase Orders', path: '/suppliers', permission: 'purchase_orders:view' },
-    { label: 'Blanket PO Builder', path: '/blanket-po-builder', permission: 'purchase_orders:view' },
-    { label: 'Approvals', path: '/intelligence', permission: 'approvals:execute' }
-  ],
-  admin: [
-    { label: 'Admin Overview', path: '/dashboard', permission: 'dashboard:view' },
-    { label: 'User Management', path: '/settings', permission: 'users:manage' },
-    { label: 'Sentinel Monitoring', path: '/intelligence', permission: 'system:monitor' },
-    { label: 'Audit Logs', path: '/analytics', permission: 'audit_logs:view' }
-  ]
+  viewer: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }],
+  buyer: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Opportunities', path: '/opportunities', permission: 'recommendations:view' }],
+  specialist: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Intelligence', path: '/intelligence', permission: 'recommendations:view' }, { label: 'Suppliers', path: '/suppliers', permission: 'supplier_risk:view' }],
+  category: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Analytics', path: '/analytics', permission: 'governance:reporting:view' }],
+  sourcing: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Intelligence', path: '/intelligence', permission: 'recommendations:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
+  director: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Suppliers', path: '/suppliers', permission: 'supplier_risk:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
+  executive: [{ label: 'Executive Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
+  compliance: [{ label: 'Compliance', path: '/analytics', permission: 'compliance:review' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
+  admin: [{ label: 'Admin Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }, { label: 'Settings', path: '/settings', permission: 'admin:routes' }]
 };
 
+function normalizeRole(role = 'buyer') {
+  if (ROLE_CATALOG[role]) return role;
+  return LEGACY_ROLE_ALIASES[role] || 'buyer';
+}
+
 export function getRoleMeta(role = 'buyer') {
-  const normalizedRole = ROLE_CATALOG[role] ? role : 'buyer';
+  const normalizedRole = normalizeRole(role);
   const group = ROLE_CATALOG[normalizedRole].group;
   return {
     role: normalizedRole,
