@@ -19,14 +19,19 @@ router.get('/investor-demo/summary', (_req, res) => {
   return res.json({ ...getInvestorDemoData(), procurementObjectModel });
 });
 
-router.post('/procurement-ingest/upload', authRequired, enforceSeatLimits, requireActiveSubscription, upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ message: 'file is required' });
-  const rows = parseUploadFile(req.file);
-  const normalized = normalizeProcurementRows(rows);
-  return res.json({
-    uploadType: req.body.uploadType || 'generic',
-    ...normalized
-  });
+router.post('/procurement-ingest/upload', authRequired, enforceSeatLimits, requireActiveSubscription, upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ message: 'file is required' });
+    const rows = await parseUploadFile(req.file);
+    const normalized = normalizeProcurementRows(rows);
+    return res.json({
+      uploadType: req.body.uploadType || 'generic',
+      ...normalized
+    });
+  } catch (error) {
+    const status = error?.code === 'MISSING_OPTIONAL_DEPENDENCY' ? 503 : 500;
+    return res.status(status).json({ message: error.message || 'Unable to parse upload file.' });
+  }
 });
 
 router.post('/margin-leaks/analyze', authRequired, enforceSeatLimits, requireActiveSubscription, (req, res) => {

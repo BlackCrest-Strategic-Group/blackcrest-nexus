@@ -1,4 +1,15 @@
-import xlsx from 'xlsx';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+let xlsx;
+
+try {
+  xlsx = require('xlsx');
+} catch (error) {
+  if (error?.code !== 'MODULE_NOT_FOUND') {
+    throw error;
+  }
+}
 
 const COLUMN_ALIASES = {
   supplierName: ['vendor', 'supplier', 'suppliername'],
@@ -23,6 +34,13 @@ function normalizeKey(key = '') {
 }
 
 export function parseUploadFile(file) {
+  if (!xlsx) {
+    const dependencyError = new Error(
+      "Missing optional dependency 'xlsx'. Install it with `npm install xlsx` to enable spreadsheet uploads."
+    );
+    dependencyError.code = 'MISSING_OPTIONAL_DEPENDENCY';
+    throw dependencyError;
+  }
   const fileName = (file?.originalname || '').toLowerCase();
   if (fileName.endsWith('.csv')) {
     const workbook = xlsx.read(file.buffer.toString('utf8'), { type: 'string' });

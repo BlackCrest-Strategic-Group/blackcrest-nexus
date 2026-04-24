@@ -37,9 +37,12 @@ export function uploadBlanketPo(req, res) {
     });
   } catch (error) {
     console.error("[blanket-po/upload] error:", error.message);
-    return res.status(500).json({
+    const status = error?.code === "MISSING_OPTIONAL_DEPENDENCY" ? 503 : 500;
+    return res.status(status).json({
       success: false,
-      error: "Failed to process blanket PO upload"
+      error: error?.code === "MISSING_OPTIONAL_DEPENDENCY"
+        ? error.message
+        : "Failed to process blanket PO upload"
     });
   }
 }
