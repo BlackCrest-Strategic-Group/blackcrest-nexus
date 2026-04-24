@@ -8,13 +8,13 @@
  * are ever committed to source control.  See .env.example for the full list.
  */
 
-import dotenv from "dotenv";
 import tracer from "dd-trace";
+import { loadEnv } from "./backend/utils/loadEnv.js";
 
 // Load .env before reading any DD_* variables so local development works
-// without having to export vars in the shell.  dotenv.config() is safe to
-// call multiple times — it never overwrites already-set environment variables.
-dotenv.config();
+// without having to export vars in the shell. loadEnv() is idempotent and
+// never overwrites already-set environment variables.
+loadEnv();
 
 const isEnabled =
   process.env.DD_ENABLED === "true";

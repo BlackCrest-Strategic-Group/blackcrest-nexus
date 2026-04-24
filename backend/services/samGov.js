@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
+import { loadEnv } from "../utils/loadEnv.js";
 
-dotenv.config();
+loadEnv();
 
 const SAM_BASE_URL = "https://api.sam.gov/opportunities/v2/search";
 

@@ -13,9 +13,9 @@
  * - Grants.gov       (public API)
  */
 
-import dotenv from "dotenv";
+import { loadEnv } from "../utils/loadEnv.js";
 
-dotenv.config();
+loadEnv();
 
 // ---------------------------------------------------------------------------
 // Helpers

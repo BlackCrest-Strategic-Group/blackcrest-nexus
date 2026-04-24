@@ -1,6 +1,6 @@
-import dotenv from "dotenv";
+import { loadEnv } from "../backend/utils/loadEnv.js";
 
-dotenv.config();
+loadEnv();
 
 // Optionally log SAM_API_KEY availability in non-production environments without exposing details
 if (process.env.NODE_ENV && process.env.NODE_ENV !== "production") {
