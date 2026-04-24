@@ -21,6 +21,11 @@ import crypto from 'crypto';
 
 const app = express();
 
+// Render and similar platforms run Node behind a reverse proxy. Trust the
+// first proxy hop so middleware like express-rate-limit can safely parse the
+// forwarded client IP.
+app.set('trust proxy', 1);
+
 app.use(helmet());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({
