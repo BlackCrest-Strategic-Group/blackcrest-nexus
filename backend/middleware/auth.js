@@ -26,7 +26,11 @@ export function authenticateToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, secret);
-    req.user = decoded;
+    const resolvedUserId = decoded?.id ?? decoded?.userId ?? decoded?._id ?? null;
+    if (!resolvedUserId) {
+      return res.status(401).json({ success: false, error: "Invalid token payload." });
+    }
+    req.user = { ...decoded, id: String(resolvedUserId), userId: String(resolvedUserId) };
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {
