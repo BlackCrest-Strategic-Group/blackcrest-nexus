@@ -1,6 +1,17 @@
 import path from "path";
-import xlsx from "xlsx";
+import { createRequire } from "module";
 import { getMissingRequiredColumns, resolveColumnMap } from "./mapColumns.js";
+
+const require = createRequire(import.meta.url);
+let xlsx;
+
+try {
+  xlsx = require("xlsx");
+} catch (error) {
+  if (error?.code !== "MODULE_NOT_FOUND") {
+    throw error;
+  }
+}
 
 function parseExcelDate(value) {
   if (value == null || value === "") return null;
@@ -10,7 +21,7 @@ function parseExcelDate(value) {
   }
 
   if (typeof value === "number") {
-    const parsed = xlsx.SSF.parse_date_code(value);
+    const parsed = xlsx?.SSF?.parse_date_code ? xlsx.SSF.parse_date_code(value) : null;
     if (parsed) {
       const date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
       if (!Number.isNaN(date.getTime())) {
@@ -42,6 +53,14 @@ function isSupportedFile(filename = "") {
 }
 
 export function parseExcel(file) {
+  if (!xlsx) {
+    const dependencyError = new Error(
+      "Missing optional dependency 'xlsx'. Install it with `npm install xlsx` to process blanket PO spreadsheets."
+    );
+    dependencyError.code = "MISSING_OPTIONAL_DEPENDENCY";
+    throw dependencyError;
+  }
+
   const { buffer, originalname = "" } = file || {};
   if (!buffer || !isSupportedFile(originalname)) {
     return {
