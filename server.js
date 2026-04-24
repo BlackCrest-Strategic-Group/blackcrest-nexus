@@ -1,12 +1,12 @@
-import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { connectDB } from './backend/config/db.js';
 import express from 'express';
 import app from './server/app.js';
 import { seedRoleDemoUsers } from './server/services/demoUserService.js';
+import { loadEnv } from './backend/utils/loadEnv.js';
 
-dotenv.config();
+loadEnv();
 
 if (process.env.MONGODB_URI) {
   try {

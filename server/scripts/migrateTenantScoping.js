@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Tenant from "../models/Tenant.js";
@@ -10,8 +9,9 @@ import Notification from "../models/Notification.js";
 import ProcurementAnalysis from "../models/ProcurementAnalysis.js";
 import ProcurementTask from "../models/ProcurementTask.js";
 import WorkflowRun from "../models/WorkflowRun.js";
+import { loadEnv } from "../../backend/utils/loadEnv.js";
 
-dotenv.config();
+loadEnv();
 
 const MODELS = [
   { name: "AIBriefing", model: AIBriefing, userField: "userId" },
