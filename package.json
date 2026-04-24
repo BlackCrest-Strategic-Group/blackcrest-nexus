@@ -6,11 +6,11 @@
     "dev": "nodemon server.js",
     "prestart": "npm run check:syntax",
     "start": "node server.js",
-    "test": "NODE_OPTIONS='--experimental-vm-modules' jest --testPathPatterns=tests/",
+    "test": "node --test tests/*.test.js",
     "build:frontend": "cd frontend && npm install --include=dev && npm run build",
     "dev:full": "concurrently \"npm run dev\" \"cd frontend && npm run dev\"",
     "check:syntax": "bash -lc 'node --check server.js && rg --files backend routes -g \"*.js\" | xargs -n1 node --check'",
-    "verify": "npm run check:syntax && npm test -- --runInBand",
+    "verify": "npm run check:syntax && npm test",
     "migrate:tenant": "node server/scripts/migrateTenantScoping.js",
     "sentinel:report": "node qa/utils/generateSummary.js",
     "sentinel:summary": "bash -lc 'node qa/utils/generateSummary.js && cat qa/reports/summaries/demo-readiness.md'"
@@ -50,10 +50,6 @@
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
-    "jest": "^30.3.0",
     "nodemon": "^3.1.14"
-  },
-  "jest": {
-    "transform": {}
   }
 }
