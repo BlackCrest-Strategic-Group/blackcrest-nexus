@@ -12,9 +12,6 @@
     "check:syntax": "bash -lc 'node --check server.js && rg --files backend routes -g \"*.js\" | xargs -n1 node --check'",
     "verify": "npm run check:syntax && npm test -- --runInBand",
     "migrate:tenant": "node server/scripts/migrateTenantScoping.js",
-    "postinstall": "patch-package",
-    "sentinel": "bash -lc 'node qa/utils/resetRun.js; npx playwright test -c qa/playwright/playwright.config.js; code=$?; node qa/utils/generateSummary.js; exit $code'",
-    "sentinel:smoke": "bash -lc 'node qa/utils/resetRun.js; npx playwright test -c qa/playwright/playwright.config.js --grep @smoke; code=$?; node qa/utils/generateSummary.js; exit $code'",
     "sentinel:report": "node qa/utils/generateSummary.js",
     "sentinel:summary": "bash -lc 'node qa/utils/generateSummary.js && cat qa/reports/summaries/demo-readiness.md'"
   },
@@ -46,19 +43,16 @@
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.13",
     "openai": "^6.33.0",
-    "patch-package": "^8.0.1",
     "pdf-parse": "1.1.1",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0",
     "stripe": "^22.0.0",
-    "swagger-ui-express": "^5.0.1",
-    "xlsx": "^0.18.5"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
     "jest": "^30.3.0",
-    "nodemon": "^3.1.14",
-    "@playwright/test": "^1.54.2"
+    "nodemon": "^3.1.14"
   },
   "jest": {
     "transform": {}
