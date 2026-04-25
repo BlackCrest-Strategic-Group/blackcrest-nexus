@@ -1,6 +1,53 @@
 import React, { useState, useEffect } from "react";
 import { marginsApi } from "../utils/api.js";
 
+const TAB_METADATA = {
+  summary: {
+    label: "Summary",
+    subtitle: "Overall leak exposure and high-risk opportunities.",
+  },
+  "supplier-risk": {
+    label: "Supplier Risk",
+    subtitle: "Review supplier instability driving cost and delivery risk.",
+  },
+  "agency-trends": {
+    label: "Agency Trends",
+    subtitle: "Analyze agency-level bid behavior and win-rate signals.",
+  },
+};
+
+function normalizeDetails(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((item) => String(item)).filter(Boolean);
+  if (typeof value === "string") return value.split(/\n|\.|;/).map((part) => part.trim()).filter(Boolean);
+  if (typeof value === "object") {
+    return Object.entries(value)
+      .map(([key, entryValue]) => `${key}: ${String(entryValue)}`)
+      .filter(Boolean);
+  }
+  return [String(value)];
+}
+
+function buildDetailState(kind, payload, title, fallback = "No root-cause details are available for this item yet.") {
+  const detailCandidates = [
+    payload?.causes,
+    payload?.drivers,
+    payload?.reasons,
+    payload?.riskFactors,
+    payload?.notes,
+    payload?.description,
+    payload?.summary,
+    payload?.recommendation,
+  ];
+  const details = detailCandidates.flatMap((value) => normalizeDetails(value));
+
+  return {
+    kind,
+    title,
+    details: details.length ? details : [fallback],
+  };
+}
+
 function LeakageBar({ category, estimatedCost, count, total }) {
   const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
@@ -34,6 +81,7 @@ export default function MarginLeakage() {
   const [agencyTrends, setAgencyTrends] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("summary");
+  const [selectedDetail, setSelectedDetail] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -57,6 +105,52 @@ export default function MarginLeakage() {
 
   const tabs = ["summary", "supplier-risk", "agency-trends"];
 
+  const selectLeakageCategory = (category) => {
+    setSelectedDetail(
+      buildDetailState(
+        "Leakage category",
+        category,
+        category?.category || "Leakage category",
+        "No explicit driver was provided. Review the category metrics and related opportunities."
+      )
+    );
+  };
+
+  const selectOpportunity = (opp) => {
+    setSelectedDetail(
+      buildDetailState(
+        "Opportunity",
+        opp,
+        opp?.title || "Opportunity",
+        "No explicit root-cause was provided for this opportunity."
+      )
+    );
+  };
+
+  const selectSupplier = (supplier) => {
+    setSelectedDetail(
+      buildDetailState(
+        "Supplier",
+        supplier,
+        supplier?.name || "Supplier",
+        "No explicit supplier driver details were provided."
+      )
+    );
+  };
+
+  const selectAgency = (agency) => {
+    setSelectedDetail(
+      buildDetailState(
+        "Agency",
+        agency,
+        agency?._id || "Unknown Agency",
+        "No agency-level root-cause narrative was provided."
+      )
+    );
+  };
+
+  const clearSelectedDetail = () => setSelectedDetail(null);
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -64,21 +158,49 @@ export default function MarginLeakage() {
         <p className="text-sm text-slate-500">Identify cost overruns and margin erosion patterns</p>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {tabs.map((t) => (
           <button
             key={t}
-            onClick={() => setActiveTab(t)}
+            onClick={() => {
+              setActiveTab(t);
+              clearSelectedDetail();
+            }}
+            aria-pressed={activeTab === t}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all capitalize ${
               activeTab === t
                 ? "bg-navy-700 text-white border-navy-700"
                 : "bg-white text-slate-600 border-slate-200 hover:border-navy-400"
             }`}
           >
-            {t.replace("-", " ")}
+            {TAB_METADATA[t]?.label || t.replace("-", " ")}
           </button>
         ))}
       </div>
+
+      <p className="text-xs text-slate-500 -mt-3">{TAB_METADATA[activeTab]?.subtitle}</p>
+
+      {selectedDetail && (
+        <aside className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">{selectedDetail.kind} analysis</p>
+              <h3 className="text-sm font-semibold text-slate-800 mt-1">{selectedDetail.title}</h3>
+            </div>
+            <button
+              className="text-xs px-2 py-1 rounded-md border border-blue-200 bg-white text-blue-700 hover:bg-blue-100"
+              onClick={clearSelectedDetail}
+            >
+              Close
+            </button>
+          </div>
+          <ul className="mt-3 space-y-1 text-sm text-slate-700 list-disc pl-5">
+            {selectedDetail.details.map((detail, idx) => (
+              <li key={`${selectedDetail.title}-${idx}`}>{detail}</li>
+            ))}
+          </ul>
+        </aside>
+      )}
 
       {activeTab === "summary" && summary && (
         <div className="space-y-5">
@@ -98,7 +220,12 @@ export default function MarginLeakage() {
               <h3 className="text-sm font-semibold text-slate-700 mb-4">Leakage by Category</h3>
               <div className="space-y-4">
                 {summary.leakageCategories.map((cat) => (
-                  <div key={cat.category}>
+                  <button
+                    type="button"
+                    key={cat.category}
+                    onClick={() => selectLeakageCategory(cat)}
+                    className="w-full text-left rounded-lg p-2 -m-2 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
                     <LeakageBar
                       category={cat.category}
                       estimatedCost={cat.estimatedCost}
@@ -106,7 +233,7 @@ export default function MarginLeakage() {
                       total={summary.totalOpportunities}
                     />
                     <p className="text-xs text-slate-400 mt-0.5">{cat.description}</p>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -117,13 +244,18 @@ export default function MarginLeakage() {
               <h3 className="text-sm font-semibold text-slate-700 mb-3">High-Risk Opportunities</h3>
               <div className="space-y-2">
                 {summary.riskOpportunities.map((opp, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm border-b border-slate-50 last:border-0 py-2">
+                  <button
+                    type="button"
+                    key={i}
+                    onClick={() => selectOpportunity(opp)}
+                    className="w-full text-left flex items-center justify-between text-sm border-b border-slate-50 last:border-0 py-2 rounded-md hover:bg-slate-50 px-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
                     <div className="min-w-0">
                       <p className="font-medium text-slate-700 truncate">{opp.title}</p>
                       <p className="text-xs text-slate-400">{opp.agency} · Due {opp.responseDeadLine || "N/A"}</p>
                     </div>
                     <ScoreBadge score={opp.bidScore} />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -141,7 +273,12 @@ export default function MarginLeakage() {
           </div>
           <div className="space-y-2">
             {supplierRisk.atRiskSuppliers?.map((s, i) => (
-              <div key={i} className="rounded-xl border border-slate-200 bg-white px-5 py-3 flex items-center justify-between">
+              <button
+                type="button"
+                key={i}
+                onClick={() => selectSupplier(s)}
+                className="w-full text-left rounded-xl border border-slate-200 bg-white px-5 py-3 flex items-center justify-between hover:border-blue-300 hover:bg-blue-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
                 <div>
                   <p className="font-medium text-slate-800 text-sm">{s.name}</p>
                   <p className="text-xs text-slate-400">{s.tier} · {s.activeContracts} active contracts</p>
@@ -153,7 +290,7 @@ export default function MarginLeakage() {
                   }`}>{s.status}</span>
                   {s.overallScore != null && <ScoreBadge score={s.overallScore} />}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -164,7 +301,12 @@ export default function MarginLeakage() {
           <h3 className="text-sm font-semibold text-slate-700 mb-3">Agency Win Rate Analysis</h3>
           <div className="space-y-3">
             {agencyTrends.map((a, i) => (
-              <div key={i} className="space-y-1">
+              <button
+                type="button"
+                key={i}
+                onClick={() => selectAgency(a)}
+                className="w-full text-left space-y-1 rounded-lg p-2 -m-2 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              >
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-slate-700 truncate">{a._id || "Unknown Agency"}</span>
                   <span className="text-xs text-slate-500 ml-2 shrink-0">
@@ -186,7 +328,7 @@ export default function MarginLeakage() {
                     style={{ width: `${a.totalOpps > 0 ? (a.noBids / a.totalOpps) * 100 : 0}%` }}
                   />
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
