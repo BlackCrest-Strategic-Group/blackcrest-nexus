@@ -74,6 +74,17 @@ cd frontend && npm install --include=dev && npm run build
 ## Investor demo walkthrough
 See [`docs/INVESTOR_DEMO_SCRIPT.md`](docs/INVESTOR_DEMO_SCRIPT.md).
 
+## Valuation readiness playbook
+See [`docs/VALUATION_1_5M_PLAYBOOK.md`](docs/VALUATION_1_5M_PLAYBOOK.md) for an actionable plan to improve enterprise sale readiness while preserving security controls.
+
+## Commercial proof & valuation operations
+- Plan packaging endpoint: `GET /api/billing/plans`
+- Commercial proof snapshot: `GET /api/billing/commercial-proof` (auth required)
+- Weekly reliability + ROI snapshot: `GET /api/billing/weekly-reliability-roi` (auth required)
+- Weekly markdown report generation: `npm run report:weekly`
+- Data room template: [`docs/INVESTOR_DATA_ROOM.md`](docs/INVESTOR_DATA_ROOM.md)
+- Security trust center index: [`docs/SECURITY_TRUST_CENTER.md`](docs/SECURITY_TRUST_CENTER.md)
+
 ## Roadmap (no overpromises)
 - Expand ERP adapters from profile + payload preview to approved live connectors.
 - Add tenant-level workflow templates and deeper analytics benchmarking.

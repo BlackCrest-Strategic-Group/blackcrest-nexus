@@ -13,7 +13,8 @@
     "verify": "npm run check:syntax && npm test",
     "migrate:tenant": "node server/scripts/migrateTenantScoping.js",
     "sentinel:report": "node qa/utils/generateSummary.js",
-    "sentinel:summary": "bash -lc 'node qa/utils/generateSummary.js && cat qa/reports/summaries/demo-readiness.md'"
+    "sentinel:summary": "bash -lc 'node qa/utils/generateSummary.js && cat qa/reports/summaries/demo-readiness.md'",
+    "report:weekly": "node server/scripts/generateWeeklyReliabilityReport.js"
   },
   "keywords": [
     "opportunity-intelligence",

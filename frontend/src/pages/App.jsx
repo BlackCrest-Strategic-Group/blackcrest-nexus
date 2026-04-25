@@ -25,6 +25,8 @@ import SentinelLandingPage from './marketing/SentinelLandingPage';
 import InsightArticlePage from './marketing/InsightArticlePage';
 import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
+import PricingPage from './marketing/PricingPage';
+import TrustCenterPage from './marketing/TrustCenterPage';
 import GovernancePage from './GovernancePage';
 import GovernancePolicyPage from './GovernancePolicyPage';
 import InvestorDemoPage from './InvestorDemoPage';
@@ -94,6 +96,8 @@ export default function App() {
             <Route path="/data-boundary" element={<DataBoundaryPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="/trust-center" element={<TrustCenterPage />} />
             <Route path="/ai-governance-principles" element={<GovernancePolicyPage />} />
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/sentinel" element={<SentinelLandingPage />} />
