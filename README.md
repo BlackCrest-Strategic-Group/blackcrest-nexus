@@ -65,8 +65,9 @@ cd frontend && npm install --include=dev && npm run build
 
 ## Environment variables
 - `JWT_SECRET`
-- `MONGO_URI`
-- `OPENAI_API_KEY` (optional)
+- `MONGODB_URI` (required for persistence)
+- `MONGO_URI` (optional compatibility alias)
+- `OPENAI_API_KEY` (recommended for AI intelligence features)
 - `STRIPE_SECRET_KEY` (billing)
 - `BLANKET_PO_BUILDER_URL` (optional ERP/blanket export bridge)
 

@@ -55,7 +55,7 @@ export default function CategoryPage() {
   return (
     <section>
       <SeoHead title="Procurement Intelligence Modules | BlackCrest OS" description="PO status, category management, contracts, and savings tracker." canonicalPath="/analytics" />
-      <div className="page-header"><h1>Procurement Intelligence System</h1><p>Real PO status, category management, contracts, and savings tracker modules.</p></div>
+      <div className="page-header procurement-hero"><h1>Procurement Intelligence System</h1><p>Real PO status, category management, contracts, and savings tracker modules.</p></div>
 
       <div className="grid four">
         <article className="card"><h3>Open POs</h3><p className="metric-label">{summary.poStatus?.openPos || 0}</p></article>

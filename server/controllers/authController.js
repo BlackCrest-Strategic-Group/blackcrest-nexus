@@ -6,8 +6,24 @@ import { seedDemoData } from '../services/seedService.js';
 import { getRoleMeta, ROLE_CATALOG } from '../config/rbac.js';
 import Stripe from 'stripe';
 
+function resolveJwtSecret() {
+  const secret = process.env.JWT_SECRET || '';
+  if (process.env.NODE_ENV === 'production' && !secret) {
+    throw new Error('JWT_SECRET is required in production');
+  }
+  return secret || 'dev-secret';
+}
+
+function validatePasswordStrength(password = '') {
+  const minLength = password.length >= 10;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /\d/.test(password);
+  return minLength && hasUpper && hasLower && hasNumber;
+}
+
 function sign(userId) {
-  return jwt.sign({ userId }, process.env.JWT_SECRET || 'dev-secret', { expiresIn: '7d' });
+  return jwt.sign({ userId }, resolveJwtSecret(), { expiresIn: '7d' });
 }
 
 function toSafeUser(userDoc) {
@@ -44,6 +60,11 @@ async function createStripeCustomerForTenant({ tenantName, email }) {
 
 export async function register(req, res) {
   const { email, password, name, company, role, procurementFocus, categoriesOfInterest, marketType } = req.body;
+  if (!validatePasswordStrength(password)) {
+    return res.status(400).json({
+      message: 'Weak password. Use at least 10 characters with uppercase, lowercase, and a number.'
+    });
+  }
   const exists = await User.findOne({ email });
   if (exists) return res.status(409).json({ message: 'Account already exists' });
 

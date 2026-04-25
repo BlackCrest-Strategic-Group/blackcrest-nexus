@@ -42,7 +42,7 @@ export default function SupplierPage() {
   return (
     <section>
       <SeoHead title="Supplier Intelligence | BlackCrest OS" description="Supplier profiles, follow-ups, and PO status analytics." canonicalPath="/suppliers" />
-      <div className="page-header">
+      <div className="page-header procurement-hero">
         <h1>Supplier Form & Performance Workspace</h1>
         <p>Track supplier records with open POs, late POs, annual spend, and follow-up history.</p>
       </div>
