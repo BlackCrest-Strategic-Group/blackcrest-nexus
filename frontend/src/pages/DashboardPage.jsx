@@ -34,6 +34,45 @@ const severityByRole = {
   'Purchasing Assistant': 'low'
 };
 
+const roleMetricDefinitions = {
+  CEO: [
+    { label: 'Total Spend Under Review', key: 'totalSpend', prefix: '$' },
+    { label: 'Open POs', key: 'openPos' },
+    { label: 'Late POs', key: 'latePos' },
+    { label: 'Realized Savings', key: 'realizedSavings', prefix: '$' }
+  ],
+  'Procurement Director': [
+    { label: 'Open Workflows', key: 'openWorkflows' },
+    { label: 'Supplier Signals', key: 'supplierSignals' },
+    { label: 'Watchlist Items', key: 'watchlistItems' },
+    { label: 'Category Risk Nodes', key: 'categoryRiskNodes' }
+  ],
+  'Category Manager': [
+    { label: 'Category Risk Nodes', key: 'categoryRiskNodes' },
+    { label: 'Opportunities in Play', key: 'opportunities' },
+    { label: 'Watchlist Items', key: 'watchlistItems' },
+    { label: 'Realized Savings', key: 'realizedSavings', prefix: '$' }
+  ],
+  'Sourcing Manager': [
+    { label: 'Open Workflows', key: 'openWorkflows' },
+    { label: 'Supplier Signals', key: 'supplierSignals' },
+    { label: 'Opportunities in Play', key: 'opportunities' },
+    { label: 'Late POs', key: 'latePos' }
+  ],
+  Buyer: [
+    { label: 'Open POs', key: 'openPos' },
+    { label: 'Late POs', key: 'latePos' },
+    { label: 'Watchlist Items', key: 'watchlistItems' },
+    { label: 'Open Workflows', key: 'openWorkflows' }
+  ],
+  'Purchasing Assistant': [
+    { label: 'Open POs', key: 'openPos' },
+    { label: 'Rows Ingested', key: 'totalRows' },
+    { label: 'Open Workflows', key: 'openWorkflows' },
+    { label: 'Supplier Signals', key: 'supplierSignals' }
+  ]
+};
+
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState(null);
   const [workspaceSummary, setWorkspaceSummary] = useState(null);
@@ -68,6 +107,24 @@ export default function DashboardPage() {
     'Purchasing Assistant': 'Upload queue, missing columns, duplicates, cleanup suggestions, and buyer-ready output.'
   }), []);
 
+  const roleMetricValues = useMemo(() => ({
+    totalSpend: workspaceSummary?.poStatus?.totalSpend || 0,
+    openPos: workspaceSummary?.poStatus?.openPos || 0,
+    latePos: workspaceSummary?.poStatus?.latePos || 0,
+    totalRows: workspaceSummary?.poStatus?.totalRows || 0,
+    realizedSavings: workspaceSummary?.savings?.realized || 0,
+    openWorkflows: dashboard?.widgets?.highPriorityActions?.length || 0,
+    supplierSignals: dashboard?.widgets?.suppliersToReview?.length || 0,
+    opportunities: dashboard?.widgets?.opportunitiesWorthPursuing?.length || 0,
+    categoryRiskNodes: dashboard?.widgets?.categoryRisks?.length || 0,
+    watchlistItems: dashboard?.widgets?.watchlist?.length || 0
+  }), [dashboard, workspaceSummary]);
+
+  const selectedRoleMetrics = useMemo(
+    () => roleMetricDefinitions[selectedRole] || roleMetricDefinitions.CEO,
+    [selectedRole]
+  );
+
   const timeline = [
     'Q1: Ingested PO history and supplier master files from sample data.',
     'Q2: Margin leak engine flagged concentrated spend and price variance.',
@@ -95,10 +152,12 @@ export default function DashboardPage() {
       </article>
 
       <div className="grid four" style={{ marginTop: '1rem' }}>
-        <article className="card glass-panel"><p className="metric-label">Total Spend Under Review</p><AnimatedCounter value={workspaceSummary?.poStatus?.totalSpend || 0} prefix="$" /></article>
-        <article className="card glass-panel"><p className="metric-label">Open POs</p><AnimatedCounter value={workspaceSummary?.poStatus?.openPos || 0} /></article>
-        <article className="card glass-panel"><p className="metric-label">Late POs</p><AnimatedCounter value={workspaceSummary?.poStatus?.latePos || 0} /></article>
-        <article className="card glass-panel"><p className="metric-label">Realized Savings</p><AnimatedCounter value={workspaceSummary?.savings?.realized || 0} prefix="$" /></article>
+        {selectedRoleMetrics.map((metric) => (
+          <article key={metric.key} className="card glass-panel">
+            <p className="metric-label">{metric.label}</p>
+            <AnimatedCounter value={roleMetricValues[metric.key] || 0} prefix={metric.prefix || ''} />
+          </article>
+        ))}
       </div>
 
       <div className="grid two" style={{ marginTop: '1rem' }}>
