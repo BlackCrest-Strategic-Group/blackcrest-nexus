@@ -11,21 +11,37 @@ import { createErpConnector, listErpConnectors } from '../services/erpConnectorS
 import { generateReport } from '../services/reportCenterService.js';
 import { analyzeRfpText } from '../services/rfpAnalysisService.js';
 import { procurementObjectModel } from '../services/procurementObjectModel.js';
+import ErpUpload from '../models/ErpUpload.js';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 12 * 1024 * 1024 } });
 
 router.get('/investor-demo/summary', (_req, res) => {
-  return res.json({ ...getInvestorDemoData(), procurementObjectModel });
+  return res.json({ ...getInvestorDemoData(), procurementObjectModel, dataSource: 'demo' });
 });
+
 
 router.post('/procurement-ingest/upload', authRequired, enforceSeatLimits, requireActiveSubscription, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'file is required' });
     const rows = await parseUploadFile(req.file);
     const normalized = normalizeProcurementRows(rows);
+    const uploadType = req.body.uploadType || 'generic';
+    const persisted = await ErpUpload.create({
+      tenantId: req.user.tenantId,
+      userId: req.user._id,
+      sourceName: req.file.originalname,
+      uploadType,
+      mappedColumns: normalized.mappedColumns,
+      unmappedColumns: normalized.unmappedColumns,
+      normalizedRows: normalized.normalizedRows,
+      summaryMetrics: normalized.summaryMetrics
+    });
+
     return res.json({
-      uploadType: req.body.uploadType || 'generic',
+      uploadId: persisted._id,
+      uploadType,
+      persisted: true,
       ...normalized
     });
   } catch (error) {
@@ -47,7 +63,7 @@ router.post('/supplier-recommendations/analyze', authRequired, enforceSeatLimits
 
 router.get('/erp-connectors', authRequired, enforceSeatLimits, requireActiveSubscription, (_req, res) => {
   return res.json({
-    copy: 'BlackCrest is designed for customer-controlled ERP connectivity. Default demo mode uses synthetic/public data. Production connections should be reviewed and approved by the customer’s IT/security team.',
+    copy: 'ERP connectors are CSV now, API later. Customer IT controls and approves API cutover when integration is ready.',
     connectors: listErpConnectors()
   });
 });

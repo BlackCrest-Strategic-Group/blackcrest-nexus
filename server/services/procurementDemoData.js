@@ -81,8 +81,8 @@ export function getInvestorDemoData() {
       estimatedEffortHours: 180
     },
     erpConnectors: [
-      { provider: 'SAP', mode: 'demo', status: 'demo_ready', readOnly: true, scopesRequested: ['purchase_orders:read', 'suppliers:read'], lastSyncTimestamp: null, sampleMapping: { vendor: 'LIFNR', partNumber: 'MATNR' }, securityNotes: 'Token-based credentials configured by customer IT in production.' },
-      { provider: 'Oracle', mode: 'csv', status: 'not_configured', readOnly: true, scopesRequested: ['suppliers:read'], lastSyncTimestamp: null, sampleMapping: { supplierName: 'SUPPLIER_NAME', total: 'AMOUNT' }, securityNotes: 'CSV bridge available for controlled transfer.' }
+      { provider: 'SAP', mode: 'csv_now_api_later', status: 'csv_ready', readOnly: true, scopesRequested: ['purchase_orders:read', 'suppliers:read'], lastSyncTimestamp: null, sampleMapping: { vendor: 'LIFNR', partNumber: 'MATNR' }, securityNotes: 'Token-based credentials configured by customer IT in production.' },
+      { provider: 'Oracle', mode: 'csv_now_api_later', status: 'not_configured', readOnly: true, scopesRequested: ['suppliers:read'], lastSyncTimestamp: null, sampleMapping: { supplierName: 'SUPPLIER_NAME', total: 'AMOUNT' }, securityNotes: 'CSV bridge available for controlled transfer.' }
     ],
     disclaimer: CLEAN_ROOM_DISCLAIMER
   };

@@ -2,15 +2,15 @@ const connectors = [
   {
     id: 'conn-sap-demo',
     provider: 'SAP',
-    mode: 'demo',
-    status: 'demo_ready',
+    mode: 'csv_now_api_later',
+    status: 'csv_ready',
     readOnly: true,
     scopesRequested: ['purchase_orders:read', 'suppliers:read'],
     lastSyncTimestamp: null,
     sampleMapping: { vendor: 'LIFNR', item: 'MATNR', total: 'NETWR' },
     tokenFields: ['clientId', 'clientSecretRef', 'refreshTokenRef'],
     itApprovalStatus: 'pending_it_approval',
-    securityNotes: 'BlackCrest is designed for customer-controlled ERP connectivity. Default demo mode uses synthetic/public data. Production connections should be reviewed and approved by the customer’s IT/security team.'
+    securityNotes: 'ERP connectors are CSV now, API later. Customer IT can approve API cutover when ready.'
   }
 ];
 
@@ -22,7 +22,7 @@ export function createErpConnector(payload = {}) {
   const connector = {
     id: `conn-${Date.now()}`,
     provider: payload.provider,
-    mode: payload.mode || 'csv',
+    mode: payload.mode || 'csv_now_api_later',
     status: payload.status || 'not_configured',
     readOnly: payload.readOnly ?? true,
     scopesRequested: payload.scopesRequested || [],
