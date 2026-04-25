@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
@@ -18,7 +17,11 @@ import procurementOsRoutes from './routes/procurementOsRoutes.js';
 import procurementIntelligenceRoutes from './routes/procurementIntelligenceRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
-import crypto from 'crypto';
+import { requestContext } from './middleware/requestContext.js';
+import { requestLogger } from './middleware/requestLogger.js';
+import { sanitizeApiInput } from './middleware/apiSanitization.js';
+import { apiRateLimiter, authRateLimiter } from './middleware/rateLimiter.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
@@ -36,17 +39,19 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-  req.requestId = crypto.randomUUID();
-  res.setHeader('x-request-id', req.requestId);
-  return next();
-});
-app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 400 }));
+
+// Cross-cutting operational middleware: request IDs, audit-safe logging,
+// and payload sanitization are applied before route handlers.
+app.use(requestContext);
+app.use(requestLogger);
+app.use('/api', sanitizeApiInput);
+
+app.use('/api', apiRateLimiter);
 app.use('/api', cleanRoomCompliance);
 app.use(auditTrail);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRateLimiter, authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/category-intelligence', categoryRoutes);
 app.use('/api/supplier-intelligence', supplierRoutes);
@@ -61,11 +66,7 @@ app.use('/api/governance', governanceRoutes);
 app.use('/api', procurementOsRoutes);
 app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
 
-app.use((err, _req, res, _next) => {
-  if (err) {
-    return res.status(500).json({ message: 'Unexpected server error', code: 'SERVER_ERROR' });
-  }
-  return res.status(500).json({ message: 'Unknown error' });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 export default app;
