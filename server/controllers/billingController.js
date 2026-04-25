@@ -1,6 +1,24 @@
 import Stripe from "stripe";
 import Tenant from "../models/Tenant.js";
 import WebhookEvent from "../models/WebhookEvent.js";
+import { getPlanCatalogArray } from "../config/pricingCatalog.js";
+import { getCommercialProofSnapshot } from "../services/commercialProofService.js";
+import { buildWeeklyReliabilityAndRoiReport } from "../services/weeklyOpsReportService.js";
+
+
+export async function getPlanCatalog(_req, res) {
+  return res.json({ plans: getPlanCatalogArray() });
+}
+
+export async function getCommercialProof(_req, res) {
+  const snapshot = await getCommercialProofSnapshot({ now: new Date() });
+  return res.json(snapshot);
+}
+
+export async function getWeeklyReliabilityRoi(_req, res) {
+  const report = await buildWeeklyReliabilityAndRoiReport({ now: new Date() });
+  return res.json(report);
+}
 
 function getStripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) return null;
