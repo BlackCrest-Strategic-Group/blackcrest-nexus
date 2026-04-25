@@ -8,6 +8,11 @@ import { loadEnv } from './backend/utils/loadEnv.js';
 
 loadEnv();
 
+
+if (!process.env.MONGODB_URI && process.env.MONGO_URI) {
+  process.env.MONGODB_URI = process.env.MONGO_URI;
+}
+
 if (process.env.MONGODB_URI) {
   try {
     await connectDB();
@@ -17,6 +22,10 @@ if (process.env.MONGODB_URI) {
   }
 } else {
   console.warn('MONGODB_URI not set. API will run with limited persistence.');
+}
+
+if (!process.env.OPENAI_API_KEY) {
+  console.warn('OPENAI_API_KEY is not set. AI intelligence features will run in fallback mode.');
 }
 
 const __filename = fileURLToPath(import.meta.url);

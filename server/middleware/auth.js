@@ -3,13 +3,21 @@ import User from '../models/User.js';
 import Tenant from '../models/Tenant.js';
 import { getRoleMeta, hasPermission } from '../config/rbac.js';
 
+function resolveJwtSecret() {
+  const secret = process.env.JWT_SECRET || '';
+  if (process.env.NODE_ENV === 'production' && !secret) {
+    throw new Error('JWT_SECRET is required in production');
+  }
+  return secret || 'dev-secret';
+}
+
 export async function authRequired(req, res, next) {
   try {
     const header = req.headers.authorization || '';
     const token = header.startsWith('Bearer ') ? header.slice(7) : null;
     if (!token) return res.status(401).json({ message: 'Missing token' });
 
-    const payload = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret');
+    const payload = jwt.verify(token, resolveJwtSecret());
     const user = await User.findById(payload.userId).lean();
     if (!user) return res.status(401).json({ message: 'Invalid token user' });
 

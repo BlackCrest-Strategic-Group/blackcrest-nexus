@@ -15,6 +15,7 @@ import billingRoutes from './routes/billingRoutes.js';
 import sentinelRoutes from './routes/sentinelRoutes.js';
 import governanceRoutes from './routes/governanceRoutes.js';
 import procurementOsRoutes from './routes/procurementOsRoutes.js';
+import procurementIntelligenceRoutes from './routes/procurementIntelligenceRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import crypto from 'crypto';
@@ -58,6 +59,7 @@ app.use('/api/billing', billingRoutes);
 app.use('/api/sentinel', sentinelRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api', procurementOsRoutes);
+app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
 
 app.use((err, _req, res, _next) => {
   if (err) {

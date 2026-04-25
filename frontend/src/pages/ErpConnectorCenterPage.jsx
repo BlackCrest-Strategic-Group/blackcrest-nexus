@@ -21,7 +21,7 @@ export default function ErpConnectorCenterPage() {
           <article className="card" key={connector.id || connector.provider}>
             <h3>{connector.provider}</h3>
             <ul>
-              <li>Mode: {connector.mode}</li>
+              <li>Mode: {connector.mode === 'csv_now_api_later' ? 'CSV now, API later' : connector.mode}</li>
               <li>Status: {connector.status}</li>
               <li>Read-only: {String(connector.readOnly)}</li>
               <li>IT approval: {connector.itApprovalStatus}</li>

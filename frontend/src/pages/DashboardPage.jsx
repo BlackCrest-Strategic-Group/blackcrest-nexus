@@ -36,7 +36,7 @@ const severityByRole = {
 
 export default function DashboardPage() {
   const [dashboard, setDashboard] = useState(null);
-  const [demo, setDemo] = useState(null);
+  const [workspaceSummary, setWorkspaceSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState('CEO');
 
@@ -46,11 +46,11 @@ export default function DashboardPage() {
       try {
         const [dashboardRes, demoRes] = await Promise.all([
           api.get('/api/dashboard'),
-          api.get('/api/investor-demo/summary')
+          api.get('/api/procurement-intelligence/summary')
         ]);
         if (mounted) {
           setDashboard(dashboardRes.data);
-          setDemo(demoRes.data);
+          setWorkspaceSummary(demoRes.data);
         }
       } finally {
         if (mounted) setLoading(false);
@@ -95,10 +95,10 @@ export default function DashboardPage() {
       </article>
 
       <div className="grid four" style={{ marginTop: '1rem' }}>
-        <article className="card glass-panel"><p className="metric-label">Total Spend Under Review</p><AnimatedCounter value={demo?.kpis?.totalSpendUnderReview || 0} prefix="$" /></article>
-        <article className="card glass-panel"><p className="metric-label">Estimated Margin Leakage</p><AnimatedCounter value={demo?.kpis?.estimatedMarginLeakage || 0} prefix="$" /></article>
-        <article className="card glass-panel"><p className="metric-label">Supplier Risk Exposure</p><AnimatedCounter value={demo?.kpis?.supplierRiskExposure || 0} suffix="%" /></article>
-        <article className="card glass-panel"><p className="metric-label">Open Opportunity Value</p><AnimatedCounter value={demo?.kpis?.openOpportunityValue || 0} prefix="$" /></article>
+        <article className="card glass-panel"><p className="metric-label">Total Spend Under Review</p><AnimatedCounter value={workspaceSummary?.poStatus?.totalSpend || 0} prefix="$" /></article>
+        <article className="card glass-panel"><p className="metric-label">Open POs</p><AnimatedCounter value={workspaceSummary?.poStatus?.openPos || 0} /></article>
+        <article className="card glass-panel"><p className="metric-label">Late POs</p><AnimatedCounter value={workspaceSummary?.poStatus?.latePos || 0} /></article>
+        <article className="card glass-panel"><p className="metric-label">Realized Savings</p><AnimatedCounter value={workspaceSummary?.savings?.realized || 0} prefix="$" /></article>
       </div>
 
       <div className="grid two" style={{ marginTop: '1rem' }}>
@@ -121,7 +121,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid two" style={{ marginTop: '1rem' }}>
-        <article className="card glass-panel"><h3>Investor Story</h3><p>{demo?.narrative}</p></article>
+        <article className="card glass-panel"><h3>Workspace Data Source</h3><p>{workspaceSummary?.dataSource === 'customer_upload' ? 'Using uploaded customer ERP data.' : 'Using demo data until customer ERP upload is available.'}</p></article>
         <article className="card glass-panel">
           <h3>Guided Next Actions</h3>
           <ul>

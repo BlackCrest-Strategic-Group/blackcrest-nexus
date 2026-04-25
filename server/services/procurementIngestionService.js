@@ -18,7 +18,11 @@ const COLUMN_ALIASES = {
   quantity: ['quantity', 'qty'],
   unitPrice: ['unitprice', 'price', 'cost'],
   extendedValue: ['extendedvalue', 'total', 'spend'],
-  orderDate: ['orderdate', 'promisedate', 'needdate', 'releasedate'],
+  orderDate: ['orderdate', 'needdate', 'releasedate', 'podate'],
+  promisedDate: ['promisedate', 'deliverydate', 'expecteddate'],
+  receivedDate: ['receiveddate', 'receiptdate'],
+  poNumber: ['ponumber', 'po', 'purchaseorder'],
+  status: ['status', 'postatus', 'line status', 'linestatus'],
   category: ['category', 'commodity'],
   buyer: ['buyer'],
   uom: ['uom']
@@ -84,6 +88,10 @@ export function normalizeProcurementRows(rows = []) {
       unitPrice: num(row[mappedColumns.unitPrice]),
       extendedValue: num(row[mappedColumns.extendedValue]),
       orderDate: row[mappedColumns.orderDate] || null,
+      poNumber: row[mappedColumns.poNumber] || '',
+      status: row[mappedColumns.status] || 'open',
+      promisedDate: row[mappedColumns.promisedDate] || null,
+      receivedDate: row[mappedColumns.receivedDate] || null,
       category: row[mappedColumns.category] || 'Uncategorized',
       buyer: row[mappedColumns.buyer] || 'Unassigned',
       uom: row[mappedColumns.uom] || 'EA'
