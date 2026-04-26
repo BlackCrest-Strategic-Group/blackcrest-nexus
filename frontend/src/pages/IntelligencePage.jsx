@@ -70,7 +70,7 @@ export default function IntelligencePage() {
   const [severity, setSeverity] = useState('');
   const [roleGroup, setRoleGroup] = useState('executive');
   const [overview, setOverview] = useState(null);
-  const [selectedAlert, setSelectedAlert] = useState(null);
+  const [selectedAlertModal, setSelectedAlertModal] = useState(null);
 
   async function loadOverview() {
     setLoading(true);
@@ -90,30 +90,9 @@ export default function IntelligencePage() {
 
   async function openAlert(alertId) {
     const { data } = await api.get(`/api/sentinel/alerts/${alertId}`, { params: { roleGroup } });
-    setSelectedAlert(data);
+    setSelectedAlertModal(data);
   }
   const [selectedAlertId, setSelectedAlertId] = useState('');
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data } = await api.get('/api/sentinel/overview', { params: severity ? { severity } : {} });
-        if (mounted) {
-          setOverview(data);
-          setSelectedAlertId((current) => {
-            if (current && data.alerts?.some((alert) => alert.id === current)) return current;
-            return data.alerts?.[0]?.id || '';
-          });
-        }
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [severity]);
-
-  const topRiskCells = useMemo(() => (overview?.riskHeatmap || []).slice().sort((a, b) => b.riskScore - a.riskScore).slice(0, 4), [overview]);
 
   const selectedAlert = useMemo(() => {
     if (!overview?.alerts?.length) return null;
@@ -165,8 +144,6 @@ export default function IntelligencePage() {
             <thead><tr><th>Severity</th><th>Alert</th><th>Category</th><th>Status</th><th>Owner</th><th>Confidence</th></tr></thead>
             <tbody>
               {(overview?.alerts || []).map((alert) => (
-                <tr key={alert.id} style={{ cursor: 'pointer' }} onClick={() => openAlert(alert.id)}>
-                  <td>{alert.type}</td><td>{alert.title}</td><td>{alert.category}</td><td>{alert.status}</td><td>{alert.owner}</td><td>{Math.round((alert.confidenceScore || 0) * 100)}%</td>
                 <tr
                   key={alert.id}
                   onClick={() => setSelectedAlertId(alert.id)}
@@ -177,6 +154,7 @@ export default function IntelligencePage() {
                   <td>{alert.category}</td>
                   <td>{alert.status}</td>
                   <td>{alert.owner}</td>
+                  <td>{Math.round((alert.confidenceScore || 0) * 100)}%</td>
                 </tr>
               ))}
             </tbody>
@@ -257,7 +235,7 @@ export default function IntelligencePage() {
         </ul>
       </article>
 
-      <AlertDrilldownModal alert={selectedAlert} onClose={() => setSelectedAlert(null)} />
+      <AlertDrilldownModal alert={selectedAlertModal} onClose={() => setSelectedAlertModal(null)} />
     </section>
   );
 }
