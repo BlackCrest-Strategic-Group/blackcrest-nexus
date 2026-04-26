@@ -27,5 +27,12 @@
 - `cd frontend && npm run build`
 - Confirm env vars in Render dashboard (SAM, email, JWT, Mongo).
 
-## 5) Why the npm vulnerability line appears
+## 5) Render web service settings (BlackCrest Sentinel)
+- **Build command:** `npm install && npm run build:frontend`
+- **Start command:** `npm start`
+- **Why this works:** `build:frontend` compiles Vite assets and copies them into `/dist`, and `server.js` serves static assets from `dist` (with fallback to `frontend/dist`) while preserving `/api/*` routing.
+- **Required environment variables:** `MONGODB_URI` (or `MONGO_URI` alias), `JWT_SECRET`, `OPENAI_API_KEY` (optional fallback mode), plus any integration keys used by your tenant.
+- **Do not hardcode secrets** in code, `.env.example`, or client-side bundles.
+
+## 6) Why the npm vulnerability line appears
 Render prints npm audit summary during build in some environments. It is advisory unless your pipeline enforces fail-on-audit.

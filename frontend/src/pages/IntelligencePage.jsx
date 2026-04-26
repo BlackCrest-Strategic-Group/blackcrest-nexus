@@ -70,6 +70,12 @@ export default function IntelligencePage() {
   const [severity, setSeverity] = useState('');
   const [roleGroup, setRoleGroup] = useState('executive');
   const [overview, setOverview] = useState(null);
+  const [drilldownAlert, setDrilldownAlert] = useState(null);
+  const [selectedAlertId, setSelectedAlertId] = useState('');
+
+  async function openAlert(alertId) {
+    const { data } = await api.get(`/api/sentinel/alerts/${alertId}`, { params: { roleGroup } });
+    setDrilldownAlert(data);
   const [selectedAlertModal, setSelectedAlertModal] = useState(null);
 
   async function loadOverview() {
@@ -92,12 +98,37 @@ export default function IntelligencePage() {
     const { data } = await api.get(`/api/sentinel/alerts/${alertId}`, { params: { roleGroup } });
     setSelectedAlertModal(data);
   }
-  const [selectedAlertId, setSelectedAlertId] = useState('');
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      try {
+        const { data } = await api.get('/api/sentinel/overview', { params: { ...(severity ? { severity } : {}), roleGroup } });
+        if (mounted) {
+          setOverview(data);
+          setSelectedAlertId((current) => {
+            if (current && data.alerts?.some((alert) => alert.id === current)) return current;
+            return data.alerts?.[0]?.id || '';
+          });
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [severity, roleGroup]);
+
+  const topRiskCells = useMemo(() => (overview?.riskHeatmap || []).slice().sort((a, b) => b.riskScore - a.riskScore).slice(0, 4), [overview]);
 
   const selectedAlert = useMemo(() => {
     if (!overview?.alerts?.length) return null;
     return overview.alerts.find((alert) => alert.id === selectedAlertId) || overview.alerts[0];
   }, [overview, selectedAlertId]);
+  const selectedAlertDetail = useMemo(() => {
+    if (drilldownAlert?.id === selectedAlertId) return drilldownAlert;
+    return selectedAlert;
+  }, [drilldownAlert, selectedAlertId, selectedAlert]);
 
   if (loading) return <section><div className="page-header"><h1>Loading Sentinel command center…</h1></div></section>;
 
@@ -146,7 +177,10 @@ export default function IntelligencePage() {
               {(overview?.alerts || []).map((alert) => (
                 <tr
                   key={alert.id}
-                  onClick={() => setSelectedAlertId(alert.id)}
+                  onClick={() => {
+                    setSelectedAlertId(alert.id);
+                    openAlert(alert.id);
+                  }}
                   style={{ cursor: 'pointer', background: selectedAlert?.id === alert.id ? 'rgba(83, 137, 255, 0.16)' : 'transparent' }}
                 >
                   <td>{alert.type}</td>
@@ -166,34 +200,39 @@ export default function IntelligencePage() {
 
       <article className="card" style={{ marginTop: 16 }}>
         <h3>Alert Root-Cause Drilldown</h3>
-        {!selectedAlert ? (
+        {!selectedAlertDetail ? (
           <p>No alert selected.</p>
         ) : (
           <div style={{ display: 'grid', gap: 10 }}>
-            <p><strong>{selectedAlert.alertType}</strong> · {selectedAlert.title}</p>
-            <p><strong>What happened:</strong> {selectedAlert.happened}</p>
-            <p><strong>What is driving it:</strong> {selectedAlert.driver}</p>
-            <p><strong>Financial impact:</strong> {selectedAlert.financialImpact}</p>
-            <p><strong>Root cause:</strong> {selectedAlert.rootCause}</p>
+            <p><strong>{selectedAlertDetail.alertType || selectedAlertDetail.type || 'Alert'}</strong> · {selectedAlertDetail.title}</p>
+            <p><strong>What happened:</strong> {selectedAlertDetail.happened || selectedAlertDetail.summary || 'Sentinel detected a threshold breach requiring review.'}</p>
+            <p><strong>What is driving it:</strong> {selectedAlertDetail.driver || selectedAlertDetail.aiReasoningSummary || 'Signal trend analysis indicates elevated procurement risk.'}</p>
+            <p>
+              <strong>Financial impact:</strong>{' '}
+              {typeof selectedAlertDetail.financialImpact === 'string'
+                ? selectedAlertDetail.financialImpact
+                : `Weekly ${formatUsd(selectedAlertDetail.financialImpact?.estimatedWeeklyUSD)} · Monthly ${formatUsd(selectedAlertDetail.financialImpact?.estimatedMonthlyUSD)} · Annualized ${formatUsd(selectedAlertDetail.financialImpact?.annualizedUSD)}`}
+            </p>
+            <p><strong>Root cause:</strong> {selectedAlertDetail.rootCause}</p>
             <p>
               <strong>Related entities:</strong>
-              {' '}Supplier: {selectedAlert.relatedEntities?.supplier} ·
-              {' '}PO: {selectedAlert.relatedEntities?.po} ·
-              {' '}Category: {selectedAlert.relatedEntities?.category} ·
-              {' '}Contract: {selectedAlert.relatedEntities?.contract} ·
-              {' '}Buyer: {selectedAlert.relatedEntities?.buyer} ·
-              {' '}Item: {selectedAlert.relatedEntities?.item}
+              {' '}Supplier: {selectedAlertDetail.relatedEntities?.supplier || selectedAlertDetail.affectedEntities?.suppliers?.[0] || 'N/A'} ·
+              {' '}PO: {selectedAlertDetail.relatedEntities?.po || 'N/A'} ·
+              {' '}Category: {selectedAlertDetail.relatedEntities?.category || selectedAlertDetail.affectedEntities?.categories?.[0] || 'N/A'} ·
+              {' '}Contract: {selectedAlertDetail.relatedEntities?.contract || 'N/A'} ·
+              {' '}Buyer: {selectedAlertDetail.relatedEntities?.buyer || selectedAlertDetail.owner || 'N/A'} ·
+              {' '}Item: {selectedAlertDetail.relatedEntities?.item || 'N/A'}
             </p>
             <div>
               <strong>Evidence:</strong>
               <ul style={{ marginTop: 6 }}>
-                {(selectedAlert.evidence || []).map((line) => <li key={line}>{line}</li>)}
+                {(selectedAlertDetail.evidence || selectedAlertDetail.sourceSignals?.map((signal) => `${signal.signal}: ${signal.value}`) || []).map((line) => <li key={line}>{line}</li>)}
               </ul>
             </div>
-            <p><strong>Recommended corrective action:</strong> {selectedAlert.recommendedAction}</p>
-            <p><strong>Priority level:</strong> {selectedAlert.priorityLevel}</p>
-            <p><strong>Owner / responsible role:</strong> {selectedAlert.responsibleRole}</p>
-            <p><strong>Next best action:</strong> {selectedAlert.nextBestAction}</p>
+            <p><strong>Recommended corrective action:</strong> {selectedAlertDetail.recommendedAction || selectedAlertDetail.recommendedActions?.[0] || 'Route to responsible leader for remediation plan approval.'}</p>
+            <p><strong>Priority level:</strong> {selectedAlertDetail.priorityLevel || selectedAlertDetail.severity || selectedAlertDetail.type}</p>
+            <p><strong>Owner / responsible role:</strong> {selectedAlertDetail.responsibleRole || selectedAlertDetail.owner || 'Procurement leadership'}</p>
+            <p><strong>Next best action:</strong> {selectedAlertDetail.nextBestAction || selectedAlertDetail.recommendedActions?.[1] || 'Review alert details and assign owner with due date.'}</p>
           </div>
         )}
       </article>
@@ -235,6 +274,7 @@ export default function IntelligencePage() {
         </ul>
       </article>
 
+      <AlertDrilldownModal alert={drilldownAlert} onClose={() => setDrilldownAlert(null)} />
       <AlertDrilldownModal alert={selectedAlertModal} onClose={() => setSelectedAlertModal(null)} />
     </section>
   );

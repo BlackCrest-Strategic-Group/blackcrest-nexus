@@ -110,6 +110,45 @@ export function buildSentinelOverview({ roleGroup = 'executive' } = {}) {
     supplierRisks: intelligenceBundle.supplierRadar,
     activeAlerts
   });
+
+  return {
+    kpis: {
+      procurementHealthScore: 84,
+      activeAlerts: activeAlerts.length,
+      highRiskSuppliers: suppliers.filter((s) => s.riskLevel === 'High').length,
+      trackedOpportunities: opportunities.length,
+      sourcingVelocityIndex: 91,
+      projectedSavingsUSD: 3460000,
+      marginLeakageAnnualizedUSD: intelligenceBundle.marginLeak.annualizedLeakageEstimate
+    },
+    alerts,
+    intelligence: scopedIntelligence,
+    signals: intelligenceBundle.intelligence[0]?.sourceSignals || [],
+    riskHeatmap: categories.map((category, idx) => ({
+      category,
+      riskScore: seededNumber(idx * 41 + 5, 38, 94),
+      supplierConcentration: seededNumber(idx * 43 + 4, 23, 79),
+      disruptionLikelihood: seededNumber(idx * 47 + 9, 14, 72)
+    })),
+    recommendations: intelligenceBundle.marginLeak.recoveryRecommendations,
+    executiveNarratives: narratives,
+    rolePriorities: prioritiesForRole(roleGroup),
+    marginLeakage: intelligenceBundle.marginLeak,
+    supplierRiskRadar: intelligenceBundle.supplierRadar,
+    activityFeed,
+    sentinel: {
+      readOnlyIntelligenceLayer: true,
+      noAutonomousPOCreation: true,
+      humanInTheLoop: true,
+      noSharedModelTrainingOnCustomerData: true,
+      governanceFirstArchitecture: true,
+      dataClassificationSupported: ['Internal', 'Confidential', 'Proprietary', 'ITAR', 'CUI', 'Export Controlled']
+    },
+    suppliers,
+    opportunities
+  };
+}
+
 function buildAlertDetails() {
   return [
     {
@@ -223,50 +262,9 @@ function buildAlertDetails() {
   ];
 }
 
-export function buildSentinelOverview() {
-  const suppliers = buildSentinelDemoSuppliers();
-  const opportunities = buildSentinelOpportunities();
-  const alerts = buildAlertDetails();
-
-  return {
-    kpis: {
-      procurementHealthScore: 84,
-      activeAlerts: activeAlerts.length,
-      highRiskSuppliers: suppliers.filter((s) => s.riskLevel === 'High').length,
-      trackedOpportunities: opportunities.length,
-      sourcingVelocityIndex: 91,
-      projectedSavingsUSD: 3460000,
-      marginLeakageAnnualizedUSD: intelligenceBundle.marginLeak.annualizedLeakageEstimate
-    },
-    alerts,
-    intelligence: scopedIntelligence,
-    signals: intelligenceBundle.intelligence[0]?.sourceSignals || [],
-    riskHeatmap: categories.map((category, idx) => ({
-      category,
-      riskScore: seededNumber(idx * 41 + 5, 38, 94),
-      supplierConcentration: seededNumber(idx * 43 + 4, 23, 79),
-      disruptionLikelihood: seededNumber(idx * 47 + 9, 14, 72)
-    })),
-    recommendations: intelligenceBundle.marginLeak.recoveryRecommendations,
-    executiveNarratives: narratives,
-    rolePriorities: prioritiesForRole(roleGroup),
-    marginLeakage: intelligenceBundle.marginLeak,
-    supplierRiskRadar: intelligenceBundle.supplierRadar,
-    activityFeed,
-    sentinel: {
-      readOnlyIntelligenceLayer: true,
-      noAutonomousPOCreation: true,
-      humanInTheLoop: true,
-      noSharedModelTrainingOnCustomerData: true,
-      governanceFirstArchitecture: true,
-      dataClassificationSupported: ['Internal', 'Confidential', 'Proprietary', 'ITAR', 'CUI', 'Export Controlled']
-    },
-    suppliers,
-    opportunities
-  };
-}
-
 export function getSentinelAlertDetail(alertId, options = {}) {
+  const alert = buildAlertDetails().find((item) => item.id === alertId);
+  if (alert) return alert;
   const { intelligence } = buildSentinelOverview(options);
   return intelligence.find((item) => item.id === alertId) || null;
 }
