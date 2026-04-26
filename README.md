@@ -89,3 +89,36 @@ See [`docs/VALUATION_1_5M_PLAYBOOK.md`](docs/VALUATION_1_5M_PLAYBOOK.md) for an 
 - Expand ERP adapters from profile + payload preview to approved live connectors.
 - Add tenant-level workflow templates and deeper analytics benchmarking.
 - Add enterprise-ready connector key vault workflows.
+
+
+## Sentinel Governance Layer (Phase 1)
+Sentinel now operates as both an integrated platform capability and a modular architecture layer suitable for future extraction.
+
+### Sentinel capabilities now included
+- Central intelligence engine for explainable procurement alerts.
+- Clickable alert drilldowns (`/api/sentinel/alerts/:alertId`) with root cause, source signals, impact, confidence, timeline, and audit metadata.
+- Margin Leak Detection Engine (weekly, monthly, annualized leakage estimates with top drivers and supplier exposure).
+- Supplier Risk Radar with explainable health scoring and mitigation guidance.
+- Executive Narrative Engine for concise operational summaries.
+- Role-aware intelligence scoping for Buyer, Manager, Director, Executive, and Admin views.
+- Sentinel audit activity feed with upload/analysis/export/search/alert interaction/role change/admin event coverage.
+- Data classification support tags: Internal, Confidential, Proprietary, ITAR, CUI, Export Controlled.
+
+### Architecture references
+- Sentinel modular services: `server/sentinel/services/*`
+- Sentinel architecture notes: [`docs/SENTINEL_ARCHITECTURE_NOTES.md`](docs/SENTINEL_ARCHITECTURE_NOTES.md)
+
+## Security philosophy (enterprise-safe defaults)
+- Read-only intelligence layer (decision support only).
+- Human-in-the-loop recommendation workflow.
+- No autonomous PO creation or autonomous procurement execution.
+- No customer data used for shared AI model training.
+- Governance-first route protections (auth + seat limits + audit capture + rate limiting).
+
+## Demo instructions
+1. Run backend and frontend locally:
+   - `npm install`
+   - `npm run dev:full`
+2. Authenticate with a demo role and open `/intelligence`.
+3. Use the role switcher to preview Buyer/Manager/Director/Executive/Admin intelligence views.
+4. Click any alert in the Executive Alert Center to open intelligence drilldown details.
