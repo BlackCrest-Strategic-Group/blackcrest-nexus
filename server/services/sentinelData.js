@@ -1,3 +1,8 @@
+import { buildProcurementIntelligence } from '../sentinel/services/intelligenceEngine.js';
+import { buildExecutiveNarratives } from '../sentinel/services/executiveNarrativeEngine.js';
+import { buildSentinelAuditFeed } from '../sentinel/services/sentinelAuditFeed.js';
+import { filterIntelligenceByRole, prioritiesForRole } from '../sentinel/services/roleIntelligenceFilter.js';
+
 const categories = ['Electronics', 'MRO', 'Logistics', 'Industrial Gases', 'IT Services', 'Packaging', 'Raw Materials'];
 const regions = ['North America', 'EMEA', 'APAC', 'LATAM'];
 
@@ -5,6 +10,18 @@ function seededNumber(seed, min, max) {
   const x = Math.sin(seed) * 10000;
   const n = x - Math.floor(x);
   return Math.round(min + n * (max - min));
+}
+
+function alertStatusFromSeverity(severity) {
+  if (severity === 'Critical' || severity === 'High') return 'Open';
+  if (severity === 'Medium') return 'Acknowledged';
+  return 'Resolved';
+}
+
+function alertOwnerFromType(type) {
+  if (type === 'margin_leakage') return 'Procurement Manager';
+  if (type === 'supplier_risk') return 'Supplier Risk Lead';
+  return 'Sentinel Ops';
 }
 
 export function buildSentinelDemoSuppliers() {
@@ -51,6 +68,48 @@ export function buildSentinelOpportunities() {
   });
 }
 
+function buildDemoRows(suppliers = []) {
+  return suppliers.slice(0, 12).map((supplier, idx) => ({
+    supplier: supplier.name,
+    item: `Item-${(idx % 6) + 1}`,
+    quantity: seededNumber(idx * 5 + 3, 20, 220),
+    unitPrice: seededNumber(idx * 7 + 4, 65, 240),
+    baselinePrice: seededNumber(idx * 11 + 2, 55, 210),
+    extendedValue: seededNumber(idx * 13 + 8, 5000, 60000),
+    expediteFlag: idx % 3 === 0,
+    premiumShippingFlag: idx % 5 === 0,
+    moqPenaltyFlag: idx % 4 === 0,
+    invoiceVarianceAmount: seededNumber(idx * 17 + 1, 0, 7000),
+    excessInventoryCost: seededNumber(idx * 19 + 6, 500, 5500)
+  }));
+}
+
+export function buildSentinelOverview({ roleGroup = 'executive' } = {}) {
+  const suppliers = buildSentinelDemoSuppliers();
+  const opportunities = buildSentinelOpportunities();
+  const rows = buildDemoRows(suppliers);
+  const intelligenceBundle = buildProcurementIntelligence({ suppliers, rows });
+  const scopedIntelligence = filterIntelligenceByRole(intelligenceBundle.intelligence, roleGroup);
+  const activityFeed = buildSentinelAuditFeed();
+
+  const alerts = scopedIntelligence.map((item) => ({
+    id: item.id,
+    type: item.severity,
+    title: item.title,
+    owner: alertOwnerFromType(item.type),
+    status: alertStatusFromSeverity(item.severity),
+    category: item.type,
+    createdAt: item.createdAt,
+    confidenceScore: item.confidenceScore,
+    auditReference: item.auditReference
+  }));
+
+  const activeAlerts = alerts.filter((a) => a.status !== 'Resolved');
+  const narratives = buildExecutiveNarratives({
+    marginLeak: intelligenceBundle.marginLeak,
+    supplierRisks: intelligenceBundle.supplierRadar,
+    activeAlerts
+  });
 function buildAlertDetails() {
   return [
     {
@@ -172,31 +231,42 @@ export function buildSentinelOverview() {
   return {
     kpis: {
       procurementHealthScore: 84,
-      activeAlerts: alerts.filter((a) => a.status !== 'Resolved').length,
+      activeAlerts: activeAlerts.length,
       highRiskSuppliers: suppliers.filter((s) => s.riskLevel === 'High').length,
       trackedOpportunities: opportunities.length,
       sourcingVelocityIndex: 91,
-      projectedSavingsUSD: 3460000
+      projectedSavingsUSD: 3460000,
+      marginLeakageAnnualizedUSD: intelligenceBundle.marginLeak.annualizedLeakageEstimate
     },
     alerts,
-    signals: [
-      { id: 'sg-1', label: 'RFQ cycle slowdown', trend: 'up', severity: 'High', delta: '+11%' },
-      { id: 'sg-2', label: 'Quote variance', trend: 'up', severity: 'Medium', delta: '+4.3%' },
-      { id: 'sg-3', label: 'Supplier response latency', trend: 'up', severity: 'Medium', delta: '+2.1 days' },
-      { id: 'sg-4', label: 'Category volatility', trend: 'down', severity: 'Low', delta: '-1.8%' }
-    ],
+    intelligence: scopedIntelligence,
+    signals: intelligenceBundle.intelligence[0]?.sourceSignals || [],
     riskHeatmap: categories.map((category, idx) => ({
       category,
       riskScore: seededNumber(idx * 41 + 5, 38, 94),
       supplierConcentration: seededNumber(idx * 43 + 4, 23, 79),
       disruptionLikelihood: seededNumber(idx * 47 + 9, 14, 72)
     })),
-    recommendations: [
-      'Launch secondary-source qualification for Electronics in APAC by May 15, 2026.',
-      'Escalate 3 expiring contracts into negotiation lane to preserve $1.2M annual savings.',
-      'Shift two high-risk opportunities to dual-supplier strategy to reduce delivery risk exposure.'
-    ],
+    recommendations: intelligenceBundle.marginLeak.recoveryRecommendations,
+    executiveNarratives: narratives,
+    rolePriorities: prioritiesForRole(roleGroup),
+    marginLeakage: intelligenceBundle.marginLeak,
+    supplierRiskRadar: intelligenceBundle.supplierRadar,
+    activityFeed,
+    sentinel: {
+      readOnlyIntelligenceLayer: true,
+      noAutonomousPOCreation: true,
+      humanInTheLoop: true,
+      noSharedModelTrainingOnCustomerData: true,
+      governanceFirstArchitecture: true,
+      dataClassificationSupported: ['Internal', 'Confidential', 'Proprietary', 'ITAR', 'CUI', 'Export Controlled']
+    },
     suppliers,
     opportunities
   };
+}
+
+export function getSentinelAlertDetail(alertId, options = {}) {
+  const { intelligence } = buildSentinelOverview(options);
+  return intelligence.find((item) => item.id === alertId) || null;
 }
