@@ -76,6 +76,27 @@ export default function IntelligencePage() {
   async function openAlert(alertId) {
     const { data } = await api.get(`/api/sentinel/alerts/${alertId}`, { params: { roleGroup } });
     setDrilldownAlert(data);
+  const [selectedAlertModal, setSelectedAlertModal] = useState(null);
+
+  async function loadOverview() {
+    setLoading(true);
+    try {
+      const { data } = await api.get('/api/sentinel/overview', { params: { ...(severity ? { severity } : {}), roleGroup } });
+      setOverview(data);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadOverview();
+  }, [severity, roleGroup]);
+
+  const topRiskCells = useMemo(() => (overview?.riskHeatmap || []).slice().sort((a, b) => b.riskScore - a.riskScore).slice(0, 4), [overview]);
+
+  async function openAlert(alertId) {
+    const { data } = await api.get(`/api/sentinel/alerts/${alertId}`, { params: { roleGroup } });
+    setSelectedAlertModal(data);
   }
 
   useEffect(() => {
@@ -254,6 +275,7 @@ export default function IntelligencePage() {
       </article>
 
       <AlertDrilldownModal alert={drilldownAlert} onClose={() => setDrilldownAlert(null)} />
+      <AlertDrilldownModal alert={selectedAlertModal} onClose={() => setSelectedAlertModal(null)} />
     </section>
   );
 }
