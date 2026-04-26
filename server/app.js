@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './routes/authRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
@@ -24,6 +26,9 @@ import { apiRateLimiter, authRateLimiter } from './middleware/rateLimiter.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const frontendBuildPath = path.join(__dirname, '..', 'frontend', 'dist');
 
 // Render and similar platforms run Node behind a reverse proxy. Trust the
 // first proxy hop so middleware like express-rate-limit can safely parse the
@@ -65,6 +70,15 @@ app.use('/api/sentinel', sentinelRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api', procurementOsRoutes);
 app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
+
+app.use(express.static(frontendBuildPath));
+app.get('/', (_req, res) => {
+  res.sendFile(path.join(frontendBuildPath, 'index.html'));
+});
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  return res.sendFile(path.join(frontendBuildPath, 'index.html'));
+});
 
 app.use(notFoundHandler);
 app.use(errorHandler);
