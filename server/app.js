@@ -21,7 +21,6 @@ import { requestContext } from './middleware/requestContext.js';
 import { requestLogger } from './middleware/requestLogger.js';
 import { sanitizeApiInput } from './middleware/apiSanitization.js';
 import { apiRateLimiter, authRateLimiter } from './middleware/rateLimiter.js';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
@@ -65,8 +64,5 @@ app.use('/api/sentinel', sentinelRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api', procurementOsRoutes);
 app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
-
-app.use(notFoundHandler);
-app.use(errorHandler);
 
 export default app;
