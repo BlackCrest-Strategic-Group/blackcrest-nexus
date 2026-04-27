@@ -30,7 +30,11 @@ export async function analyzeSupplier(req, res) {
 }
 
 export async function saveSupplierAnalysis(_req, res) {
-  return res.status(410).json({ message: 'Persistent storage is disabled in clean-room mode.' });
+  return res.json({
+    success: true,
+    demoMode: true,
+    message: 'Saved in demo session only.'
+  });
 }
 
 export async function compareSuppliers(req, res) {

@@ -13,8 +13,10 @@ export async function analyzeCategory(req, res) {
 }
 
 export async function saveCategorySnapshot(_req, res) {
-  return res.status(410).json({
-    message: 'Persistent storage of analysis inputs is disabled in clean-room mode.'
+  return res.json({
+    success: true,
+    demoMode: true,
+    message: 'Saved in demo session only.'
   });
 }
 

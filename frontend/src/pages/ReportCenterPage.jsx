@@ -6,10 +6,22 @@ const reportTypes = ['Executive Summary', 'Margin Leak Report', 'Supplier Risk R
 export default function ReportCenterPage() {
   const [type, setType] = useState(reportTypes[0]);
   const [report, setReport] = useState(null);
+  const [status, setStatus] = useState('');
 
   const generate = async () => {
-    const { data } = await api.post('/api/reports/generate', { reportType: type, context: { executiveSummary: 'Investor demo summary context.' } });
-    setReport(data);
+    try {
+      const { data } = await api.post('/api/reports/generate', { reportType: type, context: { executiveSummary: 'Investor demo summary context.' } });
+      setReport(data);
+      setStatus('');
+    } catch (_error) {
+      setStatus('Report generation is unavailable in this demo moment. Showing a polished placeholder report.');
+      setReport({
+        type,
+        preview: 'Demo report preview is available for click-through. Live exports are enabled in fully provisioned workspaces.',
+        json: { demoMode: true, message: 'Saved in demo session only.' },
+        printableLabel: 'Print / Save as PDF'
+      });
+    }
   };
 
   return (
@@ -19,6 +31,7 @@ export default function ReportCenterPage() {
         <select value={type} onChange={(e) => setType(e.target.value)}>{reportTypes.map((r) => <option key={r}>{r}</option>)}</select>
         <button className="btn" onClick={generate} style={{ marginLeft: 8 }}>Generate</button>
       </div>
+      {status && <div className="card" style={{ marginTop: '1rem' }}><strong>Demo placeholder</strong><p>{status}</p></div>}
       {report && <article className="card" style={{ marginTop: '1rem' }}>
         <h3>{report.type}</h3>
         <p>{report.preview}</p>

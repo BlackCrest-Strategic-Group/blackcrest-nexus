@@ -60,7 +60,18 @@ export const ROLE_NAVIGATION = {
   director: [{ label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Suppliers', path: '/suppliers', permission: 'supplier_risk:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
   executive: [{ label: 'Executive Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
   compliance: [{ label: 'Compliance', path: '/analytics', permission: 'compliance:review' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }],
-  admin: [{ label: 'Admin Dashboard', path: '/dashboard', permission: 'dashboard:view' }, { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' }, { label: 'Settings', path: '/settings', permission: 'admin:routes' }]
+  admin: [
+    { label: 'Dashboard', path: '/dashboard', permission: 'dashboard:view' },
+    { label: 'Intelligence', path: '/intelligence', permission: 'recommendations:view' },
+    { label: 'Opportunities', path: '/opportunities', permission: 'recommendations:view' },
+    { label: 'Suppliers', path: '/suppliers', permission: 'supplier_risk:view' },
+    { label: 'Analytics', path: '/analytics', permission: 'governance:reporting:view' },
+    { label: 'Governance', path: '/governance', permission: 'governance:dashboard:view' },
+    { label: 'Report Center', path: '/report-center', permission: 'dashboard:view' },
+    { label: 'ERP Connector Center', path: '/erp-connector-center', permission: 'dashboard:view' },
+    { label: 'Blanket PO Builder', path: '/blanket-po-builder', permission: 'supplier_risk:view' },
+    { label: 'Settings', path: '/settings', permission: 'admin:routes' }
+  ]
 };
 
 function normalizeRole(role = 'buyer') {
