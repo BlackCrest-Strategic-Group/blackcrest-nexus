@@ -1,0 +1,27 @@
+version: '3.9'
+services:
+  blackcrest-app:
+    build: .
+    container_name: blackcrest-procurement-os
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      MONGODB_URI: mongodb://mongo:27017/blackcrest
+      JWT_SECRET: change-me
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7
+    container_name: blackcrest-mongo
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
