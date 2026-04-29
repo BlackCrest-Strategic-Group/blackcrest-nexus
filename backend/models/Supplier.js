@@ -18,6 +18,18 @@ const supplierSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     cage: { type: String, trim: true, default: "" },
     dunsUei: { type: String, trim: true, default: "" },
+    website: { type: String, trim: true, default: "" },
+    headquarters: { type: String, trim: true, default: "" },
+    supplierType: {
+      type: String,
+      enum: ["manufacturer", "distributor", "service_provider", "consulting", "logistics"],
+      default: "manufacturer"
+    },
+    categories: { type: [String], default: [] },
+    indirectSpendCategories: { type: [String], default: [] },
+    regionsServed: { type: [String], default: [] },
+    industriesServed: { type: [String], default: [] },
+    capabilities: { type: [String], default: [] },
     naicsCodes: { type: [String], default: [] },
     contactName: { type: String, trim: true, default: "" },
     contactEmail: { type: String, trim: true, lowercase: true, default: "" },
@@ -31,6 +43,20 @@ const supplierSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive", "probation", "blacklisted"],
       default: "active"
+    },
+    verifiedSupplier: {
+      type: Boolean,
+      default: false
+    },
+    averageLeadTimeDays: {
+      type: Number,
+      default: 0
+    },
+    riskScore: {
+      type: Number,
+      min: 0,
+      max: 100,
+      default: 0
     },
     kpis: { type: [kpiSchema], default: [] },
     overallScore: { type: Number, min: 0, max: 100, default: null },
@@ -49,7 +75,6 @@ const supplierSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Recompute overall score as average of KPI scores before save
 supplierSchema.pre("save", function (next) {
   if (this.kpis && this.kpis.length > 0) {
     const total = this.kpis.reduce((sum, k) => sum + k.score, 0);
@@ -60,6 +85,8 @@ supplierSchema.pre("save", function (next) {
 
 supplierSchema.index({ name: "text", cage: 1, dunsUei: 1 });
 supplierSchema.index({ naicsCodes: 1 });
+supplierSchema.index({ categories: 1 });
+supplierSchema.index({ indirectSpendCategories: 1 });
 supplierSchema.index({ overallScore: -1 });
 
 const Supplier = mongoose.model("Supplier", supplierSchema);
