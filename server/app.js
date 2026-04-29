@@ -15,6 +15,7 @@ import sentinelRoutes from './routes/sentinelRoutes.js';
 import governanceRoutes from './routes/governanceRoutes.js';
 import procurementOsRoutes from './routes/procurementOsRoutes.js';
 import procurementIntelligenceRoutes from './routes/procurementIntelligenceRoutes.js';
+import procurementLiveRoutes from './routes/procurementLiveRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import { requestContext } from './middleware/requestContext.js';
@@ -66,5 +67,6 @@ app.use('/api/sentinel', sentinelRoutes);
 app.use('/api/governance', governanceRoutes);
 app.use('/api', procurementOsRoutes);
 app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
+app.use('/api/procurement-live', procurementLiveRoutes);
 
 export default app;
