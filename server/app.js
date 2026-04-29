@@ -16,6 +16,7 @@ import governanceRoutes from './routes/governanceRoutes.js';
 import procurementOsRoutes from './routes/procurementOsRoutes.js';
 import procurementIntelligenceRoutes from './routes/procurementIntelligenceRoutes.js';
 import procurementLiveRoutes from './routes/procurementLiveRoutes.js';
+import globalIntelligenceRoutes from './routes/globalIntelligenceRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import { requestContext } from './middleware/requestContext.js';
@@ -24,12 +25,7 @@ import { sanitizeApiInput } from './middleware/apiSanitization.js';
 import { apiRateLimiter, authRateLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
-
-// Render and similar platforms run Node behind a reverse proxy. Trust the
-// first proxy hop so middleware like express-rate-limit can safely parse the
-// forwarded client IP.
 app.set('trust proxy', 1);
-
 app.use(helmet());
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({
@@ -39,13 +35,9 @@ app.use(express.json({
   }
 }));
 app.use(express.urlencoded({ extended: true }));
-
-// Cross-cutting operational middleware: request IDs, audit-safe logging,
-// and payload sanitization are applied before route handlers.
 app.use(requestContext);
 app.use(requestLogger);
 app.use('/api', sanitizeApiInput);
-
 app.use('/api', apiRateLimiter);
 app.use('/api', cleanRoomCompliance);
 app.use(auditTrail);
@@ -68,5 +60,6 @@ app.use('/api/governance', governanceRoutes);
 app.use('/api', procurementOsRoutes);
 app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
 app.use('/api/procurement-live', procurementLiveRoutes);
+app.use('/api/global-intelligence', globalIntelligenceRoutes);
 
 export default app;
