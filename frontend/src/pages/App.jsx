@@ -22,7 +22,6 @@ import HomePage from './marketing/HomePage';
 import ModulePage from './marketing/ModulePage';
 import ContactPage from './marketing/ContactPage';
 import InsightsPage from './marketing/InsightsPage';
-import SentinelLandingPage from './marketing/SentinelLandingPage';
 import InsightArticlePage from './marketing/InsightArticlePage';
 import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
@@ -101,7 +100,6 @@ export default function App() {
             <Route path="/trust-center" element={<TrustCenterPage />} />
             <Route path="/ai-governance-principles" element={<GovernancePolicyPage />} />
             <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/sentinel" element={<SentinelLandingPage />} />
             <Route path="/global-intelligence" element={<GlobalIntelligencePage />} />
             <Route path="/insights/what-is-procurement-intelligence" element={<InsightArticlePage slug="what-is-procurement-intelligence" />} />
             <Route path="/insights/procurement-intelligence-vs-spend-analytics" element={<InsightArticlePage slug="procurement-intelligence-vs-spend-analytics" />} />
