@@ -1,4 +1,4 @@
-# BlackCrest Platform
+# BlackCrest Nexus
 
 Industrial Intelligence for Modern Operators.
 
