@@ -86,11 +86,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/features" element={<ModulePage pageKey="features" />} />
-            <Route path="/supplier-intelligence" element={<ModulePage pageKey="supplier" />} />
-            <Route path="/opportunity-intelligence" element={<ModulePage pageKey="opportunity" />} />
-            <Route path="/sourcing-intelligence" element={<ModulePage pageKey="sourcing" />} />
-            <Route path="/proposal-intelligence" element={<ModulePage pageKey="proposal" />} />
-            <Route path="/government-contracting" element={<ModulePage pageKey="govcon" />} />
+            <Route path="/procurement-intelligence" element={<ModulePage pageKey="procurement" />} />
+            <Route path="/truth-serum" element={<ModulePage pageKey="truthserum" />} />
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/investor-demo" element={<InvestorDemoPage />} />
@@ -103,10 +100,10 @@ export default function App() {
             <Route path="/insights" element={<InsightsPage />} />
             <Route path="/sentinel" element={<SentinelLandingPage />} />
             <Route path="/global-intelligence" element={<GlobalIntelligencePage />} />
-            <Route path="/insights/what-is-procurement-intelligence" element={<InsightArticlePage slug="what-is-procurement-intelligence" />} />
-            <Route path="/insights/procurement-intelligence-vs-spend-analytics" element={<InsightArticlePage slug="procurement-intelligence-vs-spend-analytics" />} />
+            <Route path="/insights/industrial-intelligence-for-modern-manufacturing" element={<InsightArticlePage slug="industrial-intelligence-for-modern-manufacturing" />} />
             <Route path="/insights/how-ai-improves-supplier-intelligence" element={<InsightArticlePage slug="how-ai-improves-supplier-intelligence" />} />
             <Route path="/insights/how-to-evaluate-procurement-opportunities-faster" element={<InsightArticlePage slug="how-to-evaluate-procurement-opportunities-faster" />} />
+            <Route path="/insights/procurement-intelligence-vs-spend-analytics" element={<InsightArticlePage slug="procurement-intelligence-vs-spend-analytics" />} />
             <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
             <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
             <Route path="/forgot-password" element={<><NoIndex /><ForgotPasswordPage /></>} />
