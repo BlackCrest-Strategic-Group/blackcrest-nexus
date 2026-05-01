@@ -1,62 +1,62 @@
 export const insightsArticles = [
   {
-    slug: 'what-is-procurement-intelligence',
-    title: 'What Is Procurement Intelligence? | BlackCrest OS Insights',
-    metaDescription: 'Learn what procurement intelligence is, why it matters, and how AI helps teams make faster, better sourcing decisions.',
-    heading: 'What Is Procurement Intelligence?',
-    excerpt: 'Procurement intelligence turns fragmented supplier, market, and opportunity data into decision-ready insights for sourcing and procurement teams.',
-    publishedAt: '2026-04-22',
-    updatedAt: '2026-04-22',
+    slug: 'industrial-intelligence-for-modern-manufacturing',
+    title: 'Industrial Intelligence for Modern Manufacturing | BlackCrest Insights',
+    metaDescription: 'How industrial intelligence platforms are helping manufacturers gain operational visibility and supplier control.',
+    heading: 'Industrial Intelligence for Modern Manufacturing',
+    excerpt: 'Manufacturers need operational visibility, supplier intelligence, and faster decision support without enterprise-level complexity.',
+    publishedAt: '2026-05-01',
+    updatedAt: '2026-05-01',
     readTime: '8 min read',
     body: [
-      'Procurement intelligence is the practice of collecting, structuring, and analyzing procurement data so teams can make better purchasing and sourcing decisions. It combines internal information such as supplier performance, contracts, and bid history with external signals such as market conditions, supplier events, and public opportunities.',
-      'For procurement teams, intelligence matters because speed and confidence both affect outcomes. When decisions rely on disconnected spreadsheets and inboxes, qualification cycles slow down. A procurement intelligence platform centralizes these workflows so teams can compare opportunities, evaluate suppliers, and prioritize actions in one system.',
-      'At BlackCrest OS, procurement intelligence is organized across Opportunity Intelligence, Supplier Intelligence, Sourcing Intelligence, Proposal Intelligence, and Category Intelligence. This helps teams move from raw data to decision-ready recommendations that are explainable and auditable.'
+      'Modern manufacturers operate in increasingly volatile environments where supplier delays, material shortages, and fragmented operational data create execution risk. Industrial intelligence platforms help operational teams centralize visibility and improve decision quality.',
+      'The next generation of operational platforms combines procurement intelligence, supplier analytics, reporting workflows, and governance controls into one operational ecosystem.',
+      'BlackCrest Platform was designed around real operational workflows to help procurement teams, sourcing leaders, and manufacturers reduce friction while improving supplier visibility and operational responsiveness.'
     ]
   },
   {
     slug: 'procurement-intelligence-vs-spend-analytics',
-    title: 'Procurement Intelligence vs Spend Analytics | BlackCrest OS Insights',
-    metaDescription: 'Compare procurement intelligence and spend analytics to understand when each approach supports sourcing and supplier decisions.',
+    title: 'Procurement Intelligence vs Spend Analytics | BlackCrest Insights',
+    metaDescription: 'Compare procurement intelligence and spend analytics for sourcing and operational decision support.',
     heading: 'Procurement Intelligence vs Spend Analytics',
-    excerpt: 'Spend analytics explains where money went. Procurement intelligence supports what to do next.',
-    publishedAt: '2026-04-22',
-    updatedAt: '2026-04-22',
-    readTime: '9 min read',
+    excerpt: 'Spend analytics explains historical activity. Procurement intelligence helps operators decide what happens next.',
+    publishedAt: '2026-05-01',
+    updatedAt: '2026-05-01',
+    readTime: '7 min read',
     body: [
-      'Spend analytics is retrospective. It helps teams classify spend, identify trends, and manage category performance over time. That is essential, but it does not always provide forward-looking guidance for opportunity qualification or supplier risk decisions.',
-      'Procurement intelligence combines spend patterns with operational signals and opportunity context. It helps buyers evaluate supplier readiness, sourcing paths, and procurement risk before commitments are made.',
-      'In practice, organizations need both. Spend analytics provides baseline visibility, while procurement intelligence improves tactical and strategic decision quality in active workflows.'
+      'Spend analytics focuses on historical visibility and classification. Procurement intelligence combines operational signals, supplier visibility, and workflow context to support active sourcing and operational decisions.',
+      'Organizations increasingly need systems that combine operational intelligence, supplier visibility, and procurement workflows together instead of relying on disconnected reporting systems.',
+      'Industrial operators benefit most when procurement intelligence becomes part of a broader operational decision ecosystem.'
     ]
   },
   {
     slug: 'how-ai-improves-supplier-intelligence',
-    title: 'How AI Improves Supplier Intelligence | BlackCrest OS Insights',
-    metaDescription: 'See how AI improves supplier intelligence with faster profile analysis, risk monitoring, and sourcing decision support.',
+    title: 'How AI Improves Supplier Intelligence | BlackCrest Insights',
+    metaDescription: 'AI-powered supplier intelligence improves operational visibility and sourcing responsiveness.',
     heading: 'How AI Improves Supplier Intelligence',
-    excerpt: 'AI helps procurement teams process more supplier signals quickly while preserving human oversight and governance.',
-    publishedAt: '2026-04-22',
-    updatedAt: '2026-04-22',
-    readTime: '7 min read',
+    excerpt: 'AI helps operational teams identify supplier risks, sourcing gaps, and procurement signals faster.',
+    publishedAt: '2026-05-01',
+    updatedAt: '2026-05-01',
+    readTime: '6 min read',
     body: [
-      'Supplier intelligence requires evaluating capability, reliability, compliance posture, and fit for specific procurement needs. AI helps accelerate this by summarizing supplier data, flagging potential issues, and surfacing comparable alternatives.',
-      'The key is controlled automation. High-trust organizations use AI to reduce manual triage work, then keep humans in the loop for final decisions. This pattern improves throughput without sacrificing accountability.',
-      'BlackCrest OS uses AI to support supplier evaluations, detect procurement signals, and highlight risk-relevant data so sourcing managers can act faster with clearer context.'
+      'Supplier intelligence is no longer limited to spreadsheets and vendor scorecards. AI-assisted workflows help operational teams evaluate supplier reliability, identify risks, and compare sourcing options faster.',
+      'The goal is not autonomous procurement. The goal is operational clarity and better human decision support.',
+      'BlackCrest combines AI-assisted analysis with governance-focused operational workflows to improve supplier visibility while preserving operational oversight.'
     ]
   },
   {
     slug: 'how-to-evaluate-procurement-opportunities-faster',
-    title: 'How to Evaluate Procurement Opportunities Faster | BlackCrest OS Insights',
-    metaDescription: 'A practical framework for evaluating procurement opportunities faster with stronger bid/no-bid discipline.',
+    title: 'How to Evaluate Procurement Opportunities Faster | BlackCrest Insights',
+    metaDescription: 'A practical framework for operational procurement evaluation and sourcing discipline.',
     heading: 'How to Evaluate Procurement Opportunities Faster',
-    excerpt: 'Faster opportunity evaluation starts with clear criteria, structured workflows, and reusable procurement intelligence.',
-    publishedAt: '2026-04-22',
-    updatedAt: '2026-04-22',
+    excerpt: 'Operational procurement intelligence helps teams reduce delays and improve sourcing responsiveness.',
+    publishedAt: '2026-05-01',
+    updatedAt: '2026-05-01',
     readTime: '8 min read',
     body: [
-      'Procurement and GovCon teams often struggle with opportunity overload. Valuable opportunities can be missed when reviews are inconsistent or delayed.',
-      'A practical approach is to standardize qualification inputs: strategic fit, capability match, supplier coverage, timing feasibility, and procurement risk. Teams can then score opportunities consistently and prioritize the highest-value work first.',
-      'BlackCrest OS helps teams run this process with Opportunity Intelligence and Proposal Intelligence workflows that surface fit, risks, and readiness signals early in the cycle.'
+      'Procurement and sourcing teams often struggle with fragmented information, inconsistent qualification workflows, and reactive operational processes.',
+      'Industrial intelligence platforms centralize procurement visibility, supplier intelligence, and operational reporting into unified workflows.',
+      'The result is faster qualification, stronger sourcing discipline, and improved operational responsiveness.'
     ]
   }
 ];
