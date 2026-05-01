@@ -1,81 +1,48 @@
 export const marketingPages = {
   features: {
     path: '/features',
-    title: 'Features | BlackCrest OS Procurement Intelligence Platform',
-    description: 'Explore Opportunity Intelligence, Supplier Intelligence, Sourcing Intelligence, Proposal Intelligence, and Category Intelligence in BlackCrest OS.',
-    h1: 'Platform Capabilities for Procurement Intelligence',
-    intro: 'BlackCrest OS delivers an integrated AI Procurement Intelligence Platform with modules designed for sourcing execution and decision support.',
+    title: 'BlackCrest Platform | Industrial Intelligence Ecosystem',
+    description: 'Explore Procurement Intelligence, Truth Serum analytics, Sentinel governance, and operational visibility modules inside the BlackCrest Platform.',
+    h1: 'Industrial Intelligence Platform',
+    intro: 'BlackCrest combines procurement intelligence, supplier visibility, operational analytics, and enterprise AI governance into one modular ecosystem built for modern operators.',
     sections: [
-      { title: 'Opportunity Intelligence', body: 'Review and qualify opportunities faster with structured fit analysis and procurement signal detection.' },
-      { title: 'Supplier Intelligence', body: 'Assess supplier fit, continuity risk, and capability alignment with contextual supplier profiles.' },
-      { title: 'Sourcing Intelligence', body: 'Model sourcing paths with transparent tradeoffs so procurement teams can execute confidently.' },
-      { title: 'Proposal Intelligence', body: 'Support bid/no-bid and proposal readiness decisions with timeline, risk, and resource insights.' }
+      { title: 'Procurement Intelligence', body: 'Control sourcing workflows, supplier visibility, RFQs, procurement operations, and manufacturing intelligence from one operational platform.' },
+      { title: 'Truth Serum Analytics', body: 'Surface operational risks, KPI insights, forecasting signals, and AI-powered recommendations across procurement and supply chain operations.' },
+      { title: 'Sentinel Governance', body: 'Secure industrial AI workflows with governance controls, audit visibility, role permissions, and operational oversight.' },
+      { title: 'Global Operational Visibility', body: 'Connect supplier, procurement, manufacturing, and operational intelligence into one decision-support environment.' }
     ]
   },
-  supplier: {
-    path: '/supplier-intelligence',
-    title: 'Supplier Intelligence Software | BlackCrest OS',
-    description: 'Analyze supplier fit, risk, and procurement signals with BlackCrest OS supplier intelligence tools.',
-    h1: 'Supplier Intelligence for Risk-Aware Procurement',
-    intro: 'Give sourcing teams clearer supplier visibility with AI-assisted profile analysis and procurement risk context.',
+  procurement: {
+    path: '/procurement-intelligence',
+    title: 'Procurement Intelligence | BlackCrest Platform',
+    description: 'Industrial procurement intelligence for sourcing teams, manufacturers, distributors, and operational leaders.',
+    h1: 'Procurement Intelligence for Modern Manufacturing',
+    intro: 'Manage suppliers, sourcing workflows, RFQs, procurement visibility, and operational decision support through one unified intelligence platform.',
     sections: [
-      { title: 'Supplier Fit Analysis', body: 'Match supplier capabilities to opportunity and category requirements faster.' },
-      { title: 'Risk Monitoring', body: 'Track risk indicators that can impact procurement continuity and execution readiness.' }
+      { title: 'Supplier Intelligence', body: 'Monitor supplier performance, sourcing fit, operational readiness, and procurement continuity risks.' },
+      { title: 'Operational Procurement Workflows', body: 'Reduce manual procurement chaos with centralized workflows, reporting, and operational visibility.' }
     ]
   },
-  opportunity: {
-    path: '/opportunity-intelligence',
-    title: 'Procurement Opportunity Intelligence | BlackCrest OS',
-    description: 'Discover and evaluate procurement opportunities faster with AI-powered procurement intelligence from BlackCrest OS.',
-    h1: 'Opportunity Intelligence for Faster Qualification',
-    intro: 'Prioritize high-fit opportunities with standardized qualification workflows and decision-ready summaries.',
+  truthserum: {
+    path: '/truth-serum',
+    title: 'Truth Serum Analytics Engine | BlackCrest Platform',
+    description: 'Operational analytics and AI-powered industrial intelligence designed for procurement and manufacturing environments.',
+    h1: 'Truth Serum Operational Intelligence',
+    intro: 'Truth Serum transforms operational data into explainable intelligence, KPI visibility, and predictive recommendations for industrial operators.',
     sections: [
-      { title: 'Qualification Workflows', body: 'Score opportunities consistently using fit, timing, and procurement risk criteria.' },
-      { title: 'Signal Detection', body: 'Detect important changes and decision triggers across active opportunities.' }
-    ]
-  },
-  sourcing: {
-    path: '/sourcing-intelligence',
-    title: 'Sourcing Intelligence Software | BlackCrest OS',
-    description: 'Support sourcing strategy and procurement execution with AI-powered sourcing intelligence from BlackCrest OS.',
-    h1: 'Sourcing Intelligence for Better Procurement Decisions',
-    intro: 'Connect supplier and opportunity context to sourcing actions that teams can execute with confidence.',
-    sections: [
-      { title: 'Decision Support', body: 'Clarify tradeoffs across cost, timeline, and risk before sourcing commitments are made.' },
-      { title: 'Cross-Functional Alignment', body: 'Share sourcing context across procurement, operations, finance, and program teams.' }
-    ]
-  },
-  proposal: {
-    path: '/proposal-intelligence',
-    title: 'Proposal Intelligence Software | BlackCrest OS',
-    description: 'Strengthen proposal readiness and bid/no-bid decisions with procurement intelligence from BlackCrest OS.',
-    h1: 'Proposal Intelligence for Bid Readiness',
-    intro: 'Support proposal teams with procurement insight on supplier coverage, schedule risk, and opportunity fit.',
-    sections: [
-      { title: 'Readiness Signals', body: 'Track whether teams have the supplier and sourcing posture needed to execute.' },
-      { title: 'Bid/No-Bid Support', body: 'Improve decision discipline with explainable opportunity and resource assessments.' }
-    ]
-  },
-  govcon: {
-    path: '/government-contracting',
-    title: 'Defense & GovCon Procurement Intelligence | BlackCrest OS',
-    description: 'Procurement intelligence for defense contractors and GovCon teams managing complex sourcing and supplier workflows.',
-    h1: 'Procurement Intelligence for Government Contracting Teams',
-    intro: 'BlackCrest OS helps GovCon and defense teams evaluate procurement opportunities and supplier readiness with stronger process control.',
-    sections: [
-      { title: 'GovCon Opportunity Workflows', body: 'Review opportunities efficiently using standard qualification steps and clear ownership.' },
-      { title: 'Supplier Coordination', body: 'Improve teaming and sourcing outcomes with shared supplier intelligence.' }
+      { title: 'Predictive Operational Analytics', body: 'Identify risks, delays, sourcing issues, and operational trends before they impact execution.' },
+      { title: 'Executive Intelligence Reporting', body: 'Generate operational summaries, KPI visibility, and strategic recommendations across procurement and supply chain operations.' }
     ]
   },
   about: {
     path: '/about',
-    title: 'About BlackCrest OS | AI Procurement Intelligence Platform',
-    description: 'Learn how BlackCrest OS was built from real procurement and program operations experience.',
-    h1: 'About BlackCrest OS',
-    intro: 'We build procurement intelligence software for teams that need reliable sourcing decisions under real-world constraints.',
+    title: 'About BlackCrest Platform',
+    description: 'BlackCrest builds industrial intelligence systems designed around real operational environments.',
+    h1: 'Built for the Businesses That Actually Build Things',
+    intro: 'BlackCrest was built from real-world procurement, sourcing, manufacturing, and operational experience.',
     sections: [
-      { title: 'Our Background', body: 'BlackCrest OS was built by operators familiar with procurement execution, supplier management, and program accountability.' },
-      { title: 'Our Focus', body: 'We focus on practical outcomes: faster opportunity review, better supplier visibility, and stronger procurement decisions.' }
+      { title: 'Operationally Focused', body: 'We focus on visibility, supplier intelligence, operational efficiency, and governance instead of buzzwords and unnecessary complexity.' },
+      { title: 'Built for Modern Operators', body: 'Our platform is designed for manufacturers, procurement teams, aerospace suppliers, distributors, and industrial operators.' }
     ]
   }
 };
