@@ -1,13 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="220" height="60" role="img" aria-label="BlackCrest Strategic Group">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 110" width="360" height="110" role="img" aria-label="BlackCrest Strategic Group">
   <title>BlackCrest Strategic Group</title>
-  <!-- Shield/crest icon -->
-  <g transform="translate(4, 4)">
-    <path d="M26 0 L52 8 L52 30 Q52 48 26 56 Q0 48 0 30 L0 8 Z" fill="#c79d3b"/>
-    <path d="M26 4 L48 11 L48 30 Q48 45 26 52 Q4 45 4 30 L4 11 Z" fill="#9a7724"/>
-    <!-- BC monogram -->
-    <text x="26" y="35" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#ffffff" letter-spacing="-1">BC</text>
+  <rect width="360" height="110" fill="none"/>
+  <defs>
+    <linearGradient id="gold" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f4d77a"/>
+      <stop offset="0.45" stop-color="#c79d3b"/>
+      <stop offset="1" stop-color="#8e6a1f"/>
+    </linearGradient>
+    <linearGradient id="shield" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#191919"/>
+      <stop offset="1" stop-color="#050505"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(10, 10)">
+    <path d="M45 0 C58 9 73 14 90 15 L90 45 C90 67 73 84 45 95 C17 84 0 67 0 45 L0 15 C17 14 32 9 45 0 Z" fill="url(#gold)"/>
+    <path d="M45 8 C57 16 69 20 82 21 L82 45 C82 62 69 76 45 86 C21 76 8 62 8 45 L8 21 C21 20 33 16 45 8 Z" fill="url(#shield)" stroke="#2b2b2b" stroke-width="2"/>
+    <text x="45" y="58" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="34" font-weight="700" fill="url(#gold)" letter-spacing="-4">BC</text>
   </g>
-  <!-- Company name text -->
-  <text x="64" y="22" font-family="Georgia, 'Times New Roman', serif" font-size="14" font-weight="bold" fill="#14243a" letter-spacing="0.5">BlackCrest</text>
-  <text x="64" y="40" font-family="Arial, sans-serif" font-size="10" fill="#9a7724" letter-spacing="1">STRATEGIC GROUP</text>
+  <g transform="translate(120, 34)">
+    <text x="0" y="22" font-family="Georgia, 'Times New Roman', serif" font-size="30" font-weight="700" fill="url(#gold)" letter-spacing="1.5">BlackCrest</text>
+    <line x1="0" y1="38" x2="216" y2="38" stroke="url(#gold)" stroke-width="1.5"/>
+    <text x="0" y="65" font-family="Arial, Helvetica, sans-serif" font-size="13" font-weight="600" fill="#f4e8c1" letter-spacing="5">STRATEGIC GROUP</text>
+  </g>
 </svg>
