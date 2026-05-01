@@ -2,14 +2,12 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const navLinks = [
-  ['Features', '/features'],
-  ['Security', '/security'],
-  ['Supplier Intelligence', '/supplier-intelligence'],
-  ['Opportunity Intelligence', '/opportunity-intelligence'],
-  ['Sourcing Intelligence', '/sourcing-intelligence'],
-  ['Proposal Intelligence', '/proposal-intelligence'],
-  ['Government Contracting', '/government-contracting'],
+  ['Platform', '/features'],
+  ['Procurement Intelligence', '/procurement-intelligence'],
+  ['Truth Serum', '/truth-serum'],
+  ['Sentinel', '/sentinel'],
   ['Insights', '/insights'],
+  ['Security', '/security'],
   ['About', '/about'],
   ['Contact', '/contact']
 ];
@@ -19,11 +17,11 @@ export default function MarketingLayout({ children }) {
     <div className="marketing-site">
       <header className="marketing-header">
         <div className="container row between center">
-          <Link to="/" className="brand-lockup" aria-label="BlackCrest OS home">
-            <img src="/logos/blackcrest-logo.svg" alt="BlackCrest OS logo" className="brand-logo" />
+          <Link to="/" className="brand-lockup" aria-label="BlackCrest Platform home">
+            <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Platform logo" className="brand-logo" />
             <div>
-              <strong>BlackCrest OS</strong>
-              <span>AI Procurement Intelligence Platform</span>
+              <strong>BlackCrest Platform</strong>
+              <span>Industrial Intelligence for Modern Operators</span>
             </div>
           </Link>
           <nav className="marketing-nav" aria-label="Primary">
@@ -31,7 +29,7 @@ export default function MarketingLayout({ children }) {
           </nav>
           <div className="row">
             <Link className="btn ghost" to="/login">Sign In</Link>
-            <Link className="btn" to="/contact">Request a Demo</Link>
+            <Link className="btn" to="/contact">Request Demo</Link>
           </div>
         </div>
       </header>
@@ -39,18 +37,17 @@ export default function MarketingLayout({ children }) {
       <footer className="marketing-footer">
         <div className="container footer-grid">
           <div>
-            <h3>BlackCrest OS</h3>
-            <p>AI Procurement Intelligence Platform for procurement teams, sourcing managers, manufacturers, defense contractors, and supply chain leaders.</p>
-            <p>Email: demo@blackcrest.ai</p>
+            <h3>BlackCrest Platform</h3>
+            <p>Industrial intelligence systems built for manufacturers, procurement teams, supply chain leaders, and operational decision makers.</p>
+            <p>Email: demo@blackcrestai.com</p>
           </div>
           <div>
-            <h4>Platform</h4>
+            <h4>Platform Modules</h4>
             <ul>
-              <li><Link to="/features">Features</Link></li>
-              <li><Link to="/supplier-intelligence">Supplier Intelligence</Link></li>
-              <li><Link to="/opportunity-intelligence">Opportunity Intelligence</Link></li>
-              <li><Link to="/sourcing-intelligence">Sourcing Intelligence</Link></li>
-              <li><Link to="/proposal-intelligence">Proposal Intelligence</Link></li>
+              <li><Link to="/procurement-intelligence">Procurement Intelligence</Link></li>
+              <li><Link to="/truth-serum">Truth Serum</Link></li>
+              <li><Link to="/sentinel">Sentinel Governance</Link></li>
+              <li><Link to="/global-intelligence">Global Intelligence</Link></li>
             </ul>
           </div>
           <div>
@@ -61,16 +58,15 @@ export default function MarketingLayout({ children }) {
               <li><Link to="/privacy">Privacy</Link></li>
               <li><Link to="/terms">Terms</Link></li>
               <li><Link to="/security">Security</Link></li>
-              <li><Link to="/government-contracting">GovCon</Link></li>
             </ul>
           </div>
           <div>
-            <h4>Insights</h4>
+            <h4>BlackCrest Insights</h4>
             <ul>
-              <li><Link to="/insights/what-is-procurement-intelligence">What Is Procurement Intelligence?</Link></li>
-              <li><Link to="/insights/procurement-intelligence-vs-spend-analytics">Procurement Intelligence vs Spend Analytics</Link></li>
-              <li><Link to="/insights/how-ai-improves-supplier-intelligence">How AI Improves Supplier Intelligence</Link></li>
-              <li><Link to="/insights/how-to-evaluate-procurement-opportunities-faster">Evaluate Opportunities Faster</Link></li>
+              <li><Link to="/insights/industrial-intelligence-for-modern-manufacturing">Industrial Intelligence for Manufacturing</Link></li>
+              <li><Link to="/insights/how-ai-improves-supplier-intelligence">AI & Supplier Intelligence</Link></li>
+              <li><Link to="/insights/how-to-evaluate-procurement-opportunities-faster">Operational Procurement Strategy</Link></li>
+              <li><Link to="/insights/procurement-intelligence-vs-spend-analytics">Procurement vs Spend Analytics</Link></li>
             </ul>
           </div>
         </div>
