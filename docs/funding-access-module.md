@@ -1,47 +1,105 @@
-# Funding Access Module
+# BlackCrest Funding Marketplace
 
 ## Working Name
-BlackCrest Funding Access
+BlackCrest Funding Marketplace
 
 ## Core Idea
-BlackCrest should not only help small and mid-sized contractors find, qualify, and manage procurement opportunities. It should also help them identify capital paths that make those opportunities executable.
+BlackCrest should not only help small and mid-sized businesses find, qualify, and manage procurement opportunities. It should also help them connect with funding partners that can provide the capital required to pursue, win, and execute those opportunities.
 
-The module gives small contractors a practical route to funding so they can compete against larger companies with deeper balance sheets.
+This is a two-sided marketplace:
+
+1. **Small businesses and contractors** need working capital, equipment financing, payroll float, inventory support, PO financing, invoice factoring, bonding support, grant support, SBA/CDFI connections, and strategic capital.
+2. **Funding partners** need better-qualified business leads with real opportunities, cleaner documentation, clearer risk profiles, and stronger use-of-funds narratives.
+
+BlackCrest sits in the middle as the intelligence, readiness, and matching layer.
 
 ## Strategic Positioning
-BlackCrest becomes an industrial intelligence platform with three connected layers:
+BlackCrest becomes an industrial intelligence platform with four connected layers:
 
-1. **Opportunity Intelligence**: Find and qualify procurement, sourcing, and GovCon opportunities.
+1. **Opportunity Intelligence**: Find and qualify procurement, sourcing, commercial, and GovCon opportunities.
 2. **Execution Intelligence**: Understand supplier readiness, category strategy, compliance, capacity, and risk.
-3. **Funding Intelligence**: Match the opportunity and execution plan to potential financing options.
+3. **Funding Readiness**: Turn opportunity and operating data into a capital-readiness profile.
+4. **Funding Marketplace**: Match qualified businesses with appropriate capital partners and funding pathways.
 
-This turns the platform from “find the opportunity” into “find it, prove you can execute it, and identify capital to go after it.”
+This turns the platform from “find the opportunity” into “find it, prove you can execute it, package the capital need, and connect with money.”
 
-## Target User
+## Target Business Users
 - Small government contractors
 - Defense subcontractors
 - Industrial suppliers
 - Distributors
 - Manufacturers
-- Veteran-owned, minority-owned, woman-owned, HUBZone, and other set-aside eligible businesses
+- Service contractors
+- Construction and trade contractors
+- Veteran-owned businesses
+- Minority-owned businesses
+- Woman-owned businesses
+- HUBZone and set-aside eligible firms
 - Commercial suppliers trying to expand into larger contracts
+- Small companies that have real opportunities but weak capital access
+
+## Target Funding Partners
+- Banks and credit unions
+- SBA lenders
+- CDFIs
+- Factoring companies
+- Purchase order financing providers
+- Equipment finance providers
+- Revenue-based financing providers
+- Grant consultants and grant programs
+- Bonding support providers
+- GovCon financing specialists
+- Strategic investors
+- Family offices interested in industrial operating businesses
+- Private credit groups focused on small business or contract-backed financing
 
 ## Problem
-Small contractors often lose before they even bid because they lack working capital, bonding capacity, inventory funds, payroll float, equipment financing, or proposal support.
+Small companies often lose before they bid because they lack working capital, bonding capacity, inventory funds, payroll float, equipment financing, proposal support, or the ability to carry receivables.
 
-Large contractors win partly because they have capital access. Small contractors need a smarter way to connect contract opportunity, operational readiness, and funding readiness in one place.
+Large companies win partly because they have capital access. Small companies need a smarter way to connect opportunity, operational readiness, documentation, and funding partners in one place.
 
-## Feature Goals
-- Help users understand what kind of funding may fit a specific opportunity.
-- Connect procurement intelligence to capital-readiness scoring.
-- Let a user build a funding-readiness package from platform data.
-- Help identify lenders, grant programs, factoring companies, revenue-based financing options, equipment financing, and strategic capital partners.
-- Keep the platform advisory, not a lender or broker unless licensing/compliance is handled separately.
+## Marketplace Value Proposition
+
+### For Small Businesses
+- Understand what kind of funding may fit a specific opportunity.
+- Build a capital-readiness profile.
+- Package the opportunity for a lender or funding partner.
+- Identify financing categories without getting buried in bank-speak nonsense, because apparently paperwork is humanity's favorite punishment.
+- Improve confidence before pursuing larger contracts.
+
+### For Funding Partners
+- Receive better-qualified funding inquiries.
+- See opportunity context, use of funds, timeline, documentation status, and basic risk signals.
+- Reduce wasted intake calls.
+- Focus on businesses with specific procurement, sourcing, or contract-driven capital needs.
+
+### For BlackCrest
+- Create subscription revenue from businesses.
+- Create paid partner listings or marketplace placement.
+- Create referral or success-fee potential, subject to legal review.
+- Build a defensible data layer around opportunity readiness and funding readiness.
 
 ## MVP Scope
 
-### 1. Funding Readiness Score
-Score a contractor against basic capital-readiness factors:
+### 1. Business Funding Profile
+A structured profile for small businesses:
+- Company name
+- Industry
+- Location
+- Certifications and set-asides
+- Years in business
+- Revenue range
+- Contract history
+- Past performance
+- Current opportunities
+- Funding need type
+- Desired funding amount
+- Use of funds
+- Timeline
+- Documentation status
+
+### 2. Funding Readiness Score
+Score a business against basic capital-readiness factors:
 - Contract size
 - Expected cash conversion cycle
 - Payroll/inventory/equipment burden
@@ -54,7 +112,7 @@ Score a contractor against basic capital-readiness factors:
 - GovCon/commercial contract type
 - Documentation completeness
 
-### 2. Opportunity-to-Capital Fit
+### 3. Opportunity-to-Capital Fit
 For each opportunity, show likely capital needs:
 - Working capital
 - Purchase order financing
@@ -66,8 +124,8 @@ For each opportunity, show likely capital needs:
 - Strategic partner/JV support
 - Grant or economic development program
 
-### 3. Funding Match Directory
-Create a searchable directory of funding categories and partner types:
+### 4. Funding Partner Directory
+Create a searchable marketplace directory of funding categories and partner types:
 - Banks and credit unions
 - SBA lenders
 - CDFIs
@@ -78,7 +136,17 @@ Create a searchable directory of funding categories and partner types:
 - GovCon financing specialists
 - Strategic investors
 
-### 4. Funding Package Builder
+### 5. Funding Match Workflow
+Basic workflow:
+1. Business creates profile.
+2. Business attaches or selects an opportunity.
+3. BlackCrest calculates capital needs and readiness score.
+4. BlackCrest suggests matching funding categories.
+5. Business generates funding package.
+6. Business can request introductions or submit interest to listed partners.
+7. Funding partner receives a structured lead package.
+
+### 6. Funding Package Builder
 Generate a capital-readiness package with:
 - Company overview
 - Opportunity summary
@@ -91,15 +159,26 @@ Generate a capital-readiness package with:
 - Repayment source assumptions
 - Supporting documents checklist
 
-### 5. Compliance Guardrails
-The platform should avoid presenting itself as a lender, broker, financial advisor, or securities intermediary unless proper licensing and legal review are completed.
+### 7. Partner Portal
+Funding partners should eventually be able to:
+- Create a funding partner profile
+- Define funding types offered
+- Define industries served
+- Define geography
+- Define minimum/maximum deal size
+- Define eligibility criteria
+- Review submitted business profiles
+- Accept, decline, or request more information
+
+### 8. Compliance Guardrails
+The platform should avoid presenting itself as a lender, broker, financial advisor, securities intermediary, or guaranteed funding source unless proper legal review, licensing review, partner agreements, and compliance workflows are completed.
 
 Suggested disclaimer:
 
-> BlackCrest Funding Access provides business intelligence and capital-readiness workflow support. It does not provide loans, financial advice, securities advice, or guarantee funding approval. Users should consult qualified financial, legal, and tax professionals before entering any financing arrangement.
+> BlackCrest Funding Marketplace provides business intelligence, funding-readiness workflows, and marketplace introduction support. It does not provide loans, financial advice, securities advice, tax advice, legal advice, or guarantee funding approval. Users should consult qualified financial, legal, and tax professionals before entering any financing arrangement.
 
 ## Future Scope
-- Funding partner marketplace
+- Paid funding partner marketplace
 - Secure partner portal
 - Lender-side opportunity review dashboard
 - Automated document checklist
@@ -109,25 +188,38 @@ Suggested disclaimer:
 - Contract award financing workflow
 - Bonding capacity support workflow
 - Referral revenue model, subject to legal review
+- Business verification workflows
+- Marketplace messaging
+- Capital request tracking
+- Partner analytics dashboard
 
 ## Initial Routes / UI Concepts
 - `/funding`
+- `/funding-marketplace`
 - `/funding-readiness`
 - `/capital-access`
 - `/funding-package-builder`
 - `/funding-partners`
+- `/partner-portal`
 
 ## Suggested Product Copy
 ### Hero
-Procurement intelligence gets you to the opportunity. Funding intelligence helps you figure out how to afford the fight.
+Find the opportunity. Prove you can execute. Connect with the capital to compete.
 
 ### Subhead
-BlackCrest Funding Access helps small contractors connect qualified opportunities with practical capital pathways, readiness scoring, and funding-package workflows.
+BlackCrest Funding Marketplace helps small businesses turn qualified opportunities into capital-ready funding packages and connect with lenders, funding partners, grant resources, and contract-financing specialists.
 
 ### CTA
-Build My Funding Readiness Package
+Build My Funding Profile
+
+## Marketplace Tagline Options
+- Capital access for the companies that actually build things.
+- Where small business opportunity meets capital readiness.
+- Stop losing contracts because the money side is broken.
+- Procurement intelligence plus funding access for real operators.
+- Helping small companies compete above their weight class.
 
 ## Why This Matters
-The small contractor does not just need another dashboard. They need leverage. They need a path to compete when the opportunity is bigger than their current cash position.
+The small business does not just need another dashboard. They need leverage. They need a path to compete when the opportunity is bigger than their current cash position.
 
 BlackCrest can become the bridge between opportunity, execution, and capital.
