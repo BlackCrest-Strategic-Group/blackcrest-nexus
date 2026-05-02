@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Capital Readiness Engine | BlackCrest</title>
+  <meta name="description" content="Procurement-driven funding intelligence for working capital, PO financing, invoice factoring, inventory financing, equipment funding, and GovCon performance funding." />
+  <style>
+    body{margin:0;background:#07101f;color:#e5e7eb;font-family:Arial,Helvetica,sans-serif} .wrap{max-width:1180px;margin:auto;padding:36px 18px}.hero,.card{background:#0f172a;border:1px solid #334155;border-radius:24px;padding:28px;margin:16px 0;box-shadow:0 18px 45px rgba(0,0,0,.28)}.eyebrow{color:#38bdf8;font-weight:800;letter-spacing:.12em;text-transform:uppercase}h1{font-size:48px;line-height:1.05;margin:8px 0 14px}h2{font-size:30px}p{color:#cbd5e1;font-size:18px;line-height:1.55}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.metric{font-size:34px;font-weight:800;color:#fff}.label{color:#94a3b8;font-size:14px;text-transform:uppercase;letter-spacing:.08em}.btn{display:inline-block;background:#38bdf8;color:#06111f;font-weight:800;padding:13px 18px;border-radius:14px;text-decoration:none;border:0;cursor:pointer}.ghost{background:transparent;color:#e5e7eb;border:1px solid #475569}input{width:100%;box-sizing:border-box;margin-top:8px;border-radius:12px;border:1px solid #475569;background:#020617;color:#fff;padding:12px;font-size:17px}li{margin:9px 0;color:#cbd5e1}.chip{display:inline-block;border-radius:999px;padding:5px 10px;background:#7f1d1d;color:#fecaca;font-weight:800;font-size:13px}.row{display:flex;gap:10px;flex-wrap:wrap}.small{font-size:14px;color:#94a3b8}@media(max-width:850px){.grid,.grid2{grid-template-columns:1fr}h1{font-size:36px}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <p class="eyebrow">Capital Readiness Engine</p>
+      <h1>Find the procurement risk. Understand the cash pressure. Fund the action.</h1>
+      <p>BlackCrest connects procurement intelligence to capital readiness so businesses can see when supplier delays, margin leakage, inventory exposure, purchase commitments, or awarded contracts create a funding need.</p>
+      <div class="row"><button class="btn" onclick="downloadMemo()">Download Capital Memo</button><a class="btn ghost" href="/strategic-demo">Strategic Demo</a><a class="btn ghost" href="/acquisition-room">Acquisition Room</a></div>
+    </section>
+    <section class="grid">
+      <article class="card"><div class="label">Working-capital pressure</div><div id="score" class="metric">0/100</div></article>
+      <article class="card"><div class="label">Top funding fit</div><div id="topFit" class="metric">PO Financing</div></article>
+      <article class="card"><div class="label">Capital pressure detected</div><div id="pressure" class="metric">$0</div></article>
+    </section>
+    <section class="grid2">
+      <article class="card">
+        <h2>Capital pressure inputs</h2>
+        <label>Open purchase commitments<input id="openPO" type="number" value="325000"></label>
+        <label>Accounts receivable exposure<input id="receivables" type="number" value="480000"></label>
+        <label>Inventory exposure<input id="inventory" type="number" value="210000"></label>
+        <label>Estimated margin leakage<input id="marginLeakage" type="number" value="74000"></label>
+        <label>Awarded contract / order value<input id="awardedContract" type="number" value="650000"></label>
+        <label>Equipment or capacity need<input id="equipmentNeed" type="number" value="85000"></label>
+      </article>
+      <article class="card">
+        <h2>Recommended funding paths</h2>
+        <div id="recommendations"></div>
+      </article>
+    </section>
+    <section class="grid2">
+      <article class="card"><h2>Capital readiness checklist</h2><ul id="docs"></ul></article>
+      <article class="card"><h2>Executive funding memo</h2><p id="memo"></p><p class="small">This does not approve financing. It organizes operational evidence so a business owner, CFO, lender, broker, or implementation partner can understand the funding use case faster.</p></article>
+    </section>
+    <section class="card"><h2>Why this increases platform value</h2><p>Procurement intelligence shows the problem. Capital Readiness shows the action path. This gives BlackCrest a second monetization lane through financing partners, implementation firms, advisory services, referral relationships, and enterprise customers that need operational intelligence tied to cash decisions.</p></section>
+  </main>
+<script>
+const options=[['PO Financing','Large customer orders where materials must be purchased before payment is received.'],['Invoice Factoring','Completed work or shipped goods waiting on customer payment.'],['Inventory Financing','Inventory purchases before sales or production catches up.'],['Equipment Financing','Machinery, vehicles, tooling, or capacity constraints.'],['Working Capital Line','Recurring timing gaps between purchasing, production, delivery, and payment.'],['GovCon Performance Funding','Capital to perform on awarded government contracts or large orders.']];
+const docs=['Profit and loss statement','Balance sheet','AR aging report','AP aging report','Bank statements','Customer purchase orders or contracts','Supplier quotes','Inventory report','Tax returns','Debt schedule'];
+function money(n){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(n||0)}
+function val(id){return Number(document.getElementById(id).value||0)}
+function score(){let openPO=val('openPO'),receivables=val('receivables'),inventory=val('inventory'),marginLeakage=val('marginLeakage'),awardedContract=val('awardedContract'),equipmentNeed=val('equipmentNeed');let rows=options.map(o=>({name:o[0],best:o[1],score:0,reasons:[]}));let add=(name,pts,reason)=>{let r=rows.find(x=>x.name===name);r.score+=pts;r.reasons.push(reason)};if(openPO>100000){add('PO Financing',32,'Large open purchase commitments indicate material funding need before revenue conversion.');add('Working Capital Line',12,'Open procurement commitments can pressure near-term cash.')}if(receivables>100000){add('Invoice Factoring',34,'Receivables create a cash timing gap after shipment or completed work.');add('Working Capital Line',14,'Receivables pressure recurring operating liquidity.')}if(inventory>100000){add('Inventory Financing',34,'Inventory exposure indicates capital tied up in stock or long-lead materials.');add('Working Capital Line',10,'Inventory carrying cost contributes to working capital pressure.')}if(marginLeakage>50000){add('Working Capital Line',24,'Margin leakage reduces operating cushion and increases cash risk.');add('PO Financing',8,'Low margins make upfront purchase commitments more dangerous.')}if(awardedContract>100000){add('GovCon Performance Funding',42,'Awarded contract value suggests capital may be needed to perform before payment.');add('PO Financing',16,'Contract-linked materials may require upfront supplier funding.')}if(equipmentNeed>25000){add('Equipment Financing',42,'Equipment need points to a capacity or production constraint.')}rows.sort((a,b)=>b.score-a.score);let pressure=openPO+receivables+inventory+marginLeakage+awardedContract*.35+equipmentNeed;let pressureScore=Math.min(100,Math.round(pressure/20000));document.getElementById('score').textContent=pressureScore+'/100';document.getElementById('topFit').textContent=rows[0].name;document.getElementById('pressure').textContent=money(pressure);document.getElementById('recommendations').innerHTML=rows.slice(0,4).map(r=>`<div class="card"><h3>${r.name} <span class="chip">${r.score}</span></h3><p>${r.best}</p><ul>${(r.reasons.length?r.reasons:['Potential fit based on procurement and cash-flow signals.']).slice(0,2).map(x=>`<li>${x}</li>`).join('')}</ul></div>`).join('');document.getElementById('memo').textContent=`Capital Readiness Memo: BlackCrest identified a working-capital pressure score of ${pressureScore}/100. The strongest funding fit is ${rows[0].name}. Primary reason: ${(rows[0].reasons[0]||rows[0].best)}`;return {pressureScore,pressure,rows,inputs:{openPO,receivables,inventory,marginLeakage,awardedContract,equipmentNeed}}}
+function downloadMemo(){let payload=score();let blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='blackcrest-capital-readiness-memo.json';a.click();URL.revokeObjectURL(a.href)}
+docs.forEach(d=>document.getElementById('docs').innerHTML+=`<li>${d}</li>`);document.querySelectorAll('input').forEach(i=>i.addEventListener('input',score));score();
+</script>
+</body>
+</html>
