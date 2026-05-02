@@ -31,6 +31,7 @@ import TrustCenterPage from './marketing/TrustCenterPage';
 import GovernancePage from './GovernancePage';
 import GovernancePolicyPage from './GovernancePolicyPage';
 import InvestorDemoPage from './InvestorDemoPage';
+import AcquisitionRoomPage from './AcquisitionRoomPage';
 import ReportCenterPage from './ReportCenterPage';
 import ErpConnectorCenterPage from './ErpConnectorCenterPage';
 import DataBoundaryPage from './DataBoundaryPage';
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/investor-demo" element={<InvestorDemoPage />} />
+            <Route path="/acquisition-room" element={<AcquisitionRoomPage />} />
             <Route path="/data-boundary" element={<DataBoundaryPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/security" element={<SecurityPage />} />
