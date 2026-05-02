@@ -23,6 +23,7 @@ import ModulePage from './marketing/ModulePage';
 import ContactPage from './marketing/ContactPage';
 import InsightsPage from './marketing/InsightsPage';
 import SentinelLandingPage from './marketing/SentinelLandingPage';
+import FundingMarketplacePage from './marketing/FundingMarketplacePage';
 import InsightArticlePage from './marketing/InsightArticlePage';
 import TermsPage from './marketing/TermsPage';
 import SecurityPage from './marketing/SecurityPage';
@@ -88,6 +89,9 @@ export default function App() {
             <Route path="/features" element={<ModulePage pageKey="features" />} />
             <Route path="/procurement-intelligence" element={<ModulePage pageKey="procurement" />} />
             <Route path="/truth-serum" element={<ModulePage pageKey="truthserum" />} />
+            <Route path="/funding-marketplace" element={<FundingMarketplacePage />} />
+            <Route path="/funding" element={<FundingMarketplacePage />} />
+            <Route path="/capital-access" element={<FundingMarketplacePage />} />
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/investor-demo" element={<InvestorDemoPage />} />
