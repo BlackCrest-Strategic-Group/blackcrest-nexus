@@ -18,6 +18,11 @@ const platformModules = [
     title: 'Sentinel',
     description: 'Enterprise governance, AI containment, audit trails, role-based controls, and operational security oversight.',
     path: '/sentinel'
+  },
+  {
+    title: 'Capital Readiness Engine',
+    description: 'Procurement-driven funding intelligence for working capital pressure, PO financing, invoice factoring, inventory financing, and GovCon performance funding.',
+    path: '/capital-readiness.html'
   }
 ];
 
@@ -34,28 +39,36 @@ export default function HomePage() {
   return (
     <MarketingLayout>
       <SeoHead
-        title="BlackCrest Platform | Industrial Intelligence for Modern Operators"
-        description="BlackCrest combines procurement intelligence, operational analytics, supplier visibility, and AI governance into one modular industrial intelligence ecosystem."
+        title="BlackCrest Platform | Procurement Intelligence and Capital Readiness"
+        description="BlackCrest combines procurement intelligence, operational analytics, supplier visibility, AI governance, and capital readiness into one modular industrial intelligence ecosystem."
         canonicalPath="/"
       />
       <main>
         <section className="hero-section container enterprise-hero" data-testid="landing-hero">
           <p className="eyebrow">BLACKCREST PLATFORM</p>
-          <h1>Industrial Intelligence for Modern Operators.</h1>
+          <h1>Procurement Intelligence that turns operational risk into action.</h1>
           <p>
-            BlackCrest helps manufacturers, procurement teams, and operational leaders reduce friction, improve supplier visibility,
-            and make faster decisions through procurement intelligence, operational analytics, and enterprise AI governance.
+            BlackCrest helps manufacturers, procurement teams, and operational leaders identify supplier risk, margin leakage,
+            late delivery exposure, sourcing opportunities, governance gaps, and the working-capital pressure created by procurement problems.
           </p>
           <p>
-            Built for the businesses that actually build things. Enterprise-level visibility without enterprise-level complexity.
+            Find the problem. Understand the impact. Govern the decision. Fund the action.
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <Link className="btn" to="/features">Explore Platform</Link>
+            <Link className="btn" to="/strategic-demo">View Strategic Demo</Link>
+            <a className="btn ghost" href="/capital-readiness.html">Capital Readiness</a>
             <Link className="btn ghost" to="/procurement-intelligence">Procurement Intelligence</Link>
-            <Link className="btn ghost" to="/truth-serum">Truth Serum</Link>
             <Link className="btn ghost" to="/sentinel">Sentinel</Link>
           </div>
           <div style={{ marginTop: 10 }}><Link data-testid="landing-signin" to="/login">Platform Login</Link></div>
+        </section>
+
+        <section className="container marketing-card">
+          <h2>The BlackCrest Operating Logic</h2>
+          <p>
+            Procurement Intelligence finds supplier and purchasing risk. Truth Serum explains the operational and financial impact.
+            Sentinel governs the decision. Capital Readiness identifies the funding path when procurement problems create cash pressure.
+          </p>
         </section>
 
         <section className="container section-grid capability-grid">
@@ -63,7 +76,7 @@ export default function HomePage() {
             <article key={module.title} className="marketing-card">
               <h2>{module.title}</h2>
               <p>{module.description}</p>
-              <Link className="btn ghost" to={module.path}>Explore Module</Link>
+              {module.path.endsWith('.html') ? <a className="btn ghost" href={module.path}>Explore Module</a> : <Link className="btn ghost" to={module.path}>Explore Module</Link>}
             </article>
           ))}
         </section>
@@ -71,14 +84,14 @@ export default function HomePage() {
         <section className="container marketing-card">
           <h2>Built for Real Operational Environments</h2>
           <p>
-            BlackCrest was designed around real procurement, sourcing, supplier management, and manufacturing workflows.
-            From RFQ analysis and supplier intelligence to operational governance and executive reporting, the platform focuses on practical operational outcomes.
+            BlackCrest was designed around real procurement, sourcing, supplier management, working capital, and manufacturing workflows.
+            From RFQ analysis and supplier intelligence to operational governance, executive reporting, and funding readiness, the platform focuses on practical business outcomes.
           </p>
         </section>
 
         <section className="container marketing-card">
           <h2>BlackCrest Insights</h2>
-          <p>Daily operational intelligence, procurement strategy, manufacturing technology, and supplier visibility content.</p>
+          <p>Daily operational intelligence, procurement strategy, manufacturing technology, supplier visibility, and capital readiness content.</p>
           <div className="section-grid">
             {insights.map((title) => (
               <article key={title} className="marketing-card">
