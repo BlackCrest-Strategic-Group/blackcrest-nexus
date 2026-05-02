@@ -1,0 +1,11 @@
+Supplier,PartNumber,Category,PONumber,Quantity,UnitCost,SellPrice,ExtendedCost,OrderDate,DueDate,ReceiptDate,Status
+Acme Metals,AL-4401,Raw Materials,PO1001,50,42,58,2100,2026-01-05,2026-01-20,2026-01-25,Received
+Titan Fasteners,BOLT-22,Hardware,PO1002,500,0.85,1.05,425,2026-01-10,2026-01-22,2026-01-22,Received
+Orion Plastics,PL-880,Components,PO1003,200,12,13.50,2400,2026-01-12,2026-01-25,2026-02-05,Received
+Acme Metals,AL-4402,Raw Materials,PO1004,80,39,45,3120,2026-01-15,2026-02-01,,Open
+Nova Electronics,PCB-19,Electronics,PO1005,25,110,125,2750,2026-01-18,2026-02-10,2026-02-18,Received
+Titan Fasteners,NUT-10,Hardware,PO1006,1000,0.32,0.39,320,2026-01-20,2026-02-05,,Open
+Vertex Industrial,VALVE-770,Components,PO1007,12,210,265,2520,2026-01-24,2026-02-12,2026-02-11,Received
+Cobalt Supply,GASKET-55,MRO,PO1008,120,4.5,5.1,540,2026-01-25,2026-02-08,2026-02-19,Received
+Orion Plastics,PL-881,Components,PO1009,180,13,15,2340,2026-01-26,2026-02-15,,Open
+Nova Electronics,SENSOR-300,Electronics,PO1010,18,148,145,2664,2026-01-27,2026-02-18,2026-02-22,Received
