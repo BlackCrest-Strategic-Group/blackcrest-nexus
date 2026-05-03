@@ -22,7 +22,7 @@ const platformModules = [
   {
     title: 'Capital Readiness Engine',
     description: 'Procurement-driven funding intelligence for working capital pressure, PO financing, invoice factoring, inventory financing, and GovCon performance funding.',
-    path: '/capital-readiness.html'
+    path: '/capital-readiness'
   }
 ];
 
@@ -56,7 +56,7 @@ export default function HomePage() {
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <Link className="btn" to="/strategic-demo">View Strategic Demo</Link>
-            <a className="btn ghost" href="/capital-readiness.html">Capital Readiness</a>
+            <Link className="btn ghost" to="/capital-readiness">Capital Readiness</Link>
             <Link className="btn ghost" to="/procurement-intelligence">Procurement Intelligence</Link>
             <Link className="btn ghost" to="/sentinel">Sentinel</Link>
           </div>
@@ -76,7 +76,7 @@ export default function HomePage() {
             <article key={module.title} className="marketing-card">
               <h2>{module.title}</h2>
               <p>{module.description}</p>
-              {module.path.endsWith('.html') ? <a className="btn ghost" href={module.path}>Explore Module</a> : <Link className="btn ghost" to={module.path}>Explore Module</Link>}
+              <Link className="btn ghost" to={module.path}>Explore Module</Link>
             </article>
           ))}
         </section>
