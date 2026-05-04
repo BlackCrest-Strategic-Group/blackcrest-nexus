@@ -38,6 +38,7 @@ import ReportCenterPage from './ReportCenterPage';
 import ErpConnectorCenterPage from './ErpConnectorCenterPage';
 import DataBoundaryPage from './DataBoundaryPage';
 import Marketplace from './Marketplace';
+import DemoPage from './DemoPage';
 import MarketplaceCategoryPage from './MarketplaceCategoryPage';
 import MarketplaceSupplierPage from './MarketplaceSupplierPage';
 import { hasPermission } from '../config/roleConfig';
@@ -96,6 +97,7 @@ export default function App() {
             <Route path="/truth-serum" element={<ModulePage pageKey="truthserum" />} />
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/demo" element={<DemoPage />} />
             <Route path="/investor-demo" element={<InvestorDemoPage />} />
             <Route path="/acquisition-room" element={<AcquisitionRoomPage />} />
             <Route path="/strategic-demo" element={<StrategicDemoPage />} />
@@ -122,6 +124,8 @@ export default function App() {
               <Route path="/opportunities" element={<RoleProtectedRoute permissions={['recommendations:view']}><OpportunityPage /></RoleProtectedRoute>} />
               <Route path="/suppliers" element={<RoleProtectedRoute permissions={['supplier_risk:view']}><SupplierPage /></RoleProtectedRoute>} />
               <Route path="/intelligence" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
+              <Route path="/procurement-intelligence" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
+              <Route path="/insights" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
               <Route path="/global-intelligence-platform" element={<RoleProtectedRoute permissions={['recommendations:view']}><GlobalIntelligencePage /></RoleProtectedRoute>} />
               <Route path="/analytics" element={<RoleProtectedRoute permissions={['governance:reporting:view', 'compliance:review', 'audit_logs:view']}><CategoryPage /></RoleProtectedRoute>} />
               <Route path="/governance" element={<RoleProtectedRoute permissions={['governance:dashboard:view']}><GovernancePage /></RoleProtectedRoute>} />

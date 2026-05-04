@@ -1,0 +1,7 @@
+item,category,supplier,unitPrice,quantity,leadTimeDays,onTimeDeliveryRate,rfqStatus
+Steel Sheet A36,Metals,ForgeLine Metals,118,500,28,0.91,awarded
+Steel Sheet A36,Metals,NorthBay Alloys,132,450,34,0.82,open
+Industrial Fastener M8,Fasteners,BoltCore,0.39,22000,10,0.97,awarded
+Industrial Fastener M8,Fasteners,MetricMax,0.52,18000,17,0.76,responded
+Control Module X4,Electronics,CircuitWorks,412,160,21,0.94,open
+Control Module X4,Electronics,Nova Controls,465,150,35,0.71,open

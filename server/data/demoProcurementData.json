@@ -1,0 +1,8 @@
+[
+  {"item":"Steel Sheet A36","category":"Metals","supplier":"ForgeLine Metals","unitPrice":118,"quantity":500,"leadTimeDays":28,"onTimeDeliveryRate":0.91,"rfqStatus":"awarded"},
+  {"item":"Steel Sheet A36","category":"Metals","supplier":"NorthBay Alloys","unitPrice":132,"quantity":450,"leadTimeDays":34,"onTimeDeliveryRate":0.82,"rfqStatus":"open"},
+  {"item":"Industrial Fastener M8","category":"Fasteners","supplier":"BoltCore","unitPrice":0.39,"quantity":22000,"leadTimeDays":10,"onTimeDeliveryRate":0.97,"rfqStatus":"awarded"},
+  {"item":"Industrial Fastener M8","category":"Fasteners","supplier":"MetricMax","unitPrice":0.52,"quantity":18000,"leadTimeDays":17,"onTimeDeliveryRate":0.76,"rfqStatus":"responded"},
+  {"item":"Control Module X4","category":"Electronics","supplier":"CircuitWorks","unitPrice":412,"quantity":160,"leadTimeDays":21,"onTimeDeliveryRate":0.94,"rfqStatus":"open"},
+  {"item":"Control Module X4","category":"Electronics","supplier":"Nova Controls","unitPrice":465,"quantity":150,"leadTimeDays":35,"onTimeDeliveryRate":0.71,"rfqStatus":"open"}
+]
