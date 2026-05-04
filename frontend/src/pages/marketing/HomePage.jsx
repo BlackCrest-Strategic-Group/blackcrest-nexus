@@ -5,22 +5,13 @@ import SeoHead from '../../components/SeoHead';
 const proofPoints = [
   '$127K annual cost leakage identified',
   '18% supplier delay risk flagged',
-  '32% spend in high-risk categories'
+  '34% spend in volatile categories'
 ];
 
-const features = [
-  {
-    title: 'Cost Savings Analysis',
-    description: 'Quickly identify where money is being lost across suppliers and categories.'
-  },
-  {
-    title: 'Supplier Risk Alerts',
-    description: 'Detect delays, performance issues, and high-risk vendors early.'
-  },
-  {
-    title: 'Procurement Dashboard',
-    description: 'Get a clear, real-time view of procurement performance.'
-  }
+const exampleFindings = [
+  '$127,000 in annual cost leakage',
+  '2 high-risk suppliers causing 18% of delays',
+  '34% of spend in volatile categories'
 ];
 
 export default function HomePage() {
@@ -44,18 +35,21 @@ export default function HomePage() {
       <main>
         <section className="landing-hero">
           <div className="landing-container landing-hero__content">
-            <p className="landing-eyebrow">Procurement analytics for faster decisions</p>
+            <p className="landing-eyebrow">Procurement leakage and supplier risk analysis</p>
             <h1>Find Cost Savings and Supplier Risks in Seconds</h1>
             <p className="landing-hero__subheadline">
-              Upload your procurement data and instantly uncover hidden cost leaks, risky suppliers, and performance gaps.
+              Upload your procurement data to uncover hidden cost leaks, risky suppliers, and performance gaps.
+            </p>
+            <p className="landing-hero__urgency">
+              Most procurement teams are unknowingly losing 5–15% in cost due to supplier inefficiencies and hidden pricing gaps.
             </p>
             <ul className="landing-hero__bullets" aria-label="Platform outcomes">
-              <li>Identify hidden cost leaks in minutes</li>
-              <li>Flag high-risk suppliers before they fail</li>
-              <li>See a clear procurement performance dashboard</li>
+              <li>Compare supplier pricing gaps across categories</li>
+              <li>Flag suppliers tied to delays and volatility</li>
+              <li>Prioritize leakage by annual cost impact</li>
             </ul>
             <div className="landing-hero__actions">
-              <Link className="landing-primary-btn" to="/demo">Start Free Analysis</Link>
+              <Link className="landing-primary-btn" to="/demo">Analyze My Procurement Data</Link>
               <a className="landing-text-link" href="#live-demo">See Live Demo</a>
             </div>
           </div>
@@ -63,8 +57,8 @@ export default function HomePage() {
 
         <section id="live-demo" className="landing-video-section">
           <div className="landing-container landing-section__centered">
-            <h2>See It Find Cost Savings in Real Time</h2>
-            <p>Watch how procurement data turns into actionable insights in seconds.</p>
+            <h2>Watch $100K+ in Cost Savings Get Identified in Seconds</h2>
+            <p>See the upload flow and the supplier, category, and leakage findings it returns.</p>
             <div className="video-container" aria-label="Procurement analytics demo video">
               <iframe
                 src="https://drive.google.com/file/d/1CZ0porOk2JIfmbsNujocAmy58iJ_kTVY/preview"
@@ -78,7 +72,7 @@ export default function HomePage() {
 
         <section className="landing-section landing-section--contrast">
           <div className="landing-container">
-            <h2>What This Platform Finds in Minutes</h2>
+            <h2>Procurement Findings Shown After Upload</h2>
             <div className="landing-metric-grid">
               {proofPoints.map((proofPoint) => (
                 <article className="landing-metric-card" key={proofPoint}>
@@ -89,25 +83,35 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="landing-section">
-          <div className="landing-container">
-            <h2>What You Get</h2>
-            <div className="landing-feature-grid">
-              {features.map((feature) => (
-                <article className="landing-feature-card" key={feature.title}>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </article>
-              ))}
+        <section className="landing-section landing-example-section">
+          <div className="landing-container landing-example-card">
+            <div>
+              <p className="landing-eyebrow">Sample analysis output</p>
+              <h2>Example: What This Finds in Real Data</h2>
+              <p className="landing-example-intro">
+                A mid-sized manufacturer uploaded supplier spend data and uncovered:
+              </p>
             </div>
+            <ul className="landing-example-list">
+              {exampleFindings.map((finding) => (
+                <li key={finding}>{finding}</li>
+              ))}
+            </ul>
+            <p className="landing-example-timing">Identified in under 3 minutes.</p>
           </div>
         </section>
 
         <section className="landing-final-cta">
           <div className="landing-container landing-final-cta__inner">
-            <h2>See what your procurement data is hiding</h2>
-            <Link className="landing-primary-btn" to="/demo">Start Free Analysis</Link>
+            <div className="landing-final-cta__copy">
+              <h2>Upload supplier spend data and identify leakage in minutes</h2>
+              <p>No integration required. No setup headaches. Upload and see results instantly.</p>
+            </div>
+            <Link className="landing-primary-btn" to="/demo">Analyze My Procurement Data</Link>
           </div>
+          <p className="landing-footer-credibility">
+            Built from real-world procurement and supplier management experience.
+          </p>
         </section>
       </main>
     </div>

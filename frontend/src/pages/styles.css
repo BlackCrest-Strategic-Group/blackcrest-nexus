@@ -470,6 +470,15 @@ body {
   line-height: 1.58;
 }
 
+.landing-hero__urgency {
+  max-width: 760px;
+  margin: 18px 0 0;
+  color: #7c2d12;
+  font-size: clamp(1rem, 1.8vw, 1.18rem);
+  font-weight: 800;
+  line-height: 1.55;
+}
+
 .landing-hero__bullets {
   list-style: none;
   display: grid;
@@ -641,6 +650,78 @@ body {
   line-height: 1.65;
 }
 
+.landing-example-section {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(21, 94, 239, 0.12), transparent 30%),
+    #ffffff;
+}
+
+.landing-example-card {
+  display: grid;
+  gap: 24px;
+  border: 1px solid var(--landing-border);
+  border-radius: 32px;
+  background: var(--landing-card);
+  padding: clamp(28px, 5vw, 48px);
+  box-shadow: 0 24px 70px rgba(15, 31, 53, 0.09);
+}
+
+.landing-example-card .landing-eyebrow {
+  margin-bottom: 14px;
+}
+
+.landing-example-card h2 {
+  margin-bottom: 18px;
+}
+
+.landing-example-intro {
+  max-width: 720px;
+  margin: 0;
+  color: #27364a;
+  font-size: clamp(1.05rem, 2vw, 1.22rem);
+  line-height: 1.65;
+}
+
+.landing-example-list {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-example-list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  border: 1px solid rgba(21, 94, 239, 0.14);
+  border-radius: 18px;
+  background: #f8fbff;
+  color: #0f1f35;
+  font-weight: 850;
+}
+
+.landing-example-list li::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  margin-top: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--landing-accent);
+}
+
+.landing-example-timing {
+  width: fit-content;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #065f46;
+  font-weight: 850;
+}
+
 .landing-final-cta {
   padding: 78px 0;
   background: #0f1f35;
@@ -656,6 +737,30 @@ body {
 
 .landing-final-cta h2 {
   margin-bottom: 0;
+}
+
+.landing-final-cta__copy {
+  display: grid;
+  gap: 16px;
+}
+
+.landing-final-cta__copy p {
+  max-width: 640px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 1.06rem;
+  line-height: 1.6;
+}
+
+.landing-footer-credibility {
+  width: min(100% - 48px, 1100px);
+  margin: 32px auto 0;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.94rem;
+  font-weight: 700;
+  text-align: center;
 }
 
 @media (max-width: 900px) {
@@ -714,5 +819,14 @@ body {
   .landing-feature-card {
     min-height: auto;
     padding: 22px;
+  }
+
+  .landing-example-card {
+    border-radius: 24px;
+  }
+
+  .landing-footer-credibility {
+    width: min(100% - 24px, 1100px);
+    text-align: left;
   }
 }
