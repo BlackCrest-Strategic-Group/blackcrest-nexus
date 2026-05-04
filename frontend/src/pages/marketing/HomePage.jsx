@@ -46,7 +46,7 @@ export default function HomePage() {
       <main>
         <section className="hero-section container enterprise-hero" data-testid="landing-hero">
           <p className="eyebrow">BLACKCREST PLATFORM</p>
-          <h1>Procurement Intelligence that turns operational risk into action.</h1>
+          <h1>Upload your procurement data. Instantly uncover cost savings and supplier risks.</h1>
           <p>
             BlackCrest helps manufacturers, procurement teams, and operational leaders identify supplier risk, margin leakage,
             late delivery exposure, sourcing opportunities, governance gaps, and the working-capital pressure created by procurement problems.
@@ -55,7 +55,7 @@ export default function HomePage() {
             Find the problem. Understand the impact. Govern the decision. Fund the action.
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <Link className="btn" to="/strategic-demo">View Strategic Demo</Link>
+            <Link className="btn" to="/demo">Try Demo</Link>
             <Link className="btn ghost" to="/capital-readiness">Capital Readiness</Link>
             <Link className="btn ghost" to="/procurement-intelligence">Procurement Intelligence</Link>
             <Link className="btn ghost" to="/sentinel">Sentinel</Link>

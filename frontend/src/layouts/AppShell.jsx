@@ -18,8 +18,12 @@ export default function AppShell({ children }) {
     navigate('/login', { replace: true });
   };
 
-  const navItems = user?.navigation || [{ label: 'Dashboard', path: '/dashboard' }];
-  const navWithMarketplace = navItems.some((item) => item.path === '/marketplace') ? navItems : [...navItems, { label: 'Marketplace', path: '/marketplace' }];
+  const navWithMarketplace = [
+    { label: 'Dashboard', path: '/dashboard' },
+    { label: 'Procurement Intelligence', path: '/procurement-intelligence' },
+    { label: 'Marketplace', path: '/marketplace' },
+    { label: 'Insights', path: '/insights' }
+  ];
 
   return (
     <div className="shell" data-testid="shell-root">
