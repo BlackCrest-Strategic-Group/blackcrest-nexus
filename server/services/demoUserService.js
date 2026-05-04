@@ -19,28 +19,36 @@ function toDemoSlug(email = '') {
 
 async function ensureDemoTenant(user) {
   const tenantName = user.company || 'BlackCrest Demo Workspace';
-  let tenant = null;
+  const slug = toDemoSlug(user.email);
+
+  const update = {
+    name: tenantName,
+    subscriptionStatus: 'trialing',
+    plan: 'enterprise',
+    seats: 10
+  };
+
   if (user.tenantId) {
-    tenant = await Tenant.findById(user.tenantId);
+    const tenant = await Tenant.findById(user.tenantId);
+    if (tenant) {
+      tenant.name = tenantName;
+      tenant.subscriptionStatus = 'trialing';
+      tenant.plan = 'enterprise';
+      tenant.seats = Math.max(Number(tenant.seats || 0), 10);
+      await tenant.save();
+      return tenant;
+    }
   }
 
-  if (!tenant) {
-    tenant = await Tenant.create({
-      name: tenantName,
-      slug: toDemoSlug(user.email),
-      subscriptionStatus: 'trialing',
-      plan: 'enterprise',
-      seats: 10
-    });
-  } else {
-    tenant.name = tenantName;
-    tenant.subscriptionStatus = 'trialing';
-    tenant.plan = 'enterprise';
-    tenant.seats = Math.max(Number(tenant.seats || 0), 10);
-    await tenant.save();
-  }
-
-  return tenant;
+  return Tenant.findOneAndUpdate(
+    { slug },
+    {
+      $set: update,
+      $max: { seats: 10 },
+      $setOnInsert: { slug }
+    },
+    { new: true, upsert: true }
+  );
 }
 
 export async function seedRoleDemoUsers() {
