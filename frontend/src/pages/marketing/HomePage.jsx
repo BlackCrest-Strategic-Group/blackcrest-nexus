@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import SeoHead from '../../components/SeoHead';
 
-const metrics = [
+const proofPoints = [
   '$127K annual cost leakage identified',
   '18% supplier delay risk flagged',
   '32% spend in high-risk categories'
@@ -11,15 +11,15 @@ const metrics = [
 const features = [
   {
     title: 'Cost Savings Analysis',
-    description: 'Spot duplicate spend, price drift, and missed contract savings from your uploaded data.'
+    description: 'Quickly identify where money is being lost across suppliers and categories.'
   },
   {
     title: 'Supplier Risk Alerts',
-    description: 'Flag late deliveries, concentration risk, and weak supplier performance before they hit operations.'
+    description: 'Detect delays, performance issues, and high-risk vendors early.'
   },
   {
-    title: 'Procurement Performance Dashboard',
-    description: 'See savings, delays, category exposure, and supplier health in one clear view.'
+    title: 'Procurement Dashboard',
+    description: 'Get a clear, real-time view of procurement performance.'
   }
 ];
 
@@ -28,7 +28,7 @@ export default function HomePage() {
     <div className="landing-page">
       <SeoHead
         title="Procurement Analytics Platform | Find Cost Savings and Supplier Risks"
-        description="Upload procurement data to uncover cost savings, supplier risks, and procurement performance gaps without ERP integration or complex setup."
+        description="Upload procurement data to uncover hidden cost leaks, risky suppliers, and procurement performance gaps in seconds."
         canonicalPath="/"
       />
 
@@ -43,55 +43,36 @@ export default function HomePage() {
 
       <main>
         <section className="landing-hero">
-          <div className="landing-container landing-hero__grid">
-            <div className="landing-hero__copy">
-              <h1>Upload your procurement data. Instantly uncover cost savings and supplier risks.</h1>
-              <p className="landing-hero__subheadline">
-                See where you&apos;re losing money, which suppliers are failing, and what to fix—without ERP integration or complex setup.
-              </p>
-              <ul className="landing-hero__bullets" aria-label="Platform outcomes">
-                <li>Identify hidden cost leaks in minutes</li>
-                <li>Flag high-risk suppliers before they fail</li>
-                <li>Get a clear procurement performance dashboard</li>
-              </ul>
-              <div className="landing-hero__actions">
-                <Link className="landing-primary-btn" to="/demo">Start Free Analysis</Link>
-                <Link className="landing-text-link" to="/demo">See Live Demo</Link>
-              </div>
+          <div className="landing-container landing-hero__content">
+            <p className="landing-eyebrow">Procurement analytics for faster decisions</p>
+            <h1>Find Cost Savings and Supplier Risks in Seconds</h1>
+            <p className="landing-hero__subheadline">
+              Upload your procurement data and instantly uncover hidden cost leaks, risky suppliers, and performance gaps.
+            </p>
+            <ul className="landing-hero__bullets" aria-label="Platform outcomes">
+              <li>Identify hidden cost leaks in minutes</li>
+              <li>Flag high-risk suppliers before they fail</li>
+              <li>See a clear procurement performance dashboard</li>
+            </ul>
+            <div className="landing-hero__actions">
+              <Link className="landing-primary-btn" to="/demo">Start Free Analysis</Link>
+              <a className="landing-text-link" href="#live-demo">See Live Demo</a>
             </div>
+          </div>
+        </section>
 
-            <figure className="landing-visual-card" aria-label="Procurement dashboard preview">
-              <div className="dashboard-placeholder" role="img" aria-label="Dashboard showing savings, supplier risk, and category spend insights">
-                <div className="dashboard-placeholder__topbar">
-                  <span />
-                  <span />
-                  <span />
-                </div>
-                <div className="dashboard-placeholder__content">
-                  <div className="dashboard-placeholder__metric dashboard-placeholder__metric--large">
-                    <small>Potential savings</small>
-                    <strong>$127K</strong>
-                  </div>
-                  <div className="dashboard-placeholder__metric">
-                    <small>Delay risk</small>
-                    <strong>18%</strong>
-                  </div>
-                  <div className="dashboard-placeholder__chart">
-                    <span style={{ height: '42%' }} />
-                    <span style={{ height: '68%' }} />
-                    <span style={{ height: '55%' }} />
-                    <span style={{ height: '82%' }} />
-                    <span style={{ height: '47%' }} />
-                  </div>
-                  <div className="dashboard-placeholder__list">
-                    <div><span /> Price drift found</div>
-                    <div><span /> Supplier risk rising</div>
-                    <div><span /> Category exposure high</div>
-                  </div>
-                </div>
-              </div>
-              <figcaption>Real-time procurement insights from your data</figcaption>
-            </figure>
+        <section id="live-demo" className="landing-video-section">
+          <div className="landing-container landing-section__centered">
+            <h2>See It Find Cost Savings in Real Time</h2>
+            <p>Watch how procurement data turns into actionable insights in seconds.</p>
+            <div className="video-container" aria-label="Procurement analytics demo video">
+              <iframe
+                src="https://drive.google.com/file/d/1CZ0porOk2JIfmbsNujocAmy58iJ_kTVY/preview"
+                title="Procurement analytics demo video"
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
           </div>
         </section>
 
@@ -99,9 +80,9 @@ export default function HomePage() {
           <div className="landing-container">
             <h2>What This Platform Finds in Minutes</h2>
             <div className="landing-metric-grid">
-              {metrics.map((metric) => (
-                <article className="landing-metric-card" key={metric}>
-                  <p>{metric}</p>
+              {proofPoints.map((proofPoint) => (
+                <article className="landing-metric-card" key={proofPoint}>
+                  <p>{proofPoint}</p>
                 </article>
               ))}
             </div>
