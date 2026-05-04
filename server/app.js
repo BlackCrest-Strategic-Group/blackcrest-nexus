@@ -18,6 +18,7 @@ import procurementIntelligenceRoutes from './routes/procurementIntelligenceRoute
 import procurementLiveRoutes from './routes/procurementLiveRoutes.js';
 import globalIntelligenceRoutes from './routes/globalIntelligenceRoutes.js';
 import procurementMvpRoutes from './routes/procurementMvpRoutes.js';
+import marketplaceRoutes from './routes/marketplaceRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import { requestContext } from './middleware/requestContext.js';
@@ -63,5 +64,6 @@ app.use('/api/procurement-intelligence', procurementIntelligenceRoutes);
 app.use('/api/procurement-live', procurementLiveRoutes);
 app.use('/api/global-intelligence', globalIntelligenceRoutes);
 app.use('/api/mvp', procurementMvpRoutes);
+app.use('/api/marketplace', marketplaceRoutes);
 
 export default app;

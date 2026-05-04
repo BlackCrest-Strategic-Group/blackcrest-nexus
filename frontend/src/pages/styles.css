@@ -365,3 +365,6 @@ body {
   outline-offset: 1px;
   border-color: rgba(59,164,247,0.8);
 }
+
+.category-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+
