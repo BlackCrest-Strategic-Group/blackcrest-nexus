@@ -19,6 +19,7 @@ export default function AppShell({ children }) {
   };
 
   const navItems = user?.navigation || [{ label: 'Dashboard', path: '/dashboard' }];
+  const navWithMarketplace = navItems.some((item) => item.path === '/marketplace') ? navItems : [...navItems, { label: 'Marketplace', path: '/marketplace' }];
 
   return (
     <div className="shell" data-testid="shell-root">
@@ -26,7 +27,7 @@ export default function AppShell({ children }) {
         <h2 className="brand">BlackCrest OS</h2>
         <p className="muted">{user?.roleLabel || 'Procurement'} Workspace</p>
         <nav className="nav-list">
-          {navItems.map(({ label, path }) => (
+          {navWithMarketplace.map(({ label, path }) => (
             <NavLink key={path} to={path} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} data-testid={`nav-${label.toLowerCase().replace(/\s+/g, '-')}`}>
               {label}
             </NavLink>

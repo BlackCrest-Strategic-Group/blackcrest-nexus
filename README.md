@@ -64,3 +64,31 @@ cd frontend && npm install --include=dev && npm run build
 
 ## Mission
 To build industrial intelligence systems that help the businesses that actually build things operate faster, smarter, and with greater visibility.
+
+## Marketplace module (B2B supplier discovery)
+
+### API endpoints
+- `GET /api/marketplace/categories`
+- `GET /api/marketplace/suppliers?category=paper-and-packaging&location=Chicago&q=packaging`
+- `GET /api/marketplace/suppliers/:id`
+- `POST /api/marketplace/suppliers` (admin permission required)
+- `POST /api/marketplace/request`
+
+### Example API calls
+```bash
+curl -H "Authorization: Bearer <token>" http://localhost:3000/api/marketplace/categories
+curl -H "Authorization: Bearer <token>" "http://localhost:3000/api/marketplace/suppliers?location=Houston"
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <token>" \
+  -d '{"productNeeded":"Corrugated cartons","quantity":"10000","location":"Dallas, USA","urgency":"2 weeks","email":"buyer@company.com"}' \
+  http://localhost:3000/api/marketplace/request
+```
+
+### Seed suppliers
+```bash
+node server/scripts/seedMarketplace.js
+```
+
+### Frontend routes
+- `/marketplace` (home)
+- `/marketplace/category/:slug`
+- `/marketplace/supplier/:id`

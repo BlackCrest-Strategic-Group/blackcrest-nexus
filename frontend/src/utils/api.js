@@ -279,3 +279,11 @@ export const procurementApi = {
   decisionScore: (payload) => api.post("/api/decision-score", payload),
   truthInsights: () => api.get("/api/truth-insights")
 };
+
+export const marketplaceApi = {
+  categories: () => api.get('/api/marketplace/categories'),
+  suppliers: (params) => api.get('/api/marketplace/suppliers', { params }),
+  supplier: (id) => api.get(`/api/marketplace/suppliers/${id}`),
+  createSupplier: (data) => api.post('/api/marketplace/suppliers', data),
+  requestQuote: (data) => api.post('/api/marketplace/request', data)
+};
