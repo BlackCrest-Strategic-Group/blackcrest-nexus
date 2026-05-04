@@ -1,4 +1,4 @@
-import pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 
 const MAX_CONTENT_LENGTH = 60000;
 

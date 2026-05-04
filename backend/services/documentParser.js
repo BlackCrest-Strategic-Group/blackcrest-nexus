@@ -9,7 +9,7 @@ export async function parseDocument(buffer, mimetype = "", filename = "") {
 
   // PDF
   if (type === "application/pdf" || name.endsWith(".pdf")) {
-    const { default: pdfParse } = await import("pdf-parse");
+    const { default: pdfParse } = await import("pdf-parse/lib/pdf-parse.js");
     const data = await pdfParse(buffer);
     return data.text || "";
   }
