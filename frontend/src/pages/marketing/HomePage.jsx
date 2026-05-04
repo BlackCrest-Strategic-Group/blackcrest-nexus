@@ -1,109 +1,134 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import MarketingLayout from '../../components/marketing/MarketingLayout';
 import SeoHead from '../../components/SeoHead';
 
-const platformModules = [
-  {
-    title: 'Procurement Intelligence',
-    description: 'Supplier visibility, sourcing workflows, RFQ management, operational procurement dashboards, and ERP-ready intelligence.',
-    path: '/procurement-intelligence'
-  },
-  {
-    title: 'Truth Serum',
-    description: 'Operational analytics, predictive insight, KPI intelligence, anomaly detection, and AI-powered recommendations.',
-    path: '/truth-serum'
-  },
-  {
-    title: 'Sentinel',
-    description: 'Enterprise governance, AI containment, audit trails, role-based controls, and operational security oversight.',
-    path: '/sentinel'
-  },
-  {
-    title: 'Capital Readiness Engine',
-    description: 'Procurement-driven funding intelligence for working capital pressure, PO financing, invoice factoring, inventory financing, and GovCon performance funding.',
-    path: '/capital-readiness'
-  }
+const metrics = [
+  '$127K annual cost leakage identified',
+  '18% supplier delay risk flagged',
+  '32% spend in high-risk categories'
 ];
 
-const insights = [
-  'Manufacturing Procurement Trends',
-  'Supplier Risk & Continuity',
-  'Industrial AI Governance',
-  'Operational Visibility for Manufacturers',
-  'ERP Modernization & Data Intelligence',
-  'Global Sourcing Strategy'
+const features = [
+  {
+    title: 'Cost Savings Analysis',
+    description: 'Spot duplicate spend, price drift, and missed contract savings from your uploaded data.'
+  },
+  {
+    title: 'Supplier Risk Alerts',
+    description: 'Flag late deliveries, concentration risk, and weak supplier performance before they hit operations.'
+  },
+  {
+    title: 'Procurement Performance Dashboard',
+    description: 'See savings, delays, category exposure, and supplier health in one clear view.'
+  }
 ];
 
 export default function HomePage() {
   return (
-    <MarketingLayout>
+    <div className="landing-page">
       <SeoHead
-        title="BlackCrest Platform | Procurement Intelligence and Capital Readiness"
-        description="BlackCrest combines procurement intelligence, operational analytics, supplier visibility, AI governance, and capital readiness into one modular industrial intelligence ecosystem."
+        title="Procurement Analytics Platform | Find Cost Savings and Supplier Risks"
+        description="Upload procurement data to uncover cost savings, supplier risks, and procurement performance gaps without ERP integration or complex setup."
         canonicalPath="/"
       />
+
+      <header className="landing-header" aria-label="Site header">
+        <div className="landing-container landing-header__inner">
+          <Link to="/" className="landing-brand" aria-label="BlackCrest home">
+            BlackCrest
+          </Link>
+          <Link to="/login" className="landing-login">Sign in</Link>
+        </div>
+      </header>
+
       <main>
-        <section className="hero-section container enterprise-hero" data-testid="landing-hero">
-          <p className="eyebrow">BLACKCREST PLATFORM</p>
-          <h1>Upload your procurement data. Instantly uncover cost savings and supplier risks.</h1>
-          <p>
-            BlackCrest helps manufacturers, procurement teams, and operational leaders identify supplier risk, margin leakage,
-            late delivery exposure, sourcing opportunities, governance gaps, and the working-capital pressure created by procurement problems.
-          </p>
-          <p>
-            Find the problem. Understand the impact. Govern the decision. Fund the action.
-          </p>
-          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            <Link className="btn" to="/demo">Try Demo</Link>
-            <Link className="btn ghost" to="/capital-readiness">Capital Readiness</Link>
-            <Link className="btn ghost" to="/procurement-intelligence">Procurement Intelligence</Link>
-            <Link className="btn ghost" to="/sentinel">Sentinel</Link>
+        <section className="landing-hero">
+          <div className="landing-container landing-hero__grid">
+            <div className="landing-hero__copy">
+              <h1>Upload your procurement data. Instantly uncover cost savings and supplier risks.</h1>
+              <p className="landing-hero__subheadline">
+                See where you&apos;re losing money, which suppliers are failing, and what to fix—without ERP integration or complex setup.
+              </p>
+              <ul className="landing-hero__bullets" aria-label="Platform outcomes">
+                <li>Identify hidden cost leaks in minutes</li>
+                <li>Flag high-risk suppliers before they fail</li>
+                <li>Get a clear procurement performance dashboard</li>
+              </ul>
+              <div className="landing-hero__actions">
+                <Link className="landing-primary-btn" to="/demo">Start Free Analysis</Link>
+                <Link className="landing-text-link" to="/demo">See Live Demo</Link>
+              </div>
+            </div>
+
+            <figure className="landing-visual-card" aria-label="Procurement dashboard preview">
+              <div className="dashboard-placeholder" role="img" aria-label="Dashboard showing savings, supplier risk, and category spend insights">
+                <div className="dashboard-placeholder__topbar">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="dashboard-placeholder__content">
+                  <div className="dashboard-placeholder__metric dashboard-placeholder__metric--large">
+                    <small>Potential savings</small>
+                    <strong>$127K</strong>
+                  </div>
+                  <div className="dashboard-placeholder__metric">
+                    <small>Delay risk</small>
+                    <strong>18%</strong>
+                  </div>
+                  <div className="dashboard-placeholder__chart">
+                    <span style={{ height: '42%' }} />
+                    <span style={{ height: '68%' }} />
+                    <span style={{ height: '55%' }} />
+                    <span style={{ height: '82%' }} />
+                    <span style={{ height: '47%' }} />
+                  </div>
+                  <div className="dashboard-placeholder__list">
+                    <div><span /> Price drift found</div>
+                    <div><span /> Supplier risk rising</div>
+                    <div><span /> Category exposure high</div>
+                  </div>
+                </div>
+              </div>
+              <figcaption>Real-time procurement insights from your data</figcaption>
+            </figure>
           </div>
-          <div style={{ marginTop: 10 }}><Link data-testid="landing-signin" to="/login">Platform Login</Link></div>
         </section>
 
-        <section className="container marketing-card">
-          <h2>The BlackCrest Operating Logic</h2>
-          <p>
-            Procurement Intelligence finds supplier and purchasing risk. Truth Serum explains the operational and financial impact.
-            Sentinel governs the decision. Capital Readiness identifies the funding path when procurement problems create cash pressure.
-          </p>
-        </section>
-
-        <section className="container section-grid capability-grid">
-          {platformModules.map((module) => (
-            <article key={module.title} className="marketing-card">
-              <h2>{module.title}</h2>
-              <p>{module.description}</p>
-              <Link className="btn ghost" to={module.path}>Explore Module</Link>
-            </article>
-          ))}
-        </section>
-
-        <section className="container marketing-card">
-          <h2>Built for Real Operational Environments</h2>
-          <p>
-            BlackCrest was designed around real procurement, sourcing, supplier management, working capital, and manufacturing workflows.
-            From RFQ analysis and supplier intelligence to operational governance, executive reporting, and funding readiness, the platform focuses on practical business outcomes.
-          </p>
-        </section>
-
-        <section className="container marketing-card">
-          <h2>BlackCrest Insights</h2>
-          <p>Daily operational intelligence, procurement strategy, manufacturing technology, supplier visibility, and capital readiness content.</p>
-          <div className="section-grid">
-            {insights.map((title) => (
-              <article key={title} className="marketing-card">
-                <h3>{title}</h3>
-              </article>
-            ))}
+        <section className="landing-section landing-section--contrast">
+          <div className="landing-container">
+            <h2>What This Platform Finds in Minutes</h2>
+            <div className="landing-metric-grid">
+              {metrics.map((metric) => (
+                <article className="landing-metric-card" key={metric}>
+                  <p>{metric}</p>
+                </article>
+              ))}
+            </div>
           </div>
-          <div style={{ marginTop: 16 }}>
-            <Link className="btn" to="/insights">View Insights</Link>
+        </section>
+
+        <section className="landing-section">
+          <div className="landing-container">
+            <h2>What You Get</h2>
+            <div className="landing-feature-grid">
+              {features.map((feature) => (
+                <article className="landing-feature-card" key={feature.title}>
+                  <h3>{feature.title}</h3>
+                  <p>{feature.description}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="landing-final-cta">
+          <div className="landing-container landing-final-cta__inner">
+            <h2>See what your procurement data is hiding</h2>
+            <Link className="landing-primary-btn" to="/demo">Start Free Analysis</Link>
           </div>
         </section>
       </main>
-    </MarketingLayout>
+    </div>
   );
 }
