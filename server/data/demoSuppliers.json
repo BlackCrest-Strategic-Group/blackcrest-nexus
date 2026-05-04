@@ -1,0 +1,9 @@
+[
+  {"id":"sup-001","name":"Atlas Components","region":"US","cost":128000,"currency":"USD","leadTimeDays":21,"capacity":92,"marginPercent":18},
+  {"id":"sup-002","name":"Nordic Precision GmbH","region":"EU","cost":98000,"currency":"EUR","leadTimeDays":28,"capacity":84,"marginPercent":14},
+  {"id":"sup-003","name":"Pacific Forge Ltd","region":"APAC","cost":88000,"currency":"USD","leadTimeDays":36,"capacity":76,"marginPercent":12},
+  {"id":"sup-004","name":"EuroMach Systems","region":"EU","cost":110000,"currency":"EUR","leadTimeDays":24,"capacity":89,"marginPercent":20},
+  {"id":"sup-005","name":"Summit Industrial","region":"US","cost":134000,"currency":"USD","leadTimeDays":18,"capacity":95,"marginPercent":22},
+  {"id":"sup-006","name":"Sakura Supply Chain","region":"APAC","cost":101000,"currency":"USD","leadTimeDays":32,"capacity":81,"marginPercent":16},
+  {"id":"sup-007","name":"BlueHarbor Manufacturing","region":"US","cost":119000,"currency":"USD","leadTimeDays":27,"capacity":87,"marginPercent":19}
+]

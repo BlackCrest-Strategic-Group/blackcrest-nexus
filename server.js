@@ -280,6 +280,11 @@ app.get('/robots.txt', (_req, res) => {
   res.type('text/plain').send(buildRobotsTxt());
 });
 
+app.use('/mvp-assets', express.static(path.join(__dirname, 'public', 'mvp')));
+app.get('/procurement-intelligence-os', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mvp', 'index.html'));
+});
+
 app.use(express.static(frontendBuildPath));
 app.get('/', (req, res) => res.type('html').send(renderIndexForPath(req.path)));
 app.get('*', (req, res, next) => {
