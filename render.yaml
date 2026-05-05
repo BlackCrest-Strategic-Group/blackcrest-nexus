@@ -1,19 +1,11 @@
 services:
   - type: web
-    name: blackcrest-opportunityos
+    name: govcon-ai-scanner
     runtime: node
-    buildCommand: npm cache clean --force && npm ci && npm run build:frontend
-    startCommand: npm start
+    buildCommand: npm install && npm run build
+    startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 3000
-      - key: JWT_SECRET
-        generateValue: true
-      - key: MONGODB_URI
-        sync: false
-      - key: MONGO_URI
-        sync: false
-      - key: OPENAI_API_KEY
+      - key: SAM_API_KEY
         sync: false
