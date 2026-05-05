@@ -2,7 +2,7 @@
   "name": "blackcrest-nexus-server",
   "version": "1.0.0",
   "main": "server.js",
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js"
