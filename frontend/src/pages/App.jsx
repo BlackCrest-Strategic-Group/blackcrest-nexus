@@ -41,6 +41,7 @@ import Marketplace from './Marketplace';
 import DemoPage from './DemoPage';
 import MarketplaceCategoryPage from './MarketplaceCategoryPage';
 import MarketplaceSupplierPage from './MarketplaceSupplierPage';
+import ProposalGeneratorPage from './ProposalGeneratorPage';
 import { hasPermission } from '../config/roleConfig';
 
 function AuthLoadingScreen() {
@@ -139,6 +140,7 @@ export default function App() {
               <Route path="/report-center" element={<ReportCenterPage />} />
               <Route path="/erp-connector-center" element={<ErpConnectorCenterPage />} />
               <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
+              <Route path="/proposal-generator" element={<RoleProtectedRoute permissions={['recommendations:view']}><ProposalGeneratorPage /></RoleProtectedRoute>} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
               <Route path="/mfa-setup" element={<MFASetupPage />} />
               <Route path="/marketplace" element={<Marketplace />} />
