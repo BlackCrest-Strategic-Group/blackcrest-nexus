@@ -23,11 +23,16 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/status', statusRoutes);
 
-const publicDir = path.join(__dirname, '../public');
-app.use(express.static(publicDir));
+const clientDistPath = path.join(__dirname, '../client/dist');
+
+app.use(express.static(clientDistPath));
+
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return next();
-  return res.sendFile(path.join(publicDir, 'index.html'));
+
+  return res.sendFile(
+    path.join(clientDistPath, 'index.html')
+  );
 });
 
 app.listen(PORT, () => console.log(`BlackCrest MVP running on ${PORT}`));
