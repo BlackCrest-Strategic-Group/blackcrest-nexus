@@ -28,7 +28,7 @@ export default function HomePageV2() {
   return (
     <MarketingLayout>
       <SeoHead
-        title='BlackCrest Platform | Procurement Intelligence for Industrial Operations'
+        title='BlackCrest Nexus | Procurement Intelligence for Industrial Operations'
         description='BlackCrest combines procurement intelligence, supplier visibility, operational analytics, and governance into one operational platform.'
         canonicalPath='/'
       />

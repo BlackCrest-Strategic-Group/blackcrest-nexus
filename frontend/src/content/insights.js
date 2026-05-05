@@ -11,7 +11,7 @@ export const insightsArticles = [
     body: [
       'Modern manufacturers operate in increasingly volatile environments where supplier delays, material shortages, and fragmented operational data create execution risk. Industrial intelligence platforms help operational teams centralize visibility and improve decision quality.',
       'The next generation of operational platforms combines procurement intelligence, supplier analytics, reporting workflows, and governance controls into one operational ecosystem.',
-      'BlackCrest Platform was designed around real operational workflows to help procurement teams, sourcing leaders, and manufacturers reduce friction while improving supplier visibility and operational responsiveness.'
+      'BlackCrest Nexus was designed around real operational workflows to help procurement teams, sourcing leaders, and manufacturers reduce friction while improving supplier visibility and operational responsiveness.'
     ]
   },
   {
