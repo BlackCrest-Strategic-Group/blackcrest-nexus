@@ -1,11 +1,13 @@
 {
   "name": "blackcrest-nexus",
   "version": "1.0.0",
+  "description": "BlackCrest Nexus Platform",
   "type": "module",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "vite build",
-    "build:frontend": "vite build"
+    "build:frontend": "vite build",
+    "check:syntax": "echo \"skip\""
   },
   "dependencies": {
     "express": "^4.18.2"
