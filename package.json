@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node server.js",
     "build": "vite build"
+    "build:frontend" echo\"No frontend build step\"
   },
   "dependencies": {
     "express": "^4.18.2"
