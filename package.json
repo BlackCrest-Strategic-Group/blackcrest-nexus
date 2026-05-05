@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run build:frontend",
     "start": "node server/server.js",
-    "build:frontend": "npm install --prefix frontend && npm run build --prefix frontend",
+    "build:frontend": "npm install --prefix client --include=dev && npm run build --prefix client",
     "check:syntax": "npm run build:frontend"
   },
   "dependencies": {
