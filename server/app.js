@@ -20,6 +20,7 @@ import globalIntelligenceRoutes from './routes/globalIntelligenceRoutes.js';
 import procurementMvpRoutes from './routes/procurementMvpRoutes.js';
 import marketplaceRoutes from './routes/marketplaceRoutes.js';
 import demoSaasRoutes from './routes/demoSaasRoutes.js';
+import proposalRoutes from './routes/proposalRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import { requestContext } from './middleware/requestContext.js';
@@ -67,5 +68,6 @@ app.use('/api/global-intelligence', globalIntelligenceRoutes);
 app.use('/api/mvp', procurementMvpRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api', demoSaasRoutes);
+app.use('/api', proposalRoutes);
 
 export default app;

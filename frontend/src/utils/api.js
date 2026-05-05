@@ -287,3 +287,10 @@ export const marketplaceApi = {
   createSupplier: (data) => api.post('/api/marketplace/suppliers', data),
   requestQuote: (data) => api.post('/api/marketplace/request', data)
 };
+
+
+export const proposalBuilderApi = {
+  upload: (formData) => api.post('/api/proposal/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  generate: (data) => api.post('/api/proposal/generate', data),
+  pdf: (data) => api.post('/api/proposal/pdf', data, { responseType: 'arraybuffer' })
+};
