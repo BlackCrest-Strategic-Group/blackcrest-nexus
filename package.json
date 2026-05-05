@@ -1,16 +1,18 @@
 {
-  "name": "govcon-ai-scanner",
+  "name": "blackcrest-nexus",
   "version": "1.0.0",
+  "description": "BlackCrest Nexus Platform",
   "type": "module",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "build": "vite build",
-    "build:frontend" echo\"No frontend build step\"
+    "build:frontend": "vite build"
   },
   "dependencies": {
     "express": "^4.18.2"
   },
   "devDependencies": {
-    "vite": "^5.4.0"
+    "vite": "^5.0.0"
   }
 }
