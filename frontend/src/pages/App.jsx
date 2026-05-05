@@ -78,6 +78,11 @@ function RoleProtectedRoute({ permissions = [], children }) {
   return <Navigate to="/dashboard" replace />;
 }
 
+
+function LiveDemoRoute() {
+  return <><NoIndex /><AppShell><DashboardPage /></AppShell></>;
+}
+
 function PublicOnlyRoute({ children }) {
   const { user, authLoading } = useAuth();
   if (authLoading) return <AuthLoadingScreen />;
@@ -98,6 +103,7 @@ export default function App() {
             <Route path="/about" element={<ModulePage pageKey="about" />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/demo" element={<DemoPage />} />
+            <Route path="/live-demo" element={<LiveDemoRoute />} />
             <Route path="/investor-demo" element={<InvestorDemoPage />} />
             <Route path="/acquisition-room" element={<AcquisitionRoomPage />} />
             <Route path="/strategic-demo" element={<StrategicDemoPage />} />
