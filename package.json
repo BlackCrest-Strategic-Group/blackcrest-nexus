@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run build --prefix client",
-    "start": "node server/server.js"
+    "build": "npm run build:frontend",
+    "start": "node server/server.js",
+    "build:frontend": "npm run build --prefix frontend",
+    "check:syntax": "npm run build:frontend"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
