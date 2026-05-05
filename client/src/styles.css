@@ -1,17 +1,57 @@
-:root { color-scheme: dark; }
-body { margin:0; font-family: Inter, Arial, sans-serif; background:#0a0a0b; color:#f3f3f3; }
-.app { max-width:1100px; margin:40px auto; padding:0 16px; }
-.card { background:#15171b; border:1px solid #2b2f36; border-radius:14px; padding:24px; margin-bottom:18px; }
-.hero h1 { font-size:2rem; line-height:1.2; }
-button { background:#4b7bff; border:none; color:#fff; padding:10px 14px; border-radius:8px; cursor:pointer; margin-right:8px; }
-input { background:#0f1115; color:#fff; border:1px solid #2f3440; padding:10px; border-radius:8px; margin-right:8px; margin-bottom:8px; }
-.kpis { display:grid; grid-template-columns: repeat(4,1fr); gap:10px; margin-bottom:18px; }
-.kpis div { background:#0d1016; padding:12px; border-radius:8px; }
-.kpis span { display:block; color:#99a1af; font-size:.85rem; }
-table { width:100%; border-collapse:collapse; font-size:.88rem; }
-th,td { border-bottom:1px solid #2b2f36; padding:8px; text-align:left; }
-tr.low { background:#3f1f26; }
-tr.risk { box-shadow: inset 3px 0 0 #ff8a00; }
-.actions { margin:14px 0; }
-.muted { color:#9aa2b1; }
-pre { white-space:pre-wrap; background:#0d1016; padding:12px; border-radius:8px; }
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #ffffff;
+  background: #0a0a0b;
+}
+
+body { margin: 0; background: #0a0a0b; }
+
+.layout {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  grid-template-rows: 64px 1fr;
+  grid-template-areas: 'top top' 'sidebar content';
+}
+
+.top-nav {
+  grid-area: top;
+  background: #111114;
+  border-bottom: 1px solid #1f1f23;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.sidebar {
+  grid-area: sidebar;
+  background: #111114;
+  border-right: 1px solid #1f1f23;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.content { grid-area: content; padding: 24px; }
+
+.module-card, .table-wrap {
+  background: #1a1a1d;
+  border: 1px solid #2a2a2f;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.card-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 16px; }
+button, select {
+  background: #1a1a1d;
+  color: #fff;
+  border: 1px solid #31313a;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+input { width: 100%; background: #0f0f12; border: 1px solid #2a2a2f; color: white; border-radius: 8px; padding: 10px; margin-bottom: 10px; }
+table { width: 100%; border-collapse: collapse; }
+th, td { text-align: left; padding: 10px; border-bottom: 1px solid #2a2a2f; }
