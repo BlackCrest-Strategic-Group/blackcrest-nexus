@@ -1,29 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import api from '../utils/api';
+import React, { useMemo, useState } from 'react';
+
+const suppliers = [
+  { name: 'Global Metals Inc', region: 'USA', leadTime: '2-4 weeks', price: '$$' },
+  { name: 'EuroPack Solutions', region: 'Germany', leadTime: '3-5 weeks', price: '$$$' },
+  { name: 'Asia Components Ltd', region: 'China', leadTime: '1-3 weeks', price: '$' }
+];
 
 export default function Marketplace() {
-  const [suppliers, setSuppliers] = useState([]);
-  const [rfqs, setRfqs] = useState([]);
-  const [form, setForm] = useState({ title: '', category: '', quantity: '' });
-  const [response, setResponse] = useState({ supplierName: '', message: '' });
-
-  const load = async () => {
-    const [s, r] = await Promise.all([api.get('/api/marketplace/suppliers'), api.get('/api/marketplace/rfqs')]);
-    setSuppliers(s.data); setRfqs(r.data);
-  };
-  useEffect(() => { load(); }, []);
-
-  const postRfq = async (e) => { e.preventDefault(); await api.post('/api/marketplace/rfqs', form); setForm({ title:'', category:'', quantity:''}); load(); };
-  const respond = async (rfqId) => { await api.post(`/api/marketplace/rfqs/${rfqId}/respond`, response); setResponse({ supplierName:'', message:''}); alert('Response submitted'); };
+  const [query, setQuery] = useState('');
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const filtered = useMemo(() => suppliers.filter((s) => `${s.name} ${s.region}`.toLowerCase().includes(query.toLowerCase())), [query]);
 
   return <section>
-    <div className='page-header'><h1>Marketplace MVP</h1></div>
-    <div className='grid two'>
-      <article className='card'><h3>Post RFQ</h3><form onSubmit={postRfq}><input className='input' placeholder='Title' value={form.title} onChange={(e)=>setForm({...form,title:e.target.value})}/><input className='input' placeholder='Category' value={form.category} onChange={(e)=>setForm({...form,category:e.target.value})}/><input className='input' placeholder='Quantity' value={form.quantity} onChange={(e)=>setForm({...form,quantity:e.target.value})}/><button className='btn'>Post RFQ</button></form></article>
-      <article className='card'><h3>Browse Suppliers</h3><ul>{suppliers.map((s)=><li key={s.id}>{s.name} · {s.category} · ⭐{s.rating}</li>)}</ul></article>
+    <div className='page-header'><h1>Supplier Marketplace</h1><p>Discover trusted suppliers with live-ready sample intelligence.</p></div>
+    <article className='card'>
+      <input placeholder='Search suppliers or regions' value={query} onChange={(e) => setQuery(e.target.value)} />
+    </article>
+    <div className='supplier-grid' style={{ marginTop: '1rem' }}>
+      {filtered.map((supplier) => (
+        <article key={supplier.name} className='card supplier-card'>
+          <h3>{supplier.name}</h3>
+          <p><strong>Region:</strong> {supplier.region}</p>
+          <p><strong>Lead Time:</strong> {supplier.leadTime}</p>
+          <p><strong>Price Tier:</strong> {supplier.price}</p>
+          <button className='btn' onClick={() => setSelectedSupplier(supplier)}>View Supplier</button>
+        </article>
+      ))}
     </div>
-    <article className='card' style={{marginTop:'1rem'}}><h3>Open RFQs</h3>{rfqs.map((r)=><div key={r.id} style={{borderBottom:'1px solid #333',padding:'8px 0'}}><strong>{r.title}</strong> ({r.category})
-      <div><input className='input' placeholder='Supplier name' value={response.supplierName} onChange={(e)=>setResponse({...response,supplierName:e.target.value})}/><input className='input' placeholder='Response note' value={response.message} onChange={(e)=>setResponse({...response,message:e.target.value})}/><button className='btn ghost' onClick={()=>respond(r.id)}>Respond to RFQ</button></div>
-    </div>)}</article>
+    {selectedSupplier && (
+      <article className='card' style={{ marginTop: '1rem' }}>
+        <div className='row between center'>
+          <h3 style={{ margin: 0 }}>{selectedSupplier.name}</h3>
+          <button className='btn ghost' onClick={() => setSelectedSupplier(null)}>Close</button>
+        </div>
+        <p>Region: {selectedSupplier.region}</p>
+        <p>Lead Time: {selectedSupplier.leadTime}</p>
+        <p>Price Tier: {selectedSupplier.price}</p>
+      </article>
+    )}
   </section>;
 }

@@ -17,10 +17,10 @@ export default function MarketingLayout({ children }) {
     <div className="marketing-site">
       <header className="marketing-header">
         <div className="container row between center">
-          <Link to="/" className="brand-lockup" aria-label="BlackCrest Platform home">
-            <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Platform logo" className="brand-logo" />
+          <Link to="/" className="brand-lockup" aria-label="BlackCrest Nexus home">
+            <img src="/logos/blackcrest-logo.svg" alt="BlackCrest Nexus logo" className="brand-logo" />
             <div>
-              <strong>BlackCrest Platform</strong>
+              <strong>BlackCrest Nexus</strong>
               <span>Industrial Intelligence for Modern Operators</span>
             </div>
           </Link>
@@ -28,8 +28,8 @@ export default function MarketingLayout({ children }) {
             {navLinks.map(([label, path]) => <Link key={path} to={path}>{label}</Link>)}
           </nav>
           <div className="row">
-            <Link className="btn ghost" to="/login">Sign In</Link>
-            <Link className="btn" to="/contact">Request Demo</Link>
+            <Link className="btn" to="/demo">Enter Live Demo</Link>
+            <Link className="btn ghost" to="/contact">Request Demo</Link>
           </div>
         </div>
       </header>
@@ -37,7 +37,7 @@ export default function MarketingLayout({ children }) {
       <footer className="marketing-footer">
         <div className="container footer-grid">
           <div>
-            <h3>BlackCrest Platform</h3>
+            <h3>BlackCrest Nexus</h3>
             <p>Industrial intelligence systems built for manufacturers, procurement teams, supply chain leaders, and operational decision makers.</p>
             <p>Email: demo@blackcrestai.com</p>
           </div>

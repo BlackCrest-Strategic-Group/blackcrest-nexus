@@ -18,15 +18,15 @@ export default function HomePage() {
   return (
     <div className="landing-page">
       <SeoHead
-        title="Procurement Analytics Platform | Find Cost Savings and Supplier Risks"
-        description="Upload procurement data to uncover hidden cost leaks, risky suppliers, and procurement performance gaps in seconds."
+        title="BlackCrest Nexus | The Procurement Intelligence Operating System"
+        description="Procurement intelligence that turns operational risk into action."
         canonicalPath="/"
       />
 
       <header className="landing-header" aria-label="Site header">
         <div className="landing-container landing-header__inner">
-          <Link to="/" className="landing-brand" aria-label="BlackCrest home">
-            BlackCrest
+          <Link to="/" className="landing-brand" aria-label="BlackCrest Nexus home">
+            BlackCrest Nexus
           </Link>
           <Link to="/login" className="landing-login">Sign in</Link>
         </div>
@@ -35,30 +35,28 @@ export default function HomePage() {
       <main>
         <section className="landing-hero">
           <div className="landing-container landing-hero__content">
-            <p className="landing-eyebrow">Procurement leakage and supplier risk analysis</p>
-            <h1>Find Cost Savings and Supplier Risks in Seconds</h1>
+            <p className="landing-eyebrow">Procurement intelligence for modern teams</p>
+            <h1>BlackCrest Nexus</h1>
             <p className="landing-hero__subheadline">
-              Upload your procurement data to uncover hidden cost leaks, risky suppliers, and performance gaps.
+              The Procurement Intelligence Operating System
             </p>
-            <p className="landing-hero__urgency">
-              Most procurement teams are unknowingly losing 5–15% in cost due to supplier inefficiencies and hidden pricing gaps.
-            </p>
+            <p className="landing-hero__urgency">Procurement intelligence that turns operational risk into action.</p>
             <ul className="landing-hero__bullets" aria-label="Platform outcomes">
               <li>Compare supplier pricing gaps across categories</li>
               <li>Flag suppliers tied to delays and volatility</li>
               <li>Prioritize leakage by annual cost impact</li>
             </ul>
             <div className="landing-hero__actions">
-              <Link className="landing-primary-btn" to="/demo">Analyze My Procurement Data</Link>
-              <a className="landing-text-link" href="#live-demo">See Live Demo</a>
+              <Link className="landing-primary-btn" to="/demo">Enter Live Demo</Link>
+              <Link className="secondary-btn" to="/contact">Request Demo</Link>
             </div>
           </div>
         </section>
 
-        <section id="live-demo" className="landing-video-section">
+        <section id="live-demo" className="video-section landing-video-section">
           <div className="landing-container landing-section__centered">
-            <h2>Watch $100K+ in Cost Savings Get Identified in Seconds</h2>
-            <p>See the upload flow and the supplier, category, and leakage findings it returns.</p>
+            <h2>See BlackCrest Nexus in Action</h2>
+            <p>Watch how procurement teams uncover cost savings and supplier risk in seconds.</p>
             <div className="video-container" aria-label="Procurement analytics demo video">
               <iframe
                 src="https://drive.google.com/file/d/1CZ0porOk2JIfmbsNujocAmy58iJ_kTVY/preview"
@@ -67,6 +65,7 @@ export default function HomePage() {
                 allowFullScreen
               />
             </div>
+            <Link className="primary-btn" to="/demo">Enter Live Demo</Link>
           </div>
         </section>
 
