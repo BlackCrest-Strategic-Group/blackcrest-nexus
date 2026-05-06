@@ -1,10 +1,15 @@
-generator client { provider = "prisma-client-js" }
+generator client {
+  provider = "prisma-client-js"
+}
 
-datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
 model User {
-  id          String   @id @default(cuid())
-  clerkId     String?  @unique
+  id          String             @id @default(cuid())
+  clerkId     String?            @unique
   name        String
   role        String
   facility    String
@@ -13,7 +18,7 @@ model User {
 }
 
 model Supplier {
-  id               String   @id @default(cuid())
+  id               String             @id @default(cuid())
   supplierName     String
   category         String
   region           String
@@ -24,39 +29,42 @@ model Supplier {
   status           String
   purchaseOrders   PurchaseOrder[]
   rfqs             RFQ[]
+  alerts           OperationalAlert[]
 }
 
 model PurchaseOrder {
-  id            String   @id @default(cuid())
-  poNumber      String   @unique
-  supplierId    String
-  material      String
-  quantity      Int
-  dueDate       DateTime
-  status        String
-  cost          Float
-  riskFlag      Boolean  @default(false)
-  supplier      Supplier @relation(fields: [supplierId], references: [id])
+  id             String             @id @default(cuid())
+  poNumber       String             @unique
+  supplierId     String
+  material       String
+  quantity       Int
+  dueDate        DateTime
+  status         String
+  cost           Float
+  riskFlag       Boolean            @default(false)
+  supplier       Supplier           @relation(fields: [supplierId], references: [id])
   jobAssignments JobPO[]
-  alerts        OperationalAlert[]
+  alerts         OperationalAlert[]
 }
 
 model ManufacturingJob {
-  id                String   @id @default(cuid())
-  jobNumber          String   @unique
-  productionPhase    String
-  materialStatus     String
-  blockedReason      String?
-  completionPercent  Int
-  purchaseOrders     JobPO[]
-  alerts             OperationalAlert[]
+  id               String             @id @default(cuid())
+  jobNumber        String             @unique
+  productionPhase  String
+  materialStatus   String
+  blockedReason    String?
+  completionPercent Int
+  purchaseOrders   JobPO[]
+  alerts           OperationalAlert[]
 }
 
 model JobPO {
   jobId String
   poId  String
-  job   ManufacturingJob @relation(fields:[jobId], references:[id])
-  po    PurchaseOrder @relation(fields:[poId], references:[id])
+
+  job ManufacturingJob @relation(fields: [jobId], references: [id])
+  po  PurchaseOrder    @relation(fields: [poId], references: [id])
+
   @@id([jobId, poId])
 }
 
@@ -69,11 +77,12 @@ model RFQ {
   supplierId    String
   estimatedCost Float
   status        String
-  supplier      Supplier @relation(fields:[supplierId], references:[id])
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
 }
 
 model OperationalAlert {
-  id                String   @id @default(cuid())
+  id                String             @id @default(cuid())
   severity          String
   alertType         String
   relatedSupplierId String?
@@ -81,10 +90,11 @@ model OperationalAlert {
   relatedPoId       String?
   aiSummary         String
   recommendedAction String
-  createdAt         DateTime @default(now())
+  createdAt         DateTime           @default(now())
   assignedUserId    String?
-  user              User? @relation(fields:[assignedUserId], references:[id])
-  supplier          Supplier? @relation(fields:[relatedSupplierId], references:[id])
-  job               ManufacturingJob? @relation(fields:[relatedJobId], references:[id])
-  po                PurchaseOrder? @relation(fields:[relatedPoId], references:[id])
+
+  user     User?             @relation(fields: [assignedUserId], references: [id])
+  supplier Supplier?         @relation(fields: [relatedSupplierId], references: [id])
+  job      ManufacturingJob? @relation(fields: [relatedJobId], references: [id])
+  po       PurchaseOrder?    @relation(fields: [relatedPoId], references: [id])
 }
