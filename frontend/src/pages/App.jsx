@@ -43,6 +43,7 @@ import MarketplaceCategoryPage from './MarketplaceCategoryPage';
 import MarketplaceSupplierPage from './MarketplaceSupplierPage';
 import ProposalGeneratorPage from './ProposalGeneratorPage';
 import FundingBridgePage from './FundingBridgePage';
+import NexusMailroomPage from './NexusMailroomPage';
 import { hasPermission } from '../config/roleConfig';
 
 function AuthLoadingScreen() {
@@ -143,6 +144,7 @@ export default function App() {
               <Route path="/funding-bridge" element={<FundingBridgePage />} />
               <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
               <Route path="/proposal-generator" element={<RoleProtectedRoute permissions={['recommendations:view']}><ProposalGeneratorPage /></RoleProtectedRoute>} />
+              <Route path="/nexus-mailroom" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><NexusMailroomPage /></RoleProtectedRoute>} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
               <Route path="/mfa-setup" element={<MFASetupPage />} />
               <Route path="/marketplace" element={<Marketplace />} />
