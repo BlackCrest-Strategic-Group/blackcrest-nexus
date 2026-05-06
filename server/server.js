@@ -1,38 +1,24 @@
 import express from 'express';
-import cors from 'cors';
-import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import authRoutes from './routes/auth.js';
-import chatRoutes from './routes/chat.js';
-import uploadRoutes from './routes/upload.js';
-import statusRoutes from './routes/status.js';
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/blackcrest_mvp';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const port = process.env.PORT || 3000;
 
-app.use(cors());
 app.use(express.json());
 
-mongoose.connect(MONGO_URI).then(() => console.log('Mongo connected')).catch((err) => console.error(err.message));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/api/dashboard', (_req, res) => res.json({ spend: 12400000, activeRfqs: 38, onTimeDelivery: '94.2%' }));
+app.get('/api/suppliers', (_req, res) => res.json([
+  { id: 1, name: 'Atlas Components', category: 'Electronics', region: 'North America' },
+  { id: 2, name: 'IronPeak Industrial', category: 'Machining', region: 'Europe' }
+]));
+app.post('/api/proposals', (req, res) => res.json({ ok: true, proposal: req.body, message: 'Proposal draft accepted in mock mode.' }));
 
-app.use('/api/auth', authRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/status', statusRoutes);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.join(__dirname, '..', 'client', 'dist');
+app.use(express.static(distPath));
+app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
 
-const clientDistPath = path.join(__dirname, '../client/dist');
-
-app.use(express.static(clientDistPath));
-
-app.get('*', (req, res, next) => {
-  if (req.path.startsWith('/api')) return next();
-
-  return res.sendFile(
-    path.join(clientDistPath, 'index.html')
-  );
-});
-
-app.listen(PORT, () => console.log(`BlackCrest Nexus running on ${PORT}`));
+app.listen(port, () => console.log(`Nexus server running on ${port}`));

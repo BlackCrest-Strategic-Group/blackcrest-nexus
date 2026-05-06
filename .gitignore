@@ -1,24 +1,6 @@
 node_modules
-.env
-uploads
+client/node_modules
+server/node_modules
+client/dist
 .DS_Store
-
-
-frontend/node_modules
-frontend/dist
-dist
-*.log
-node_modules/
-*.tgz
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-intelligence/intelligence.db
-
-# Deployment/cleanup hygiene
-*.zip
-pull_requests/
-deprecated_internal_integrations/
-Assets/
+.env

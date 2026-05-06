@@ -1,94 +1,54 @@
 # BlackCrest Nexus
 
-Industrial Intelligence for Modern Operators.
+Standalone production-ready SaaS foundation for enterprise procurement and supply chain operations.
 
-BlackCrest is a modular industrial intelligence ecosystem built for manufacturers, procurement teams, sourcing leaders, distributors, aerospace suppliers, and operational decision makers.
+## Stack
+- React + Vite frontend (`/client`)
+- Node.js + Express backend (`/server`)
+- Render deployment via `render.yaml`
+- Mock data only (no API keys, no ERP integrations)
 
-The platform combines procurement intelligence, supplier visibility, operational analytics, and enterprise AI governance into one scalable operational environment.
+## Project Structure
+/
+├── client/
+├── server/
+├── package.json
+├── render.yaml
+├── README.md
+└── .gitignore
 
-## Platform Modules
-
-### Procurement Intelligence
-- Supplier intelligence
-- RFQ and sourcing workflows
-- Procurement dashboards
-- Opportunity qualification
-- ERP-ready operational visibility
-
-### Truth Serum
-- Operational analytics
-- Predictive intelligence
-- KPI forecasting
-- Risk visibility
-- Executive operational reporting
-
-### Sentinel
-- Enterprise AI governance
-- Audit visibility
-- Role-based permissions
-- Governance workflows
-- Operational security controls
-
-## Platform Positioning
-BlackCrest is designed to provide enterprise-level operational visibility without enterprise-level complexity.
-
-The platform focuses on practical operational outcomes:
-- Reduced procurement friction
-- Faster sourcing decisions
-- Improved supplier visibility
-- Better operational awareness
-- Explainable operational intelligence
-
-## Current Capabilities
-- Procurement opportunity analysis
-- Supplier intelligence workflows
-- Operational dashboards
-- Role-based governance
-- ERP connector center
-- Executive reporting
-- Investor demo environment
-- Operational insights content engine
-
-## Security & Governance Philosophy
-- Human-in-the-loop operational decision support
-- Governance-first architecture
-- Customer-controlled data ingestion
-- Read-only operational intelligence posture
-- Designed for non-classified operational environments
+## Scripts
+- `npm run install-all` installs root + client + server dependencies
+- `npm run build` builds the Vite frontend
+- `npm start` starts the Express server
 
 ## Local Setup
-npm install
-npm run check:syntax
-npm test -- --runInBand
-cd frontend && npm install --include=dev && npm run build
+1. `npm run install-all`
+2. `npm run build`
+3. `npm start`
+4. Open `http://localhost:3000`
 
-## Mission
-To build industrial intelligence systems that help the businesses that actually build things operate faster, smarter, and with greater visibility.
+## Backend APIs
+- `GET /api/health`
+- `GET /api/dashboard`
+- `GET /api/suppliers`
+- `POST /api/proposals`
 
-## Marketplace module (B2B supplier discovery)
+## Render Deployment
+1. Push this repository to GitHub.
+2. Create a new **Web Service** on Render.
+3. Render auto-detects `render.yaml`.
+4. Build command: `npm run install-all && npm run build`
+5. Start command: `npm start`
 
-### API endpoints
-- `GET /api/marketplace/categories`
-- `GET /api/marketplace/suppliers?category=paper-and-packaging&location=Chicago&q=packaging`
-- `GET /api/marketplace/suppliers/:id`
-- `POST /api/marketplace/suppliers` (admin permission required)
-- `POST /api/marketplace/request`
+## Modules Included
+1. Executive Dashboard
+2. Procurement Intelligence
+3. Sourcing Command Center
+4. Supplier Marketplace
+5. Proposal Generator
+6. Funding Bridge
+7. ERP Connector Center
+8. Settings
 
-### Example API calls
-```bash
-curl -H "Authorization: Bearer <token>" http://localhost:3000/api/marketplace/categories
-curl -H "Authorization: Bearer <token>" "http://localhost:3000/api/marketplace/suppliers?location=Houston"
-curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer <token>" \
-  -d '{"productNeeded":"Corrugated cartons","quantity":"10000","location":"Dallas, USA","urgency":"2 weeks","email":"buyer@company.com"}' \
-  http://localhost:3000/api/marketplace/request
-```
-
-### Seed suppliers
-```bash
-node server/scripts/seedMarketplace.js
-```
-
-### Frontend routes
-- `/marketplace` (home)
-- `/marketplace/category/:slug`
-- `/marketplace/supplier/:id`
+All module routes are functional in-app and use mock data flows.
