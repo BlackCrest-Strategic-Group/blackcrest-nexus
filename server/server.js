@@ -1,11 +1,13 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import authRouter from '../routes/auth.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+app.use('/api/auth', authRouter);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 app.get('/api/dashboard', (_req, res) => res.json({ spend: 12400000, activeRfqs: 38, onTimeDelivery: '94.2%' }));
