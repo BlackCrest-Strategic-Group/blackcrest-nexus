@@ -1,34 +1,43 @@
 import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import authRouter from '../routes/auth.js';
-import { roleGuard } from './middleware/roleGuard.js';
-import { listAuditEvents, logAuditEvent } from './services/auditService.js';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+import OpenAI from 'openai';
 
+dotenv.config();
 const app = express();
-const port = process.env.PORT || 3000;
+const prisma = new PrismaClient();
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
 
+app.use(cors());
 app.use(express.json());
-app.use('/api/auth', authRouter);
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok', platform: 'blackcrest-nexus', timestamp: new Date().toISOString() }));
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
-app.get('/api/dashboard', (_req, res) => res.json({ spend: 12400000, activeRfqs: 38, onTimeDelivery: '94.2%' }));
-app.get('/api/suppliers', (_req, res) => res.json([
-  { id: 1, name: 'Atlas Components', category: 'Electronics', region: 'North America' },
-  { id: 2, name: 'IronPeak Industrial', category: 'Machining', region: 'Europe' }
-]));
-app.post('/api/proposals', roleGuard(['Admin','Executive','Buyer']), (req, res) => {
-  logAuditEvent('proposal_generation', { role: req.role });
-  res.json({ ok: true, proposal: req.body, message: 'Proposal draft accepted in mock mode.' });
+const roleFilter = (req, _res, next) => { req.role = req.query.role || 'EXECUTIVE'; next(); };
+
+async function aiSummarize(context) {
+  if (!openai) return `AI fallback summary: ${context}`;
+  const r = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [{ role: 'system', content: 'You are an industrial operations intelligence engine.' }, { role: 'user', content: context }] });
+  return r.choices[0]?.message?.content || context;
+}
+
+app.get('/api/nexus/overview', roleFilter, async (req, res) => {
+  const [suppliers, pos, jobs, alerts, rfqs] = await Promise.all([
+    prisma.supplier.findMany(),
+    prisma.purchaseOrder.findMany({ include: { supplier: true } }),
+    prisma.manufacturingJob.findMany({ include: { purchaseOrders: { include: { po: true } } } }),
+    prisma.operationalAlert.findMany({ orderBy: { createdAt: 'desc' }, include: { supplier: true, job: true, po: true } }),
+    prisma.rFQ.findMany({ include: { supplier: true } })
+  ]);
+  res.json({ role: req.role, suppliers, purchaseOrders: pos, jobs, alerts, rfqs });
 });
-app.post('/api/audit/events', roleGuard(), (req, res) => res.json({ ok: true, record: logAuditEvent(req.body?.event, { ...req.body?.metadata, role: req.role }) }));
-app.get('/api/audit/events', roleGuard(['Admin','Auditor']), (_req, res) => res.json({ ok: true, events: listAuditEvents() }));
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const distPath = path.join(__dirname, '..', 'client', 'dist');
-app.use(express.static(distPath));
-app.get('*', (_req, res) => res.sendFile(path.join(distPath, 'index.html')));
+app.post('/api/nexus/workflows/supplier-escalation/:supplierId', async (req, res) => {
+  const supplier = await prisma.supplier.update({ where: { id: req.params.supplierId }, data: { riskScore: { increment: 8 }, deliveryScore: { decrement: 5 }, escalationLevel: 'CRITICAL', status: 'ESCALATED' } });
+  const summary = await aiSummarize(`Supplier ${supplier.supplierName} risk score is ${supplier.riskScore}. Generate impact + action in 2 sentences.`);
+  const alert = await prisma.operationalAlert.create({ data: { severity: 'HIGH', alertType: 'SUPPLIER_RISK_ESCALATION', relatedSupplierId: supplier.id, aiSummary: summary, recommendedAction: 'Trigger alternate sourcing review and executive escalation.' } });
+  res.json({ supplier, alert });
+});
 
-app.listen(port, () => console.log(`Nexus server running on ${port}`));
+app.get('/health', (_req, res) => res.json({ status: 'ok', service: 'blackcrest-nexus', date: new Date().toISOString() }));
+
+app.listen(process.env.PORT || 3000, () => console.log('Nexus server running'));
