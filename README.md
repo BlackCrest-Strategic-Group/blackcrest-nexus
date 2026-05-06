@@ -1,48 +1,40 @@
-# BlackCrest Nexus
+# BlackCrest Nexus MVP
 
-BlackCrest Nexus is a modular enterprise procurement platform with a shared application shell, centralized services, role-based access controls, and Render-compatible deployment.
+Enterprise procurement intelligence workflow:
 
-## Architecture Overview
-- **Frontend (`client/`)**: React + Vite with centralized app shell (`client/src/platform/AppShell.jsx`), role-aware navigation, module routing, notification zone, and system status indicator.
-- **Frontend Services (`client/src/services/`)**: reusable auth, api, audit, permissions, storage, and notifications service modules.
-- **Backend (`server/`)**: Express service with `/api/*` endpoints and root `/health` endpoint.
-- **Backend Foundations**:
-  - `server/services/auditService.js` centralized audit event tracking.
-  - `server/services/platformServices.js` reusable service registry (auth/api/audit/permissions/storage/notifications).
-  - `server/middleware/roleGuard.js` role-based middleware for Admin/Executive/Buyer/Supplier/Auditor.
-  - `server/models/sharedDataModel.js` mock shared schema foundation.
+**Upload procurement files → AI analysis → Supplier comparison → Executive summary**
 
-## Setup
-1. Install dependencies:
-   - `npm run install-all`
-2. Build frontend:
-   - `npm run build`
-3. Start platform:
-   - `npm start`
-4. Open:
-   - `http://localhost:3000`
+## Stack
+- Frontend: React + Vite + TailwindCSS + Axios + React Dropzone + Lucide
+- Backend: Node.js + Express + Multer + pdf-parse + xlsx + mammoth + OpenAI
 
-## Environment Template
-Use `.env.example` as baseline. Minimum recommended keys:
-- `PORT=3000`
-- `NODE_ENV=production`
+## Local setup
+1. Install dependencies
+```bash
+npm install --prefix server
+npm install --prefix frontend
+```
+2. Copy env template
+```bash
+cp .env.example server/.env
+```
+3. Add `OPENAI_API_KEY` in `server/.env` (optional for deterministic fallback).
+4. Run backend
+```bash
+npm run dev --prefix server
+```
+5. Run frontend
+```bash
+npm run dev --prefix frontend
+```
 
-## Core Endpoints
-- `GET /health`
+## API routes
 - `GET /api/health`
-- `POST /api/auth/login`
-- `POST /api/audit/events`
-- `GET /api/audit/events`
-- `POST /api/proposals`
+- `POST /api/upload` (multipart form-data, field name `files`)
+- `POST /api/analyze` (body: `{ files: [...] }` using upload metadata)
+- `POST /api/summary` (body: `{ analysis }`)
 
-## Demo Roles
-- Admin
-- Executive
-- Buyer
-- Supplier
-- Auditor
-
-## Render Compatibility
-- Build command: `npm run install-all && npm run build`
-- Start command: `npm start`
-- Static frontend build remains served by Express from `client/dist`.
+## Deployment (Render)
+- Build frontend: `npm install --prefix frontend && npm run build --prefix frontend`
+- Start backend: `npm install --prefix server && npm run start --prefix server`
+- Ensure environment variables set in Render dashboard.

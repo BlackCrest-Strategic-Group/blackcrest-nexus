@@ -1,161 +1,78 @@
 import React from 'react';
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import { AuthProvider, useAuth } from '../context/AuthContext';
-import AppShell from '../layouts/AppShell';
-import RegisterPage from './RegisterPage';
-import DashboardPage from './DashboardPage';
-import SupplierPage from './SupplierPage';
-import OpportunityPage from './OpportunityPage';
-import IntelligencePage from './IntelligencePage';
-import GlobalIntelligencePage from './GlobalIntelligencePage';
-import CategoryPage from './CategoryPage';
-import SettingsPage from './SettingsPage';
-import PrivacyPage from './PrivacyPage';
-import LoginPage from './LoginPage';
-import MFASettingsPage from '../components/MFASettingsPage';
-import MFASetupPage from '../components/MFASetupPage';
-import ResetPasswordPage from '../components/ResetPasswordPage';
-import ForgotPasswordPage from './ForgotPasswordPage';
-import BlanketPOBuilderPage from './BlanketPOBuilder';
-import SeoHead from '../components/SeoHead';
-import HomePage from './marketing/HomePage';
-import ModulePage from './marketing/ModulePage';
-import ContactPage from './marketing/ContactPage';
-import InsightsPage from './marketing/InsightsPage';
-import SentinelLandingPage from './marketing/SentinelLandingPage';
-import InsightArticlePage from './marketing/InsightArticlePage';
-import TermsPage from './marketing/TermsPage';
-import SecurityPage from './marketing/SecurityPage';
-import PricingPage from './marketing/PricingPage';
-import TrustCenterPage from './marketing/TrustCenterPage';
-import GovernancePage from './GovernancePage';
-import GovernancePolicyPage from './GovernancePolicyPage';
-import InvestorDemoPage from './InvestorDemoPage';
-import AcquisitionRoomPage from './AcquisitionRoomPage';
-import StrategicDemoPage from './StrategicDemoPage';
-import CapitalReadinessPage from './CapitalReadinessPage';
-import ReportCenterPage from './ReportCenterPage';
-import ErpConnectorCenterPage from './ErpConnectorCenterPage';
-import DataBoundaryPage from './DataBoundaryPage';
-import Marketplace from './Marketplace';
-import DemoPage from './DemoPage';
-import MarketplaceCategoryPage from './MarketplaceCategoryPage';
-import MarketplaceSupplierPage from './MarketplaceSupplierPage';
-import ProposalGeneratorPage from './ProposalGeneratorPage';
-import FundingBridgePage from './FundingBridgePage';
-import NexusMailroomPage from './NexusMailroomPage';
-import { hasPermission } from '../config/roleConfig';
+import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom';
+import axios from 'axios';
 
-function AuthLoadingScreen() {
-  return <div className="auth-page"><div className="auth-card"><h2>Validating session…</h2></div></div>;
+const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' });
+
+function LandingPage() {
+  return <main className="min-h-screen bg-zinc-950 text-zinc-100 px-8 py-12">
+    <section className="max-w-6xl mx-auto">
+      <p className="text-amber-400 tracking-widest uppercase text-xs">BlackCrestAI</p>
+      <h1 className="text-5xl font-bold mt-4">Procurement decisions in minutes, not days.</h1>
+      <p className="text-zinc-300 mt-6 max-w-3xl">Upload RFQs, quotes, and sourcing documents. BlackCrestAI compares suppliers, flags risk, and generates procurement intelligence instantly.</p>
+      <div className="mt-8 flex gap-4"><Link to="/dashboard" className="bg-amber-500 text-black px-6 py-3 font-semibold">Upload Procurement Package</Link><button className="border border-zinc-600 px-6 py-3">Book Demo</button></div>
+      <div className="grid md:grid-cols-3 gap-6 mt-12">
+        <Card title="Operational workflow" text="Ingest RFQs, RFPs, quote PDFs, XLSX BOMs, and SOWs into one secure analysis run." />
+        <Card title="Supplier comparison" text="Normalize supplier pricing, lead time, and quote coverage in one executive comparison." />
+        <Card title="Enterprise trust" text="SOC2-ready architecture language, role-based access controls, and AI governance posture." />
+      </div>
+    </section>
+  </main>;
 }
 
-function NoIndex() {
-  return <SeoHead robots="noindex, nofollow" />;
+function Card({ title, text }) { return <article className="bg-zinc-900 border border-zinc-800 p-6"><h3 className="mt-1 font-semibold text-amber-400">{title}</h3><p className="text-zinc-400 mt-2 text-sm">{text}</p></article>; }
+
+function LoginPage() {
+  return <main className="min-h-screen bg-zinc-950 flex items-center justify-center p-8"><div className="bg-zinc-900 border border-zinc-800 p-8 w-full max-w-md"><h2 className="text-2xl text-white font-semibold">Enterprise Login</h2><input className="w-full mt-6 bg-zinc-800 p-3 text-white" placeholder="Email"/><input className="w-full mt-3 bg-zinc-800 p-3 text-white" type="password" placeholder="Password"/><button className="w-full bg-amber-500 text-black py-3 mt-4 font-semibold">Sign in</button><button className="w-full border border-zinc-700 text-zinc-200 py-3 mt-3">Continue with Google (placeholder)</button><button className="w-full border border-zinc-700 text-zinc-200 py-3 mt-3">Continue with Outlook (placeholder)</button></div></main>;
 }
 
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-  static getDerivedStateFromError() { return { hasError: true }; }
-  render() {
-    if (this.state.hasError) {
-      return <main className="auth-page"><section className="auth-card"><h1>Something went wrong</h1><p>Please refresh and try again.</p></section></main>;
-    }
-    return this.props.children;
-  }
-}
+function Dashboard() {
+  const [files, setFiles] = React.useState([]);
+  const [analysis, setAnalysis] = React.useState(null);
+  const [summary, setSummary] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
-function ProtectedLayout() {
-  const { user, authLoading } = useAuth();
-  if (authLoading) return <AuthLoadingScreen />;
-  if (!user) return <Navigate to="/login" replace />;
-  return <><NoIndex /><AppShell><Outlet /></AppShell></>;
-}
+  const onFileChange = async (event) => {
+    const selected = Array.from(event.target.files || []);
+    if (!selected.length) return;
+    const formData = new FormData();
+    selected.forEach((file) => formData.append('files', file));
+    const uploadRes = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    setFiles(uploadRes.data.files);
+  };
 
-function RoleProtectedRoute({ permissions = [], children }) {
-  const { user } = useAuth();
-  if (!permissions.length || permissions.some((permission) => hasPermission(user, permission))) return children;
-  return <Navigate to="/dashboard" replace />;
-}
+  const runAnalysis = async () => {
+    setLoading(true);
+    const analyzeRes = await api.post('/analyze', { files });
+    setAnalysis(analyzeRes.data.analysis);
+    const summaryRes = await api.post('/summary', { analysis: analyzeRes.data.analysis });
+    setSummary(summaryRes.data.summary);
+    setLoading(false);
+  };
 
-
-function LiveDemoRoute() {
-  return <><NoIndex /><AppShell><DashboardPage /></AppShell></>;
-}
-
-function PublicOnlyRoute({ children }) {
-  const { user, authLoading } = useAuth();
-  if (authLoading) return <AuthLoadingScreen />;
-  if (user) return <Navigate to="/dashboard" replace />;
-  return <><NoIndex />{children}</>;
+  return <main className="min-h-screen bg-zinc-950 text-zinc-100 p-6">
+    <div className="grid lg:grid-cols-3 gap-6">
+      <section className="bg-zinc-900 border border-zinc-800 p-5">
+        <h3 className="font-semibold">Upload Panel</h3>
+        <label className="mt-4 p-8 border border-dashed border-zinc-600 text-center cursor-pointer block">
+          <input type="file" multiple className="hidden" onChange={onFileChange} />
+          Select RFQ/RFP/Quote/BOM files
+        </label>
+        <button disabled={!files.length || loading} onClick={runAnalysis} className="mt-4 w-full bg-amber-500 text-black py-3 disabled:opacity-50">{loading ? 'Analyzing...' : 'Run AI Analysis'}</button>
+      </section>
+      <section className="bg-zinc-900 border border-zinc-800 p-5"><h3 className="font-semibold">Processing Pipeline</h3><p className="text-zinc-400 text-sm mt-2">Ingest → Parse PDF/XLSX/DOCX → AI compare → Risk scoring → Executive summary.</p><ul className="mt-4 text-sm text-zinc-300 space-y-2">{files.map((f) => <li key={f.storedName}>{f.fileName}</li>)}</ul></section>
+      <section className="bg-zinc-900 border border-zinc-800 p-5"><h3 className="font-semibold">AI Procurement Summary</h3><p className="text-zinc-300 text-sm mt-3 whitespace-pre-wrap">{summary || 'No summary generated yet.'}</p></section>
+    </div>
+    <section className="bg-zinc-900 border border-zinc-800 p-5 mt-6 overflow-x-auto">
+      <h3 className="font-semibold">Supplier Comparison</h3>
+      <table className="w-full mt-4 text-sm">
+        <thead><tr className="text-left text-zinc-400"><th>Supplier</th><th>Total Price</th><th>Lead Time</th><th>Risk Score</th><th>Anomaly Flags</th><th>Recommendation</th></tr></thead>
+        <tbody>{(analysis?.supplierComparison || []).map((row) => <tr key={row.supplier} className="border-t border-zinc-800"><td className="py-2">{row.supplier}</td><td>${row.totalPrice}</td><td>{row.leadTimeDays} days</td><td>{row.riskScore}</td><td>{(row.anomalyFlags || []).join(', ')}</td><td>{row.recommendation}</td></tr>)}</tbody>
+      </table>
+    </section>
+  </main>;
 }
 
 export default function App() {
-  return (
-    <AuthProvider>
-      <ErrorBoundary>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/features" element={<ModulePage pageKey="features" />} />
-            <Route path="/procurement-intelligence" element={<ModulePage pageKey="procurement" />} />
-            <Route path="/truth-serum" element={<ModulePage pageKey="truthserum" />} />
-            <Route path="/about" element={<ModulePage pageKey="about" />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/demo" element={<DemoPage />} />
-            <Route path="/live-demo" element={<LiveDemoRoute />} />
-            <Route path="/investor-demo" element={<InvestorDemoPage />} />
-            <Route path="/acquisition-room" element={<AcquisitionRoomPage />} />
-            <Route path="/strategic-demo" element={<StrategicDemoPage />} />
-            <Route path="/capital-readiness" element={<CapitalReadinessPage />} />
-            <Route path="/data-boundary" element={<DataBoundaryPage />} />
-            <Route path="/terms" element={<TermsPage />} />
-            <Route path="/security" element={<SecurityPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/trust-center" element={<TrustCenterPage />} />
-            <Route path="/ai-governance-principles" element={<GovernancePolicyPage />} />
-            <Route path="/insights" element={<InsightsPage />} />
-            <Route path="/sentinel" element={<SentinelLandingPage />} />
-            <Route path="/global-intelligence" element={<GlobalIntelligencePage />} />
-            <Route path="/insights/industrial-intelligence-for-modern-manufacturing" element={<InsightArticlePage slug="industrial-intelligence-for-modern-manufacturing" />} />
-            <Route path="/insights/how-ai-improves-supplier-intelligence" element={<InsightArticlePage slug="how-ai-improves-supplier-intelligence" />} />
-            <Route path="/insights/how-to-evaluate-procurement-opportunities-faster" element={<InsightArticlePage slug="how-to-evaluate-procurement-opportunities-faster" />} />
-            <Route path="/insights/procurement-intelligence-vs-spend-analytics" element={<InsightArticlePage slug="procurement-intelligence-vs-spend-analytics" />} />
-            <Route path="/login" element={<PublicOnlyRoute><LoginPage /></PublicOnlyRoute>} />
-            <Route path="/register" element={<PublicOnlyRoute><RegisterPage /></PublicOnlyRoute>} />
-            <Route path="/forgot-password" element={<><NoIndex /><ForgotPasswordPage /></>} />
-            <Route path="/reset-password" element={<><NoIndex /><ResetPasswordPage /></>} />
-            <Route element={<ProtectedLayout />}>
-              <Route path="/dashboard" element={<RoleProtectedRoute permissions={['dashboard:view']}><DashboardPage /></RoleProtectedRoute>} />
-              <Route path="/opportunities" element={<RoleProtectedRoute permissions={['recommendations:view']}><OpportunityPage /></RoleProtectedRoute>} />
-              <Route path="/suppliers" element={<RoleProtectedRoute permissions={['supplier_risk:view']}><SupplierPage /></RoleProtectedRoute>} />
-              <Route path="/intelligence" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
-              <Route path="/procurement-intelligence" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
-              <Route path="/insights" element={<RoleProtectedRoute permissions={['recommendations:view']}><IntelligencePage /></RoleProtectedRoute>} />
-              <Route path="/global-intelligence-platform" element={<RoleProtectedRoute permissions={['recommendations:view']}><GlobalIntelligencePage /></RoleProtectedRoute>} />
-              <Route path="/analytics" element={<RoleProtectedRoute permissions={['governance:reporting:view', 'compliance:review', 'audit_logs:view']}><CategoryPage /></RoleProtectedRoute>} />
-              <Route path="/governance" element={<RoleProtectedRoute permissions={['governance:dashboard:view']}><GovernancePage /></RoleProtectedRoute>} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/report-center" element={<ReportCenterPage />} />
-              <Route path="/erp-connector-center" element={<ErpConnectorCenterPage />} />
-              <Route path="/funding-bridge" element={<FundingBridgePage />} />
-              <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
-              <Route path="/proposal-generator" element={<RoleProtectedRoute permissions={['recommendations:view']}><ProposalGeneratorPage /></RoleProtectedRoute>} />
-              <Route path="/nexus-mailroom" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><NexusMailroomPage /></RoleProtectedRoute>} />
-              <Route path="/mfa-settings" element={<MFASettingsPage />} />
-              <Route path="/mfa-setup" element={<MFASetupPage />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/marketplace/category/:slug" element={<MarketplaceCategoryPage />} />
-              <Route path="/marketplace/supplier/:id" element={<MarketplaceSupplierPage />} />
-            </Route>
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </ErrorBoundary>
-    </AuthProvider>
-  );
+  return <BrowserRouter><Routes><Route path='/' element={<LandingPage/>}/><Route path='/login' element={<LoginPage/>}/><Route path='/dashboard' element={<Dashboard/>}/><Route path='*' element={<Navigate to='/' replace/>}/></Routes></BrowserRouter>;
 }
