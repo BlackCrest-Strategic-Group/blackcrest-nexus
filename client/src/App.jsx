@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Landing from './pages/Landing';
 import Nexus from './pages/Nexus';
@@ -29,11 +29,13 @@ export default function App() {
         <span>{token ? 'Authenticated' : 'Not logged in'}</span>
       </section>
 
+      <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/nexus" element={<Nexus token={token} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </BrowserRouter>
     </div>
   );
 }

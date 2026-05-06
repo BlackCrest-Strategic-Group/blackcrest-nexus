@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run build:frontend",
+    "build": "npm run build:frontend && ls -la client && ls -la client/dist",
     "start": "node server/server.js",
     "build:frontend": "npm install --prefix client --include=dev && npm run build --prefix client",
     "check:syntax": "npm run build:frontend"

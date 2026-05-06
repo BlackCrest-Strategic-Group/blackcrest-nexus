@@ -35,4 +35,4 @@ app.get('*', (req, res, next) => {
   );
 });
 
-app.listen(PORT, () => console.log(`BlackCrest MVP running on ${PORT}`));
+app.listen(PORT, () => console.log(`BlackCrest Nexus running on ${PORT}`));
