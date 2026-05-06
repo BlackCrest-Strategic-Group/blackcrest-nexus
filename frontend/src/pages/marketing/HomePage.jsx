@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import SeoHead from '../../components/SeoHead';
+import EarlyIndustryFeedback from './EarlyIndustryFeedback';
 
 const systemActivity = [
   'Supplier Risk Detected: Apex Components (Delay Risk High)',
@@ -58,6 +59,8 @@ export default function HomePage() {
             </aside>
           </div>
         </section>
+
+        <EarlyIndustryFeedback />
 
         <section className="funding-bridge">
           <div className="nexus-container">
