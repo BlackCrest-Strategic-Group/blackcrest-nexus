@@ -2,6 +2,8 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import authRouter from '../routes/auth.js';
+import { roleGuard } from './middleware/roleGuard.js';
+import { listAuditEvents, logAuditEvent } from './services/auditService.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -9,13 +11,19 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use('/api/auth', authRouter);
 
-app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (_req, res) => res.json({ status: 'ok', platform: 'blackcrest-nexus', timestamp: new Date().toISOString() }));
+app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.get('/api/dashboard', (_req, res) => res.json({ spend: 12400000, activeRfqs: 38, onTimeDelivery: '94.2%' }));
 app.get('/api/suppliers', (_req, res) => res.json([
   { id: 1, name: 'Atlas Components', category: 'Electronics', region: 'North America' },
   { id: 2, name: 'IronPeak Industrial', category: 'Machining', region: 'Europe' }
 ]));
-app.post('/api/proposals', (req, res) => res.json({ ok: true, proposal: req.body, message: 'Proposal draft accepted in mock mode.' }));
+app.post('/api/proposals', roleGuard(['Admin','Executive','Buyer']), (req, res) => {
+  logAuditEvent('proposal_generation', { role: req.role });
+  res.json({ ok: true, proposal: req.body, message: 'Proposal draft accepted in mock mode.' });
+});
+app.post('/api/audit/events', roleGuard(), (req, res) => res.json({ ok: true, record: logAuditEvent(req.body?.event, { ...req.body?.metadata, role: req.role }) }));
+app.get('/api/audit/events', roleGuard(['Admin','Auditor']), (_req, res) => res.json({ ok: true, events: listAuditEvents() }));
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

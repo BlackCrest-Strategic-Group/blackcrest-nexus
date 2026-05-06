@@ -29,3 +29,18 @@ li { margin: 8px 0; }
 input, select, button { background: #0f1827; border: 1px solid #334862; color: #edf2fb; border-radius: 8px; padding: 10px; }
 button { cursor: pointer; }
 @media (max-width: 900px) { .topnav { grid-template-columns: 1fr; } .profile { flex-wrap: wrap; } }
+
+.shell-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+.sidebar { background: #10151f; border-right: 1px solid #2b3442; padding: 20px 12px; display: grid; gap: 8px; align-content: start; }
+.sidebar .brand { margin-bottom: 12px; font-size: 1.1rem; }
+.sidebar a { padding: 10px; border-radius: 8px; color: #d6dde8; }
+.sidebar a.active, .sidebar a:hover { background: #d4af37; color: #111; }
+.notice-zone { padding: 8px 20px 0; }
+.notice { border-radius: 8px; padding: 10px; background: #1d2430; border: 1px solid #323f54; }
+.notice.ok { border-color: #467a52; }
+.notice.warn { border-color: #a67f2b; }
+
+@media (max-width: 900px) {
+  .shell-layout { grid-template-columns: 1fr; }
+  .sidebar { grid-auto-flow: column; overflow: auto; }
+}
