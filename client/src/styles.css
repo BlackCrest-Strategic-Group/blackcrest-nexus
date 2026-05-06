@@ -28,6 +28,9 @@ li { margin: 8px 0; }
 .form-grid { display: grid; gap: 10px; margin-top: 12px; }
 input, select, button { background: #0f1827; border: 1px solid #334862; color: #edf2fb; border-radius: 8px; padding: 10px; }
 button { cursor: pointer; }
+.module-grid { display: grid; grid-template-columns: repeat(2, minmax(240px, 1fr)); gap: 12px; margin: 14px 0; }
+.disclaimer { border: 1px solid #6d5630; background: #2a1f10; padding: 10px; border-radius: 8px; color: #f3d9a5; }
+.form-grid.inline { grid-template-columns: 1fr 180px 120px; align-items: center; }
 @media (max-width: 900px) { .topnav { grid-template-columns: 1fr; } .profile { flex-wrap: wrap; } }
 
 .shell-layout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }

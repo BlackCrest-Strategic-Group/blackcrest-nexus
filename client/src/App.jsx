@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import './styles.css';
+import SentinelSecurityCenter from './components/SentinelSecurityCenter';
 
 const executiveCards = [
   { id: 'supplier-response-time', label: 'Supplier Response Time', value: '14.8h', trend: '-11%', detail: 'Median response time across active sourcing events.', items: ['Critical suppliers >24h: 5', 'Fast-lane suppliers <8h: 18'] },
@@ -30,6 +31,12 @@ const navConfig = {
     { label: 'Supplier Marketplace', path: '/marketplace/home' },
     { label: 'Supplier Matching', path: '/marketplace/matching' }
   ],
+  Admin: [
+    { label: 'Tenant Settings', path: '/admin/tenant-settings' },
+    { label: 'Role & Access', path: '/admin/roles' },
+    { label: 'Audit Feed', path: '/admin/audit-feed' },
+    { label: 'Sentinel Security Center', path: '/admin/sentinel-security' }
+  ]
   Funding: [{ label: 'Funding Bridge', path: '/funding/bridge' }],
   Operations: [{ label: 'Notifications', path: '/operations/notifications' }],
   Admin: [{ label: 'Admin Controls', path: '/admin/controls' }]
@@ -140,6 +147,16 @@ function Login({ onLogin }) {
     }
   };
 
+  return (<div><header className="topnav"><Link className="brand" to="/modules/executive">BlackCrest Nexus</Link>
+    <div className="menu-row">{Object.entries(navConfig).map(([title, items]) => <details key={title} className="menu"><summary>{title}</summary><div className="menu-list">{items.map((item) => <Link key={item.path} to={item.path}>{item.label}</Link>)}</div></details>)}</div>
+    <div className="profile"><span>{profile?.name || 'Loading...'}</span><select value={role} onChange={(e) => setRole(e.target.value)}><option value="user">User</option><option value="admin">Admin</option></select><button type="button" onClick={logout}>Logout</button></div></header>
+    <main className="content">{message && <p>{message}</p>}
+      <Routes><Route path="/" element={<Navigate to="/modules/executive" replace />} />
+        <Route path="/profile" element={<section className="card"><h2>Profile</h2>{profile && <div className="form-grid"><input value={profile.name} onChange={(e)=>setProfile({...profile,name:e.target.value})}/><input value={profile.company||''} onChange={(e)=>setProfile({...profile,company:e.target.value})}/><button type="button" onClick={saveProfile}>Save Profile</button></div>}</section>} />
+        {routeEntries.map((entry) => <Route key={entry.path} path={entry.path} element={entry.path === '/admin/sentinel-security'
+          ? (role !== 'admin' ? <Navigate to="/modules/executive" replace /> : <SentinelSecurityCenter token={auth.accessToken} />)
+          : (entry.group === 'Admin' && role !== 'admin' ? <Navigate to="/modules/executive" replace /> : <ShellPage entry={entry} role={role} />)} />)}
+      </Routes></main></div>);
   return <main className="content"><section className="card"><h1>BlackCrest Nexus Login</h1><form className="form-grid" onSubmit={submit}>
     <label>Role<select value={role} onChange={(e) => syncRole(e.target.value)}>{ROLES.map((r) => <option key={r}>{r}</option>)}</select></label>
     <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />

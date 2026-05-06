@@ -121,3 +121,49 @@ export function defaultWorkflow() {
 }
 
 export { WORKFLOW_STATES };
+
+
+export function buildSecurityCommandCenterSnapshot() {
+  return {
+    activeUsers: 48,
+    failedLogins24h: 7,
+    auditEvents24h: 126,
+    exports24h: 14,
+    approvalsPending: 12,
+    highRiskActions24h: 5,
+    tenantActivityScore: 89,
+    incidentOpen: 2
+  };
+}
+
+export function buildSoc2Dashboard() {
+  return [
+    { category: 'Security', status: 'Healthy', score: 92, note: 'RBAC, approval gates, and admin override logging are active.' },
+    { category: 'Availability', status: 'Monitor', score: 88, note: 'Availability SLO telemetry and incident escalation workflows enabled.' },
+    { category: 'Processing Integrity', status: 'Healthy', score: 90, note: 'Human-in-the-loop approvals enforce decision integrity.' },
+    { category: 'Confidentiality', status: 'Healthy', score: 91, note: 'Tenant-scoped records and encrypted audit signatures in place.' },
+    { category: 'Privacy', status: 'Monitor', score: 86, note: 'Data minimization and privacy workflow checkpoints are configured.' }
+  ];
+}
+
+export function buildNistCsfDashboard() {
+  return [
+    { function: 'Govern', readiness: 'Implemented', focus: 'Policy workflows, approvals, and governance command center.' },
+    { function: 'Identify', readiness: 'Implemented', focus: 'Tenant activity baselines and high-risk action detection.' },
+    { function: 'Protect', readiness: 'Implemented', focus: 'Role and module permissions with override controls.' },
+    { function: 'Detect', readiness: 'Implemented', focus: 'Centralized security logging, failed login and export monitoring.' },
+    { function: 'Respond', readiness: 'In Progress', focus: 'Incident escalation workflow and admin notification orchestration.' },
+    { function: 'Recover', readiness: 'In Progress', focus: 'Runbook-backed incident closure and continuity evidence tracking.' }
+  ];
+}
+
+export function complianceReadiness() {
+  return {
+    soc2Readiness: 'Foundational controls implemented',
+    nistCsfAlignment: 'Core functions mapped to Sentinel controls',
+    ssoReadiness: true,
+    mfaReadiness: true,
+    encryptionReadiness: true,
+    tenantIsolationFoundation: 'Tenant IDs enforced across governance and audit records.'
+  };
+}
