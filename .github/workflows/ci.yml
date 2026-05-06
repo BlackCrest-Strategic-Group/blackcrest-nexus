@@ -1,4 +1,4 @@
-name: SaaS CI
+name: BlackCrest Nexus CI
 
 on:
   pull_request:
@@ -12,30 +12,46 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
-          
+          cache: npm
 
-      - name: Install dependencies
+      - name: Install Root Dependencies
         run: npm install
 
-      - name: Backend syntax checks
+      - name: Install Client Dependencies
+        run: npm install --prefix client
+
+      - name: Install Server Dependencies
+        run: npm install --prefix server
+
+      - name: Backend Syntax Validation
         run: npm run check:syntax
 
-      - name: Frontend build
-        run: npm run build:frontend
+      - name: Generate Prisma Client
+        run: npm run prisma:generate --prefix server
 
-      - name: Tenant migration dry-run check
-        env:
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      - name: Frontend Production Build
+        run: npm run build --prefix client
+
+      - name: Validate Frontend Dist
         run: |
-          if [ -z "$MONGODB_URI" ]; then
-            echo "::warning::MONGODB_URI is not configured. Skipping migration check."
-            exit 0
+          if [ ! -f client/dist/index.html ]; then
+            echo "Frontend build failed. dist/index.html missing"
+            exit 1
           fi
-          node --check server/scripts/migrateTenantScoping.js
+
+      - name: Migration Script Syntax Check
+        run: |
+          if [ -f server/scripts/migrateTenantScoping.js ]; then
+            node --check server/scripts/migrateTenantScoping.js
+          else
+            echo "Migration script not present. Skipping."
+          fi
