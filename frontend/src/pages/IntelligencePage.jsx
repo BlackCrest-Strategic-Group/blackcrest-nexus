@@ -13,259 +13,125 @@ const ROLE_VIEW_OPTIONS = [
   { value: 'admin', label: 'Admin' }
 ];
 
-const DEMO_CSV = `supplier,item,category,poNumber,quantity,unitCost,sellPrice,orderDate,dueDate,receiptDate
-ABC Metals,Aluminum Housing,Raw Materials,PO-1001,100,42,48,2026-03-01,2026-03-15,2026-03-18
-ABC Metals,Bracket Assembly,Raw Materials,PO-1002,75,31,38,2026-03-04,2026-03-20,2026-03-20
-Nova Circuits,Controller Board,Electronics,PO-1003,50,210,245,2026-03-05,2026-03-22,2026-03-29
-Helios Gas Systems,Valve Assembly,Industrial Gases,PO-1004,40,122,138,2026-03-07,2026-03-18,2026-03-24
-Boxline Partners,Corrugate Sheet,Packaging,PO-1005,1200,1.82,2.05,2026-03-02,2026-03-12,2026-03-12`;
-
-function AlertDrilldownModal({ alert, onClose }) {
-  if (!alert) return null;
-
-  const sourceSignals = Array.isArray(alert.sourceSignals)
-    ? alert.sourceSignals
-    : Object.entries(alert.sourceSignals || {}).map(([signal, value]) => ({ signal, value }));
-
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, background: 'rgba(5, 18, 34, 0.65)', zIndex: 40, padding: 16, overflow: 'auto' }}>
-      <article className="card" style={{ maxWidth: 980, margin: '24px auto', padding: 20 }}>
-        <header style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}>
-          <div>
-            <h3 style={{ margin: 0 }}>{alert.title}</h3>
-            <p style={{ margin: '4px 0 0 0' }}>Severity: <strong>{alert.severity || alert.type}</strong> · Category: {alert.category}</p>
-          </div>
-          <button className="btn" type="button" onClick={onClose}>Close</button>
-        </header>
-
-        <div className="grid two" style={{ marginTop: 14 }}>
-          <section>
-            <h4>Operational Cause</h4>
-            <p>{alert.rootCause || alert.driver || 'Operational signal breach detected.'}</p>
-            <h4>Recommended Action</h4>
-            <p>{alert.recommendedAction || alert.recommendedActions?.[0] || 'Assign an owner and validate the underlying records.'}</p>
-          </section>
-
-          <section>
-            <h4>Business Impact</h4>
-            <p>{typeof alert.financialImpact === 'number' ? formatUsd(alert.financialImpact) : alert.financialImpact || 'Impact requires source data.'}</p>
-            <h4>Source Signals</h4>
-            <ul>{sourceSignals.map((signal) => <li key={signal.signal}>{signal.signal}: {String(signal.value)}</li>)}</ul>
-            <p>Confidence Score: <strong>{Math.round((alert.confidenceScore || 0) * 100)}%</strong></p>
-          </section>
-        </div>
-      </article>
-    </div>
-  );
-}
-
-function LiveUploadPanel({ onAnalysis }) {
-  const [csv, setCsv] = useState(DEMO_CSV);
-  const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
-
-  async function analyze() {
-    setUploading(true);
-    setError('');
-    try {
-      let response;
-      if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        response = await api.post('/api/procurement-live/analyze-upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-        onAnalysis(response.data.analysis);
-      } else {
-        response = await api.post('/api/procurement-live/analyze-upload', { csv });
-        onAnalysis(response.data.analysis);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Unable to analyze procurement data.');
-    } finally {
-      setUploading(false);
-    }
+const ENTERPRISE_PROCUREMENT_ANALYTICS = {
+  executiveSummary: { keyRisks: 4, estimatedSavingsUSD: 4870000, supplierHealthScore: 76, operationalEfficiencyScore: 82 },
+  analytics: {
+    marginLeakage: { leakageRate: 0.067, annualLeakageUSD: 2120000, topLeakCategory: 'Electronics Assemblies' },
+    supplierPerformance: { onTimeDelivery: 0.89, qualityAcceptance: 0.94, strategicSupplierCoverage: 0.71 },
+    sourcingEfficiency: { avgSourcingCycleDays: 34, eventWinRate: 0.63, competitiveBidRatio: 0.77 },
+    operationalBottlenecks: [
+      { area: 'Contract Approval', delayDays: 6.4, severity: 'High' },
+      { area: 'Inbound QA Sign-off', delayDays: 4.1, severity: 'Medium' },
+      { area: 'PO Change Orders', delayDays: 3.8, severity: 'High' }
+    ],
+    procurementCycle: [
+      { stage: 'Requisition', days: 5 },
+      { stage: 'RFx & Evaluation', days: 11 },
+      { stage: 'Negotiation', days: 7 },
+      { stage: 'Approval', days: 6 },
+      { stage: 'PO Release', days: 5 }
+    ],
+    spendAnomalies: [
+      { category: 'Precision Castings', variancePct: 0.23, exposureUSD: 640000 },
+      { category: 'Industrial Gases', variancePct: 0.18, exposureUSD: 390000 },
+      { category: 'Packaging Film', variancePct: 0.14, exposureUSD: 240000 }
+    ]
+  },
+  insights: {
+    costSavings: [
+      'Renegotiate top 12 MRO SKUs indexed above market to unlock $1.1M annual savings.',
+      'Shift 18% of spot-buy volume into catalog contracts for $740K savings.'
+    ],
+    supplierConsolidation: 'Consolidate tier-2 electrical suppliers from 14 to 9 to reduce admin overhead and improve leverage.',
+    riskAlerts: [
+      'Single-source dependency exceeds 45% in avionics connectors.',
+      'Late-delivery risk elevated for two critical suppliers supporting Q3 programs.'
+    ],
+    sourcingOptimization: 'Deploy dual-track RFx process for high-volatility categories to cut sourcing cycle time by 19%.'
+  },
+  visualizations: {
+    spendHeatmap: {
+      rows: ['North America', 'EMEA', 'APAC'],
+      cols: ['Raw Materials', 'Electronics', 'MRO', 'Logistics'],
+      values: [[72, 88, 54, 43], [51, 62, 48, 58], [67, 79, 38, 64]]
+    },
+    supplierRiskMap: [
+      { supplier: 'Nova Circuits', impact: 86, risk: 74 },
+      { supplier: 'Helios Gas Systems', impact: 72, risk: 68 },
+      { supplier: 'Atlas Machining', impact: 65, risk: 49 },
+      { supplier: 'Boxline Partners', impact: 58, risk: 33 }
+    ],
+    savingsTrend: [
+      { month: 'Jan', usd: 420000 }, { month: 'Feb', usd: 510000 }, { month: 'Mar', usd: 690000 }, { month: 'Apr', usd: 780000 }, { month: 'May', usd: 920000 }
+    ],
+    procurementVelocity: [
+      { lane: 'Direct Materials', eventsPerMonth: 14 },
+      { lane: 'Indirect / MRO', eventsPerMonth: 21 },
+      { lane: 'Services', eventsPerMonth: 9 }
+    ]
   }
+};
 
-  return (
-    <article className="card" style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div>
-          <h3 style={{ marginBottom: 4 }}>Live Procurement Intelligence Upload</h3>
-          <p className="muted" style={{ margin: 0 }}>Upload CSV procurement data or run the included sample to generate live margin, supplier, and delivery intelligence.</p>
-        </div>
-        <button className="btn primary" type="button" onClick={analyze} disabled={uploading}>{uploading ? 'Analyzing…' : 'Run Live Analysis'}</button>
-      </div>
-      <div className="grid two" style={{ marginTop: 12 }}>
-        <label>
-          <span className="metric-label">CSV Upload</span>
-          <input className="input" type="file" accept=".csv,text/csv" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-        </label>
-        <label>
-          <span className="metric-label">Paste CSV / Sample Data</span>
-          <textarea className="input" rows={6} value={csv} onChange={(e) => { setCsv(e.target.value); setFile(null); }} />
-        </label>
-      </div>
-      {error ? <p style={{ color: '#b42318', marginTop: 8 }}>{error}</p> : null}
-    </article>
-  );
-}
+const DEMO_CSV = `supplier,item,category,poNumber,quantity,unitCost,sellPrice,orderDate,dueDate,receiptDate\nABC Metals,Aluminum Housing,Raw Materials,PO-1001,100,42,48,2026-03-01,2026-03-15,2026-03-18`;
+
+function LiveUploadPanel({ onAnalysis }) { const [csv, setCsv] = useState(DEMO_CSV); const [uploading, setUploading] = useState(false); async function analyze() { setUploading(true); try { const response = await api.post('/api/procurement-live/analyze-upload', { csv }); onAnalysis(response.data.analysis); } finally { setUploading(false); } } return <article className="card" style={{ marginBottom: 16 }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}><div><h3 style={{ marginBottom: 4 }}>Live Procurement Intelligence Upload</h3><p className="muted" style={{ margin: 0 }}>Upload or run sample data to blend real-time signals into Truth Serum Analytics.</p></div><button className="btn primary" type="button" onClick={analyze} disabled={uploading}>{uploading ? 'Analyzing…' : 'Run Live Analysis'}</button></div><label><span className="metric-label">Paste CSV / Sample Data</span><textarea className="input" rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} /></label></article>; }
 
 export default function IntelligencePage() {
-  const [loading, setLoading] = useState(true);
-  const [severity, setSeverity] = useState('');
   const [roleGroup, setRoleGroup] = useState('executive');
   const [overview, setOverview] = useState(null);
   const [liveAnalysis, setLiveAnalysis] = useState(null);
-  const [drilldownAlert, setDrilldownAlert] = useState(null);
-  const [selectedAlertId, setSelectedAlertId] = useState('');
-  const [loadError, setLoadError] = useState('');
 
-  async function openAlert(alertId) {
-    const liveAlert = liveAnalysis?.alerts?.find((alert) => alert.id === alertId);
-    if (liveAlert) {
-      setDrilldownAlert(liveAlert);
-      return;
-    }
-    try {
-      const { data } = await api.get(`/api/sentinel/alerts/${alertId}`, { params: { roleGroup } });
-      setDrilldownAlert(data);
-    } catch {
-      const fallback = overview?.alerts?.find((alert) => alert.id === alertId);
-      setDrilldownAlert(fallback || null);
-    }
-  }
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      setLoadError('');
-      try {
-        const { data } = await api.get('/api/sentinel/overview', { params: { ...(severity ? { severity } : {}), roleGroup } });
-        if (mounted) {
-          setOverview(data);
-          setSelectedAlertId((current) => current || data.alerts?.[0]?.id || '');
-        }
-      } catch (err) {
-        if (mounted) setLoadError(err.response?.data?.message || 'Sentinel overview unavailable. Live upload workflow remains available.');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => { mounted = false; };
-  }, [severity, roleGroup]);
+  useEffect(() => { (async () => { try { const { data } = await api.get('/api/sentinel/overview', { params: { roleGroup } }); setOverview(data); } catch { setOverview(null); } })(); }, [roleGroup]);
 
   const commandKpis = liveAnalysis?.kpis || overview?.kpis || {};
-  const alerts = liveAnalysis?.alerts?.length ? liveAnalysis.alerts : (overview?.alerts || []);
-  const selectedAlert = alerts.find((alert) => alert.id === selectedAlertId) || alerts[0] || null;
-
-  const topRiskCells = useMemo(() => {
-    if (liveAnalysis?.categorySpend?.length) return liveAnalysis.categorySpend.slice(0, 4).map((c) => ({ category: c.category, riskScore: Math.round(c.spend / Math.max(1, commandKpis.totalSpend || c.spend) * 100), supplierConcentration: c.lineCount }));
-    return (overview?.riskHeatmap || []).slice().sort((a, b) => b.riskScore - a.riskScore).slice(0, 4);
-  }, [overview, liveAnalysis, commandKpis.totalSpend]);
-
-  if (loading) return <section><div className="page-header"><h1>Loading command center…</h1></div></section>;
+  const seeded = ENTERPRISE_PROCUREMENT_ANALYTICS;
+  const savingsMax = Math.max(...seeded.visualizations.savingsTrend.map((m) => m.usd));
 
   return (
     <section>
-      <SeoHead title="Global Procurement Intelligence | BlackCrest AI" description="Upload-driven procurement intelligence for supplier risk, margin recovery, and governance-safe operations." canonicalPath="/intelligence" />
-      <div className="page-header">
-        <h1>Global Procurement Intelligence Command Center</h1>
-        <p>Live upload-driven analytics for margin recovery, supplier risk, delivery exposure, and executive procurement actions.</p>
-      </div>
-
-      {loadError ? <article className="card" style={{ marginBottom: 16 }}><strong>Notice:</strong> {loadError}</article> : null}
-      <LiveUploadPanel onAnalysis={(analysis) => { setLiveAnalysis(analysis); setSelectedAlertId(analysis.alerts?.[0]?.id || ''); }} />
-
-      <article className="card" style={{ marginBottom: 16 }}>
-        <strong>Enterprise Governance Posture</strong>
-        <p style={{ margin: '8px 0' }}>Read-only intelligence layer · Human approval before procurement action · No autonomous PO creation · Customer-controlled data ingestion.</p>
-        <p style={{ margin: 0 }}>Platform mode: <strong>{liveAnalysis ? 'Live procurement upload intelligence' : 'Sentinel governed fallback'}</strong></p>
-      </article>
+      <SeoHead title="Truth Serum Analytics | BlackCrest Nexus" description="Advanced procurement analytics dashboard with enterprise visual intelligence and AI recommendations." canonicalPath="/intelligence" />
+      <div className="page-header"><h1>Truth Serum Analytics Module</h1><p>Advanced enterprise procurement analytics with AI-style insights, seeded with realistic operational data.</p></div>
+      <LiveUploadPanel onAnalysis={setLiveAnalysis} />
 
       <div className="grid four">
-        <article className="card"><p className="metric-label">Rows / Health</p><h3>{commandKpis.rowCount || commandKpis.procurementHealthScore || 0}{commandKpis.procurementHealthScore ? '/100' : ''}</h3></article>
-        <article className="card"><p className="metric-label">Active Alerts</p><h3>{commandKpis.activeAlertCount ?? commandKpis.activeAlerts ?? alerts.length}</h3></article>
-        <article className="card"><p className="metric-label">Supplier Count / Risk</p><h3>{commandKpis.supplierCount || commandKpis.highRiskSuppliers || 0}</h3></article>
-        <article className="card"><p className="metric-label">Annualized Recovery</p><h3>{formatUsd(commandKpis.projectedAnnualRecoveryUSD || overview?.kpis?.marginLeakageAnnualizedUSD)}</h3></article>
+        <article className="card"><p className="metric-label">Key Risks</p><h3>{seeded.executiveSummary.keyRisks}</h3></article>
+        <article className="card"><p className="metric-label">Estimated Savings</p><h3>{formatUsd(seeded.executiveSummary.estimatedSavingsUSD)}</h3></article>
+        <article className="card"><p className="metric-label">Supplier Health</p><h3>{seeded.executiveSummary.supplierHealthScore}/100</h3></article>
+        <article className="card"><p className="metric-label">Operational Efficiency</p><h3>{seeded.executiveSummary.operationalEfficiencyScore}/100</h3></article>
       </div>
 
-      {liveAnalysis?.executiveSummary ? <article className="card" style={{ marginTop: 16 }}><h3>Executive Summary</h3><p>{liveAnalysis.executiveSummary}</p></article> : null}
+      <div className="grid two" style={{ marginTop: 16 }}>
+        <article className="card"><h3>Procurement Analytics Sections</h3><ul>
+          <li>Margin leakage: {pct(seeded.analytics.marginLeakage.leakageRate)} · {formatUsd(seeded.analytics.marginLeakage.annualLeakageUSD)} leakage</li>
+          <li>Supplier performance: OTD {pct(seeded.analytics.supplierPerformance.onTimeDelivery)} · Quality {pct(seeded.analytics.supplierPerformance.qualityAcceptance)}</li>
+          <li>Sourcing efficiency: {seeded.analytics.sourcingEfficiency.avgSourcingCycleDays} day cycle · Win rate {pct(seeded.analytics.sourcingEfficiency.eventWinRate)}</li>
+          <li>Operational bottlenecks: {seeded.analytics.operationalBottlenecks.map((b) => `${b.area} (${b.delayDays}d)`).join(', ')}</li>
+          <li>Procurement cycle analysis: {seeded.analytics.procurementCycle.reduce((s, c) => s + c.days, 0)} days end-to-end</li>
+          <li>Spend anomalies: {seeded.analytics.spendAnomalies.length} high-variance categories flagged</li>
+        </ul></article>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <h3>Executive Alert Center</h3>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <select className="input" value={roleGroup} onChange={(e) => setRoleGroup(e.target.value)} style={{ maxWidth: 240 }}>
-              {ROLE_VIEW_OPTIONS.map((role) => <option key={role.value} value={role.value}>{role.label} View</option>)}
-            </select>
-            <select className="input" value={severity} onChange={(e) => setSeverity(e.target.value)} style={{ maxWidth: 240 }}>
-              <option value="">All severities</option>
-              <option value="Critical">Critical</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Informational">Informational</option>
-            </select>
-          </div>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table" style={{ width: '100%', marginTop: 12 }}>
-            <thead><tr><th>Severity</th><th>Alert</th><th>Category</th><th>Status</th><th>Impact</th><th>Confidence</th></tr></thead>
-            <tbody>
-              {alerts.map((alert) => (
-                <tr key={alert.id} onClick={() => { setSelectedAlertId(alert.id); openAlert(alert.id); }} style={{ cursor: 'pointer', background: selectedAlert?.id === alert.id ? 'rgba(83, 137, 255, 0.16)' : 'transparent' }}>
-                  <td>{alert.type || alert.severity}</td>
-                  <td><strong>{alert.alertType || alert.category || 'Alert'}</strong><br /><span>{alert.title}</span></td>
-                  <td>{alert.category}</td>
-                  <td>{alert.status || 'Open'}</td>
-                  <td>{typeof alert.financialImpact === 'number' ? formatUsd(alert.financialImpact) : alert.owner || 'Review'}</td>
-                  <td>{Math.round((alert.confidenceScore || 0) * 100)}%</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <article className="card"><h3>AI-Style Insights Engine</h3><ul>
+          {seeded.insights.costSavings.map((i) => <li key={i}><strong>Cost savings recommendation:</strong> {i}</li>)}
+          <li><strong>Supplier consolidation suggestion:</strong> {seeded.insights.supplierConsolidation}</li>
+          {seeded.insights.riskAlerts.map((r) => <li key={r}><strong>Risk alert:</strong> {r}</li>)}
+          <li><strong>Sourcing optimization recommendation:</strong> {seeded.insights.sourcingOptimization}</li>
+        </ul></article>
+      </div>
+
+      <div className="grid two" style={{ marginTop: 16 }}>
+        <article className="card"><h3>Spend Heatmap</h3>{seeded.visualizations.spendHeatmap.rows.map((r, i) => <div key={r} style={{ marginBottom: 8 }}><p className="metric-label" style={{ marginBottom: 4 }}>{r}</p><div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>{seeded.visualizations.spendHeatmap.values[i].map((v, idx) => <div key={`${r}-${idx}`} style={{ background: `rgba(37,99,235,${0.2 + (v / 120)})`, color: '#fff', textAlign: 'center', borderRadius: 8, padding: '8px 4px' }}>{v}</div>)}</div></div>)}</article>
+        <article className="card"><h3>Supplier Risk Map</h3>{seeded.visualizations.supplierRiskMap.map((s) => <div key={s.supplier} style={{ marginBottom: 10 }}><p style={{ margin: '0 0 4px 0' }}>{s.supplier}</p><div style={{ height: 10, borderRadius: 999, background: '#1f2937' }}><div style={{ width: `${s.risk}%`, height: '100%', borderRadius: 999, background: 'linear-gradient(90deg,#ef4444,#f59e0b)' }} /></div><small>Risk {s.risk} · Impact {s.impact}</small></div>)}</article>
+      </div>
+
+      <div className="grid two" style={{ marginTop: 16 }}>
+        <article className="card"><h3>Savings Trend Analysis</h3>{seeded.visualizations.savingsTrend.map((point) => <div key={point.month} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><span style={{ width: 34 }}>{point.month}</span><div style={{ flex: 1, height: 12, borderRadius: 8, background: '#1f2937' }}><div style={{ width: `${(point.usd / savingsMax) * 100}%`, height: '100%', borderRadius: 8, background: 'linear-gradient(90deg,#0ea5e9,#22d3ee)' }} /></div><span>{formatUsd(point.usd)}</span></div>)}</article>
+        <article className="card"><h3>Procurement Velocity Charts</h3>{seeded.visualizations.procurementVelocity.map((lane) => <div key={lane.lane} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}><span style={{ width: 140 }}>{lane.lane}</span><div style={{ flex: 1, height: 12, borderRadius: 8, background: '#1f2937' }}><div style={{ width: `${lane.eventsPerMonth * 4}%`, height: '100%', borderRadius: 8, background: 'linear-gradient(90deg,#8b5cf6,#6366f1)' }} /></div><span>{lane.eventsPerMonth}/mo</span></div>)}</article>
       </div>
 
       <article className="card" style={{ marginTop: 16 }}>
-        <h3>Alert Root-Cause Drilldown</h3>
-        {!selectedAlert ? <p>No alert selected.</p> : (
-          <div style={{ display: 'grid', gap: 10 }}>
-            <p><strong>{selectedAlert.alertType || selectedAlert.category || selectedAlert.type}</strong> · {selectedAlert.title}</p>
-            <p><strong>What is driving it:</strong> {selectedAlert.rootCause || selectedAlert.driver || selectedAlert.aiReasoningSummary || 'Signal trend analysis indicates elevated procurement risk.'}</p>
-            <p><strong>Financial impact:</strong> {typeof selectedAlert.financialImpact === 'number' ? formatUsd(selectedAlert.financialImpact) : selectedAlert.financialImpact || 'Impact requires source records.'}</p>
-            <p><strong>Recommended corrective action:</strong> {selectedAlert.recommendedAction || selectedAlert.recommendedActions?.[0] || 'Route to responsible leader for remediation plan approval.'}</p>
-          </div>
-        )}
+        <h3>Live Overlay KPI</h3>
+        <p>Rows/Health: {commandKpis.rowCount || commandKpis.procurementHealthScore || 0} · Active Alerts: {commandKpis.activeAlertCount ?? commandKpis.activeAlerts ?? 0} · Supplier Count/Risk: {commandKpis.supplierCount || commandKpis.highRiskSuppliers || 0}</p>
       </article>
-
-      {liveAnalysis?.supplierScorecards?.length ? (
-        <div className="grid two" style={{ marginTop: 16 }}>
-          <article className="card">
-            <h3>Supplier Risk Scorecards</h3>
-            <ul>{liveAnalysis.supplierScorecards.slice(0, 6).map((s) => <li key={s.supplier}>{s.supplier}: {s.riskLevel} risk · spend {formatUsd(s.spend)} · OTD {pct(s.onTimeDelivery)}</li>)}</ul>
-          </article>
-          <article className="card">
-            <h3>Margin Recovery Engine</h3>
-            <p>Low-margin lines: {liveAnalysis.marginLeakage?.lowMarginLineCount || 0}</p>
-            <p>Annualized recovery opportunity: {formatUsd(liveAnalysis.marginLeakage?.annualizedRecoveryOpportunity)}</p>
-            <ul>{(liveAnalysis.marginLeakage?.topDrivers || []).slice(0, 5).map((driver) => <li key={`${driver.supplier}-${driver.item}-${driver.poNumber}`}>{driver.supplier} · {driver.item}: {formatUsd(driver.estimatedRecovery)}</li>)}</ul>
-          </article>
-        </div>
-      ) : (
-        <div className="grid two" style={{ marginTop: 16 }}>
-          <article className="card">
-            <h3>Executive Narrative Engine</h3>
-            <ul>{(overview?.executiveNarratives || []).map((line) => <li key={line}>{line}</li>)}</ul>
-          </article>
-          <article className="card">
-            <h3>Category Risk Heatmap</h3>
-            <ul>{topRiskCells.map((cell) => <li key={cell.category}>{cell.category}: risk {cell.riskScore}, concentration {cell.supplierConcentration}%</li>)}</ul>
-          </article>
-        </div>
-      )}
-
-      <AlertDrilldownModal alert={drilldownAlert} onClose={() => setDrilldownAlert(null)} />
     </section>
   );
 }
