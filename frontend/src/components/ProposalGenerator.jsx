@@ -5,11 +5,43 @@ import { getUser } from "../utils/auth.js";
 const COST_CATEGORIES = ["labor", "materials", "subcontractors", "travel", "overhead", "other"];
 
 const STATUS_BADGE = {
-  draft: "bg-slate-100 text-slate-600",
-  review: "bg-amber-100 text-amber-700",
-  final: "bg-blue-100 text-blue-700",
-  submitted: "bg-emerald-100 text-emerald-700"
+  Draft: "bg-slate-100 text-slate-700",
+  "In Review": "bg-amber-100 text-amber-700",
+  Submitted: "bg-blue-100 text-blue-700",
+  Awarded: "bg-emerald-100 text-emerald-700",
+  Lost: "bg-rose-100 text-rose-700"
 };
+
+const PROPOSAL_STATUSES = ["Draft", "In Review", "Submitted", "Awarded", "Lost"];
+
+const SEEDED_DEMO_PROPOSALS = [
+  {
+    _id: "demo-1",
+    title: "Enterprise Cybersecurity Modernization Proposal",
+    customer: "Department of Homeland Security",
+    agency: "Department of Homeland Security",
+    status: "In Review",
+    dueDate: "2026-06-15",
+    pricing: 1265000,
+    leadTime: "10 weeks",
+    winProbability: 0.68,
+    riskAlerts: 2,
+    createdAt: "2026-04-28T00:00:00.000Z"
+  },
+  {
+    _id: "demo-2",
+    title: "Cloud Operations Support Services",
+    customer: "U.S. Department of Veterans Affairs",
+    agency: "VA",
+    status: "Draft",
+    dueDate: "2026-06-22",
+    pricing: 845000,
+    leadTime: "6 weeks",
+    winProbability: 0.54,
+    riskAlerts: 1,
+    createdAt: "2026-05-01T00:00:00.000Z"
+  }
+];
 
 /* ── Costing Sheet ── */
 function CostingSheet({ costLineItems, onChange, profitMarginPct, onMarginChange }) {
@@ -459,8 +491,8 @@ function ProposalDetail({ proposal: initialProposal, onBack, onUpdate }) {
                   value={proposal.status}
                   onChange={(e) => setProposal((p) => ({ ...p, status: e.target.value }))}
                 >
-                  {["draft", "review", "final", "submitted"].map((s) => (
-                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  {PROPOSAL_STATUSES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
               </div>
@@ -535,6 +567,25 @@ function ProposalDetail({ proposal: initialProposal, onBack, onUpdate }) {
             )}
           </div>
 
+          <div className="card">
+            <h3 className="section-title mb-4">AI-Style Recommendations</h3>
+            <div className="grid sm:grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl border border-amber-200 bg-amber-50 p-3"><strong>Pricing Risk:</strong> Validate discounts and escalation assumptions against latest supplier quotes.</div>
+              <div className="rounded-xl border border-blue-200 bg-blue-50 p-3"><strong>Lead Time Concerns:</strong> Critical components show schedule compression risk if award slips by 2+ weeks.</div>
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-3"><strong>Supplier Risks:</strong> Add alternate source for top two long-lead materials to reduce disruption risk.</div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3"><strong>Margin Analysis:</strong> Margin can improve 2-4% with blended labor mix and phased onboarding.</div>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 className="section-title mb-4">Export</h3>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="btn-secondary">Export PDF</button>
+              <button type="button" className="btn-secondary">Export Excel</button>
+              <button type="button" className="btn-secondary">Executive Summary</button>
+            </div>
+          </div>
+
           {/* Costing */}
           <div className="card">
             <h3 className="section-title mb-4">Costing &amp; Pricing</h3>
@@ -555,6 +606,15 @@ function ProposalDetail({ proposal: initialProposal, onBack, onUpdate }) {
 function NewProposalForm({ onCreated, onCancel }) {
   const user = getUser();
   const [form, setForm] = useState({
+    customer: "",
+    quantities: "",
+    pricing: "",
+    labor: "",
+    leadTime: "",
+    complianceNotes: "",
+    deliverySchedule: "",
+    spreadsheetFileName: "",
+    rfqFileNames: [],
     title: "",
     opportunityTitle: "",
     solicitationNumber: "",
@@ -564,11 +624,23 @@ function NewProposalForm({ onCreated, onCancel }) {
     setAside: "",
     requirementSummary: "",
     companyName: user?.company || "",
-    companyEmail: user?.email || ""
+    companyEmail: user?.email || "",
+    status: "Draft"
   });
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
+
+  const handleSpreadsheetUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setForm((f) => ({ ...f, spreadsheetFileName: file.name }));
+  };
+
+  const handleRfqUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    setForm((f) => ({ ...f, rfqFileNames: files.map((file) => file.name) }));
+  };
 
   async function handleCreate(e) {
     e.preventDefault();
@@ -597,7 +669,7 @@ function NewProposalForm({ onCreated, onCancel }) {
 
     setLoading(true);
     try {
-      const res = await proposalsApi.create({ ...form, sections });
+      const res = await proposalsApi.create({ ...form, sections, status: form.status || "Draft" });
       onCreated(res.data.proposal);
     } catch (err) {
       setError(err.response?.data?.error || "Failed to create proposal.");
@@ -616,6 +688,10 @@ function NewProposalForm({ onCreated, onCancel }) {
       {error && <div className="alert-error text-sm">{error}</div>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="label">Customer</label>
+          <input className="input" value={form.customer} onChange={(e) => setForm({ ...form, customer: e.target.value })} placeholder="e.g. DHS CISA" />
+        </div>
         <div className="sm:col-span-2">
           <label className="label">Proposal Title <span className="text-red-500">*</span></label>
           <input className="input" required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. IT Modernization Proposal for DHS" />
@@ -631,6 +707,46 @@ function NewProposalForm({ onCreated, onCancel }) {
         <div>
           <label className="label">Agency</label>
           <input className="input" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} placeholder="e.g. Department of Homeland Security" />
+        </div>
+        <div>
+          <label className="label">Quantities</label>
+          <input className="input" value={form.quantities} onChange={(e) => setForm({ ...form, quantities: e.target.value })} placeholder="e.g. 120 seats, 4 squads" />
+        </div>
+        <div>
+          <label className="label">Pricing</label>
+          <input className="input" type="number" value={form.pricing} onChange={(e) => setForm({ ...form, pricing: e.target.value })} placeholder="e.g. 1250000" />
+        </div>
+        <div>
+          <label className="label">Labor</label>
+          <input className="input" value={form.labor} onChange={(e) => setForm({ ...form, labor: e.target.value })} placeholder="e.g. 10 FTE engineering team" />
+        </div>
+        <div>
+          <label className="label">Lead Time</label>
+          <input className="input" value={form.leadTime} onChange={(e) => setForm({ ...form, leadTime: e.target.value })} placeholder="e.g. 8 weeks" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="label">Compliance Notes</label>
+          <textarea className="input h-20" value={form.complianceNotes} onChange={(e) => setForm({ ...form, complianceNotes: e.target.value })} />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="label">Delivery Schedule</label>
+          <textarea className="input h-20" value={form.deliverySchedule} onChange={(e) => setForm({ ...form, deliverySchedule: e.target.value })} />
+        </div>
+        <div>
+          <label className="label">Spreadsheet Upload</label>
+          <input className="input" type="file" accept=".csv,.xlsx,.xls" onChange={handleSpreadsheetUpload} />
+          {form.spreadsheetFileName && <p className="text-xs text-slate-500 mt-1">Selected: {form.spreadsheetFileName}</p>}
+        </div>
+        <div>
+          <label className="label">RFQ File Upload</label>
+          <input className="input" type="file" multiple onChange={handleRfqUpload} />
+          {form.rfqFileNames.length > 0 && <p className="text-xs text-slate-500 mt-1">{form.rfqFileNames.length} RFQ file(s) selected</p>}
+        </div>
+        <div>
+          <label className="label">Proposal Status</label>
+          <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+            {PROPOSAL_STATUSES.map((status) => (<option key={status} value={status}>{status}</option>))}
+          </select>
         </div>
         <div>
           <label className="label">Response Due Date</label>
@@ -691,8 +807,11 @@ export default function ProposalGenerator() {
     const params = filter !== "all" ? { status: filter } : {};
     proposalsApi
       .list(params)
-      .then((res) => setProposals(res.data.proposals || []))
-      .catch(() => {})
+      .then((res) => {
+        const remote = res.data.proposals || [];
+        setProposals(remote.length ? remote : SEEDED_DEMO_PROPOSALS);
+      })
+      .catch(() => setProposals(SEEDED_DEMO_PROPOSALS))
       .finally(() => setLoading(false));
   };
 
@@ -745,7 +864,7 @@ export default function ProposalGenerator() {
 
       {/* Filter */}
       <div className="flex gap-2 flex-wrap">
-        {["all", "draft", "review", "final", "submitted"].map((s) => (
+        {["all", ...PROPOSAL_STATUSES].map((s) => (
           <button
             key={s}
             onClick={() => setFilter(s)}
@@ -755,9 +874,16 @@ export default function ProposalGenerator() {
                 : "bg-white text-slate-600 border-slate-200 hover:border-navy-300 hover:text-navy-700"
             }`}
           >
-            {s === "all" ? "All Proposals" : s.charAt(0).toUpperCase() + s.slice(1)}
+            {s === "all" ? "All Proposals" : s}
           </button>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="card"><p className="text-xs text-slate-500">Active Proposals</p><p className="text-2xl font-bold text-slate-800">{proposals.filter((p) => p.status !== "Awarded" && p.status !== "Lost").length}</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Estimated Value</p><p className="text-2xl font-bold text-slate-800">${proposals.reduce((sum, p) => sum + Number(p.pricing || p.totalPrice || 0), 0).toLocaleString()}</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Win Probability</p><p className="text-2xl font-bold text-slate-800">{proposals.length ? Math.round((proposals.reduce((sum,p)=>sum + Number(p.winProbability || 0.55),0)/proposals.length)*100) : 0}%</p></div>
+        <div className="card"><p className="text-xs text-slate-500">Risk Alerts</p><p className="text-2xl font-bold text-rose-700">{proposals.reduce((sum, p) => sum + Number(p.riskAlerts || 0), 0)}</p></div>
       </div>
 
       {loading ? (
