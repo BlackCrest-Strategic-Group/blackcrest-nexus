@@ -969,3 +969,51 @@ html { scroll-behavior: smooth; }
 @media (max-width: 900px) {
   .premium-hero__grid, .bridge-cards { grid-template-columns: 1fr; }
 }
+
+.mailroom-kpis {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.mailroom-thread-table {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.mailroom-thread-head,
+.mailroom-thread-row {
+  display: grid;
+  grid-template-columns: 1.1fr 1.5fr 1.1fr 0.8fr 1fr 0.8fr 0.8fr 0.8fr 1.2fr;
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.mailroom-thread-head {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.mailroom-thread-row {
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  padding: 0.55rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.timeline-list {
+  margin: 0.6rem 0 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+@media (max-width: 1200px) {
+  .mailroom-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mailroom-thread-head,
+  .mailroom-thread-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
