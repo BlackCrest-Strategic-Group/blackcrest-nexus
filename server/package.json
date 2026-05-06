@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
+    "postinstall": "prisma generate",
     "check:syntax": "node --check server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
