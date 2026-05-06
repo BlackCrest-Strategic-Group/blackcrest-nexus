@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import './styles.css';
+import SentinelSecurityCenter from './components/SentinelSecurityCenter';
 
 const navConfig = {
   Modules: [
@@ -21,7 +22,8 @@ const navConfig = {
   Admin: [
     { label: 'Tenant Settings', path: '/admin/tenant-settings' },
     { label: 'Role & Access', path: '/admin/roles' },
-    { label: 'Audit Feed', path: '/admin/audit-feed' }
+    { label: 'Audit Feed', path: '/admin/audit-feed' },
+    { label: 'Sentinel Security Center', path: '/admin/sentinel-security' }
   ]
 };
 
@@ -110,7 +112,9 @@ function DashboardShell({ auth, setAuth }) {
     <main className="content">{message && <p>{message}</p>}
       <Routes><Route path="/" element={<Navigate to="/modules/executive" replace />} />
         <Route path="/profile" element={<section className="card"><h2>Profile</h2>{profile && <div className="form-grid"><input value={profile.name} onChange={(e)=>setProfile({...profile,name:e.target.value})}/><input value={profile.company||''} onChange={(e)=>setProfile({...profile,company:e.target.value})}/><button type="button" onClick={saveProfile}>Save Profile</button></div>}</section>} />
-        {routeEntries.map((entry) => <Route key={entry.path} path={entry.path} element={entry.group === 'Admin' && role !== 'admin' ? <Navigate to="/modules/executive" replace /> : <ShellPage entry={entry} role={role} />} />)}
+        {routeEntries.map((entry) => <Route key={entry.path} path={entry.path} element={entry.path === '/admin/sentinel-security'
+          ? (role !== 'admin' ? <Navigate to="/modules/executive" replace /> : <SentinelSecurityCenter token={auth.accessToken} />)
+          : (entry.group === 'Admin' && role !== 'admin' ? <Navigate to="/modules/executive" replace /> : <ShellPage entry={entry} role={role} />)} />)}
       </Routes></main></div>);
 }
 
