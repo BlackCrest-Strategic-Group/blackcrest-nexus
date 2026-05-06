@@ -1,19 +1,14 @@
 {
-  "name": "blackcrest-strategic-group",
+  "name": "blackcrest-nexus",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "npm run build:frontend && ls -la client && ls -la client/dist",
-    "start": "node server/server.js",
-    "build:frontend": "npm install --prefix client --include=dev && npm run build --prefix client",
-    "check:syntax": "npm run build:frontend"
+    "install-all": "npm install && npm install --prefix client && npm install --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "npm run start --prefix server"
   },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "express": "^4.21.1",
-    "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.8.0"
+    "express": "^4.21.2"
   }
 }
