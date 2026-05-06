@@ -1,54 +1,48 @@
 # BlackCrest Nexus
 
-Standalone production-ready SaaS foundation for enterprise procurement and supply chain operations.
+BlackCrest Nexus is a modular enterprise procurement platform with a shared application shell, centralized services, role-based access controls, and Render-compatible deployment.
 
-## Stack
-- React + Vite frontend (`/client`)
-- Node.js + Express backend (`/server`)
-- Render deployment via `render.yaml`
-- Mock data only (no API keys, no ERP integrations)
+## Architecture Overview
+- **Frontend (`client/`)**: React + Vite with centralized app shell (`client/src/platform/AppShell.jsx`), role-aware navigation, module routing, notification zone, and system status indicator.
+- **Frontend Services (`client/src/services/`)**: reusable auth, api, audit, permissions, storage, and notifications service modules.
+- **Backend (`server/`)**: Express service with `/api/*` endpoints and root `/health` endpoint.
+- **Backend Foundations**:
+  - `server/services/auditService.js` centralized audit event tracking.
+  - `server/services/platformServices.js` reusable service registry (auth/api/audit/permissions/storage/notifications).
+  - `server/middleware/roleGuard.js` role-based middleware for Admin/Executive/Buyer/Supplier/Auditor.
+  - `server/models/sharedDataModel.js` mock shared schema foundation.
 
-## Project Structure
-/
-├── client/
-├── server/
-├── package.json
-├── render.yaml
-├── README.md
-└── .gitignore
+## Setup
+1. Install dependencies:
+   - `npm run install-all`
+2. Build frontend:
+   - `npm run build`
+3. Start platform:
+   - `npm start`
+4. Open:
+   - `http://localhost:3000`
 
-## Scripts
-- `npm run install-all` installs root + client + server dependencies
-- `npm run build` builds the Vite frontend
-- `npm start` starts the Express server
+## Environment Template
+Use `.env.example` as baseline. Minimum recommended keys:
+- `PORT=3000`
+- `NODE_ENV=production`
 
-## Local Setup
-1. `npm run install-all`
-2. `npm run build`
-3. `npm start`
-4. Open `http://localhost:3000`
-
-## Backend APIs
+## Core Endpoints
+- `GET /health`
 - `GET /api/health`
-- `GET /api/dashboard`
-- `GET /api/suppliers`
+- `POST /api/auth/login`
+- `POST /api/audit/events`
+- `GET /api/audit/events`
 - `POST /api/proposals`
 
-## Render Deployment
-1. Push this repository to GitHub.
-2. Create a new **Web Service** on Render.
-3. Render auto-detects `render.yaml`.
-4. Build command: `npm run install-all && npm run build`
-5. Start command: `npm start`
+## Demo Roles
+- Admin
+- Executive
+- Buyer
+- Supplier
+- Auditor
 
-## Modules Included
-1. Executive Dashboard
-2. Procurement Intelligence
-3. Sourcing Command Center
-4. Supplier Marketplace
-5. Proposal Generator
-6. Funding Bridge
-7. ERP Connector Center
-8. Settings
-
-All module routes are functional in-app and use mock data flows.
+## Render Compatibility
+- Build command: `npm run install-all && npm run build`
+- Start command: `npm start`
+- Static frontend build remains served by Express from `client/dist`.
