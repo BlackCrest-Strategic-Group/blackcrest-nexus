@@ -69,12 +69,124 @@ function CaptureDash({ data }) {
 }
 
 function ProcurementDash({ data }) {
+  const workflowStages = data.sourcingWorkflowStages || [];
+  const sourcingEvents = data.sourcingEvents || [];
+  const supplierComparison = data.supplierComparison || [];
+  const rfqs = data.rfqManagement || [];
+  const quoteAnalysis = data.quoteAnalysis || [];
+  const recommendations = data.sourcingRecommendations || [];
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <KpiCard label="Active Workflows" value={data.kpis.activeWorkflows} accent="blue" />
         <KpiCard label="Active Suppliers" value={data.kpis.activeSuppliers} accent="green" />
         <KpiCard label="Pending Tasks" value={data.kpis.pendingTasks} accent="amber" />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <KpiCard label="Savings Identified" value={data.sourcingAnalytics?.savingsIdentified || "$0"} accent="green" />
+        <KpiCard label="Sourcing Cycle Time" value={data.sourcingAnalytics?.cycleTime || "—"} accent="blue" />
+        <KpiCard label="Active Sourcing Projects" value={data.sourcingAnalytics?.activeProjects || 0} accent="purple" />
+        <KpiCard label="Supplier Participation" value={data.sourcingAnalytics?.supplierParticipation || "0%"} accent="amber" />
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Create Sourcing Event</h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-sm">
+          <input className="rounded-lg border border-slate-200 px-3 py-2" value={data.sourcingEventForm?.title || ""} readOnly />
+          <input className="rounded-lg border border-slate-200 px-3 py-2" value={data.sourcingEventForm?.category || ""} readOnly />
+          <input className="rounded-lg border border-slate-200 px-3 py-2" value={data.sourcingEventForm?.estimatedValue || ""} readOnly />
+          <input className="rounded-lg border border-slate-200 px-3 py-2" value={data.sourcingEventForm?.dueDate || ""} readOnly />
+          <input className="rounded-lg border border-slate-200 px-3 py-2 sm:col-span-2" value={data.sourcingEventForm?.supplierTargets || ""} readOnly />
+          <div className="sm:col-span-2 rounded-lg border border-dashed border-slate-300 px-3 py-2 text-slate-500">
+            Attachments UI: {data.sourcingEventForm?.attachments || "No files attached"}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm overflow-x-auto">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Supplier Comparison</h3>
+        <table className="min-w-full text-sm">
+          <thead>
+            <tr className="text-left text-slate-500 border-b">
+              <th className="py-2 pr-4">Supplier</th><th className="py-2 pr-4">Lead Time</th><th className="py-2 pr-4">Quote Value</th><th className="py-2 pr-4">Risk Score</th><th className="py-2 pr-4">Certifications</th><th className="py-2 pr-4">Region</th><th className="py-2">Performance Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {supplierComparison.map((supplier) => (
+              <tr key={supplier.supplier} className="border-b last:border-b-0">
+                <td className="py-2 pr-4 font-medium text-slate-700">{supplier.supplier}</td>
+                <td className="py-2 pr-4">{supplier.leadTime}</td>
+                <td className="py-2 pr-4">{supplier.quoteValue}</td>
+                <td className="py-2 pr-4">{supplier.riskScore}</td>
+                <td className="py-2 pr-4">{supplier.certifications}</td>
+                <td className="py-2 pr-4">{supplier.region}</td>
+                <td className="py-2">{supplier.performanceScore}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Sourcing Workflow Stages</h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {workflowStages.map((stage) => (
+            <div key={stage.name} className="rounded-lg border border-slate-100 px-3 py-2">
+              <p className="text-xs text-slate-500 uppercase tracking-wide">{stage.name}</p>
+              <p className="text-lg font-semibold text-slate-800">{stage.count}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">RFQ Management</h3>
+          <div className="space-y-2">
+            {rfqs.map((rfq) => (
+              <div key={rfq.id} className="rounded-lg border border-slate-100 px-3 py-2 text-sm">
+                <p className="font-medium text-slate-700">{rfq.title}</p>
+                <p className="text-xs text-slate-500">Due {rfq.dueDate} · {rfq.responsesReceived}/{rfq.suppliersInvited} responses</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-700 mb-3">Quote Analysis</h3>
+          <div className="space-y-2">
+            {quoteAnalysis.map((quote) => (
+              <div key={quote.id} className="rounded-lg border border-slate-100 px-3 py-2 text-sm">
+                <p className="font-medium text-slate-700">{quote.supplier}</p>
+                <p className="text-xs text-slate-500">Quoted {quote.quoteValue} · {quote.varianceVsTarget} vs target · Confidence {quote.confidence}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Sourcing Pipeline Tracking</h3>
+        <div className="space-y-2">
+          {sourcingEvents.map((event) => (
+            <div key={event.id} className="flex items-center justify-between rounded-lg border border-slate-100 px-3 py-2 text-sm">
+              <div>
+                <p className="font-medium text-slate-700">{event.title}</p>
+                <p className="text-xs text-slate-500">{event.category} · Due {event.dueDate}</p>
+              </div>
+              <span className="px-2 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{event.stage}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-700 mb-3">Sourcing Recommendations</h3>
+        <ul className="list-disc pl-5 text-sm text-slate-700 space-y-1">
+          {recommendations.map((rec) => <li key={rec}>{rec}</li>)}
+        </ul>
       </div>
       {data.supplierSummary?.length > 0 && (
         <div>

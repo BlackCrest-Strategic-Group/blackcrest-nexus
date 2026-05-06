@@ -95,6 +95,15 @@ router.get("/procurement", authenticateToken, async (req, res) => {
       { $group: { _id: "$status", count: { $sum: 1 }, avgScore: { $avg: "$overallScore" } } }
     ]);
 
+    const sourcingWorkflowStages = [
+      { name: "Draft", count: 3 },
+      { name: "Supplier Outreach", count: 4 },
+      { name: "Quotes Received", count: 5 },
+      { name: "Evaluation", count: 2 },
+      { name: "Awarded", count: 2 },
+      { name: "Closed", count: 6 }
+    ];
+
     res.json({
       success: true,
       role: "procurement",
@@ -103,7 +112,47 @@ router.get("/procurement", authenticateToken, async (req, res) => {
         activeSuppliers: suppliers,
         pendingTasks: pendingTasks[0]?.total ?? 0
       },
-      supplierSummary
+      supplierSummary,
+      sourcingAnalytics: {
+        savingsIdentified: "$482,000",
+        cycleTime: "34 days",
+        activeProjects: 14,
+        supplierParticipation: "78%"
+      },
+      sourcingEventForm: {
+        title: "FY26 Tactical Comms Equipment Sourcing",
+        category: "Communications Hardware",
+        estimatedValue: "$1,850,000",
+        dueDate: "2026-06-18",
+        supplierTargets: "8 qualified suppliers (small business + SDVOSB mix)",
+        attachments: "SOW_v4.pdf, Compliance_Matrix.xlsx"
+      },
+      sourcingWorkflowStages,
+      sourcingEvents: [
+        { id: "SE-1042", title: "Secure Router Refresh", category: "Network Infrastructure", dueDate: "2026-05-29", stage: "Evaluation" },
+        { id: "SE-1043", title: "Field Sensor Kit Rebid", category: "IoT Devices", dueDate: "2026-06-04", stage: "Supplier Outreach" },
+        { id: "SE-1044", title: "Command Center Video Wall", category: "AV Systems", dueDate: "2026-06-12", stage: "Quotes Received" }
+      ],
+      rfqManagement: [
+        { id: "RFQ-4408", title: "Encrypted Handheld Radios", dueDate: "2026-05-20", suppliersInvited: 9, responsesReceived: 7 },
+        { id: "RFQ-4415", title: "Satellite Uplink Services", dueDate: "2026-05-24", suppliersInvited: 6, responsesReceived: 4 },
+        { id: "RFQ-4421", title: "Ruggedized Laptop Fleet", dueDate: "2026-05-28", suppliersInvited: 10, responsesReceived: 8 }
+      ],
+      quoteAnalysis: [
+        { id: "Q-991", supplier: "Aegis Dynamics", quoteValue: "$612,000", varianceVsTarget: "-4.8%", confidence: "High" },
+        { id: "Q-992", supplier: "Frontier Signal Works", quoteValue: "$648,500", varianceVsTarget: "+1.0%", confidence: "Medium" },
+        { id: "Q-993", supplier: "NorthBridge Defense Tech", quoteValue: "$605,750", varianceVsTarget: "-5.7%", confidence: "High" }
+      ],
+      supplierComparison: [
+        { supplier: "Aegis Dynamics", leadTime: "21 days", quoteValue: "$612,000", riskScore: 28, certifications: "ISO 9001, AS9100", region: "Mid-Atlantic", performanceScore: 92 },
+        { supplier: "Frontier Signal Works", leadTime: "27 days", quoteValue: "$648,500", riskScore: 36, certifications: "ISO 9001, CMMC L2", region: "Southeast", performanceScore: 87 },
+        { supplier: "NorthBridge Defense Tech", leadTime: "19 days", quoteValue: "$605,750", riskScore: 24, certifications: "AS9100, ITAR", region: "Midwest", performanceScore: 94 }
+      ],
+      sourcingRecommendations: [
+        "Advance NorthBridge Defense Tech to final negotiations based on best value and lowest risk profile.",
+        "Keep Aegis Dynamics as competitive fallback and request alternate pricing on maintenance options.",
+        "Escalate Frontier Signal Works for regional redundancy coverage despite higher quote value."
+      ]
     });
   } catch (err) {
     console.error("Procurement dashboard error:", err.message);
