@@ -13,9 +13,25 @@ import { PrismaClient } from '@prisma/client';
 
 dotenv.config();
 
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('UNHANDLED REJECTION:', reason);
+});
+
 const app = express();
-const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
+
+let prisma = null;
+
+try {
+  prisma = new PrismaClient();
+  console.log('Prisma initialized');
+} catch (err) {
+  console.error('Prisma initialization failed:', err);
+}
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -47,6 +63,7 @@ app.get('/health', (_req, res) => {
     status: 'ok',
     service: 'blackcrest-nexus',
     openaiConfigured: Boolean(openai),
+    prismaConfigured: Boolean(prisma),
     timestamp: new Date().toISOString(),
   });
 });
@@ -126,56 +143,23 @@ async function runAnalysisPrompt(documents) {
   return JSON.parse(response.choices[0].message.content);
 }
 
-app.post('/api/analyze', async (req, res, next) => {
-  try {
-    const { files = [] } = req.body;
-
-    if (!files.length) {
-      return res.status(400).json({
-        ok: false,
-        error: 'No files provided.',
-      });
-    }
-
-    const documents = [];
-
-    for (const file of files) {
-      const content = await extractTextFromFile(file.path, file.mimeType || '');
-      documents.push({ fileName: file.fileName, content });
-    }
-
-    const analysis = await runAnalysisPrompt(documents);
-
-    res.json({
-      ok: true,
-      documentsProcessed: documents.length,
-      analysis,
+app.get('/api/nexus/overview', async (_req, res) => {
+  if (!prisma) {
+    return res.json({
+      suppliers: [],
+      purchaseOrders: [],
+      alerts: [],
+      warning: 'Prisma unavailable',
     });
-  } catch (error) {
-    next(error);
   }
-});
 
-app.get('/api/nexus/overview', async (_req, res, next) => {
-  try {
-    const [suppliers, purchaseOrders, alerts] = await Promise.all([
-      prisma.supplier.findMany().catch(() => []),
-      prisma.purchaseOrder.findMany({
-        include: { supplier: true },
-      }).catch(() => []),
-      prisma.operationalAlert.findMany({
-        orderBy: { createdAt: 'desc' },
-      }).catch(() => []),
-    ]);
+  const [suppliers, purchaseOrders, alerts] = await Promise.all([
+    prisma.supplier.findMany().catch(() => []),
+    prisma.purchaseOrder.findMany({ include: { supplier: true } }).catch(() => []),
+    prisma.operationalAlert.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
+  ]);
 
-    res.json({
-      suppliers,
-      purchaseOrders,
-      alerts,
-    });
-  } catch (error) {
-    next(error);
-  }
+  res.json({ suppliers, purchaseOrders, alerts });
 });
 
 app.get('*', async (req, res, next) => {
@@ -186,13 +170,13 @@ app.get('*', async (req, res, next) => {
 
     await fs.access(path.join(frontendDist, 'index.html'));
     res.sendFile(path.join(frontendDist, 'index.html'));
-  } catch (error) {
+  } catch (_error) {
     res.status(404).send('Frontend build not found.');
   }
 });
 
 app.use((error, _req, res, _next) => {
-  console.error(error);
+  console.error('EXPRESS ERROR:', error);
 
   res.status(500).json({
     ok: false,
@@ -200,6 +184,6 @@ app.use((error, _req, res, _next) => {
   });
 });
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`BlackCrest Nexus server running on port ${port}`);
 });
