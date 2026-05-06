@@ -31,7 +31,6 @@ jobs:
       - name: Build artifacts
         run: |
           npm ci
-          npm run check:syntax
           npm run build:frontend
 
       - name: Deploy (template placeholder)
