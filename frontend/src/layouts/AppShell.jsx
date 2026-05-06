@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 const quickActions = [
   { label: 'Generate Executive Report', path: '/report-center' },
   { label: 'Open ERP Connector Center', path: '/erp-connector-center' },
+  { label: 'Open Funding Bridge', path: '/funding-bridge' },
   { label: 'Go to Blanket PO Builder', path: '/blanket-po-builder' },
   { label: 'View Data Boundary', path: '/data-boundary' }
 ];
@@ -22,7 +23,8 @@ export default function AppShell({ children }) {
     { label: 'Dashboard', path: '/dashboard' },
     { label: 'Procurement Intelligence', path: '/procurement-intelligence' },
     { label: 'Marketplace', path: '/marketplace' },
-    { label: 'Insights', path: '/insights' }
+    { label: 'Insights', path: '/insights' },
+    { label: 'Funding Bridge', path: '/funding-bridge' }
   ];
 
   return (

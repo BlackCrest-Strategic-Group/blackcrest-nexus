@@ -42,6 +42,7 @@ import DemoPage from './DemoPage';
 import MarketplaceCategoryPage from './MarketplaceCategoryPage';
 import MarketplaceSupplierPage from './MarketplaceSupplierPage';
 import ProposalGeneratorPage from './ProposalGeneratorPage';
+import FundingBridgePage from './FundingBridgePage';
 import { hasPermission } from '../config/roleConfig';
 
 function AuthLoadingScreen() {
@@ -139,6 +140,7 @@ export default function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/report-center" element={<ReportCenterPage />} />
               <Route path="/erp-connector-center" element={<ErpConnectorCenterPage />} />
+              <Route path="/funding-bridge" element={<FundingBridgePage />} />
               <Route path="/blanket-po-builder" element={<RoleProtectedRoute permissions={['recommendations:view', 'supplier_risk:view']}><BlanketPOBuilderPage /></RoleProtectedRoute>} />
               <Route path="/proposal-generator" element={<RoleProtectedRoute permissions={['recommendations:view']}><ProposalGeneratorPage /></RoleProtectedRoute>} />
               <Route path="/mfa-settings" element={<MFASettingsPage />} />
