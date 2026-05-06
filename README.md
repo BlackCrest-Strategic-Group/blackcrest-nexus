@@ -1,48 +1,43 @@
-# BlackCrest Nexus
+# BlackCrest Nexus MVP
 
-BlackCrest Nexus is a modular enterprise procurement platform with a shared application shell, centralized services, role-based access controls, and Render-compatible deployment.
+AI-assisted operational coordination infrastructure for industrial operations.
 
-## Architecture Overview
-- **Frontend (`client/`)**: React + Vite with centralized app shell (`client/src/platform/AppShell.jsx`), role-aware navigation, module routing, notification zone, and system status indicator.
-- **Frontend Services (`client/src/services/`)**: reusable auth, api, audit, permissions, storage, and notifications service modules.
-- **Backend (`server/`)**: Express service with `/api/*` endpoints and root `/health` endpoint.
-- **Backend Foundations**:
-  - `server/services/auditService.js` centralized audit event tracking.
-  - `server/services/platformServices.js` reusable service registry (auth/api/audit/permissions/storage/notifications).
-  - `server/middleware/roleGuard.js` role-based middleware for Admin/Executive/Buyer/Supplier/Auditor.
-  - `server/models/sharedDataModel.js` mock shared schema foundation.
+## Stack
+- Frontend: React + Vite + Tailwind + React Router + Recharts
+- Backend: Node.js + Express
+- Database: PostgreSQL + Prisma ORM
+- Auth: Role-aware scaffolding (ready to bind Clerk/Supabase)
+- AI: OpenAI operational intelligence summaries
 
-## Setup
-1. Install dependencies:
-   - `npm run install-all`
-2. Build frontend:
-   - `npm run build`
-3. Start platform:
-   - `npm start`
-4. Open:
-   - `http://localhost:3000`
+## Core Entities
+Suppliers, Purchase Orders, RFQs, Manufacturing Jobs, Operational Alerts, Users.
 
-## Environment Template
-Use `.env.example` as baseline. Minimum recommended keys:
-- `PORT=3000`
-- `NODE_ENV=production`
+## Workflows
+1. Supplier Risk Escalation
+2. Manufacturing Delay Coordination (via shortage + alerts view)
+3. RFQ Coordination (cross-supplier comparison in seeded data)
 
-## Core Endpoints
+## Run
+```bash
+npm run install-all
+cp .env.example .env
+npm run dev
+```
+
+## Database
+```bash
+cd server
+npx prisma generate
+npx prisma migrate dev --name init
+npm run prisma:seed
+```
+
+## API
+- `GET /api/nexus/overview?role=BUYER|OPERATIONS|EXECUTIVE`
+- `POST /api/nexus/workflows/supplier-escalation/:supplierId`
 - `GET /health`
-- `GET /api/health`
-- `POST /api/auth/login`
-- `POST /api/audit/events`
-- `GET /api/audit/events`
-- `POST /api/proposals`
 
-## Demo Roles
-- Admin
-- Executive
-- Buyer
-- Supplier
-- Auditor
-
-## Render Compatibility
-- Build command: `npm run install-all && npm run build`
-- Start command: `npm start`
-- Static frontend build remains served by Express from `client/dist`.
+## Deployment (Render/Railway)
+- Build: `npm run install-all && cd server && npx prisma generate && cd .. && npm run build`
+- Start: `npm start`
+- Add `DATABASE_URL`, `OPENAI_API_KEY`, and `PORT` env vars.
