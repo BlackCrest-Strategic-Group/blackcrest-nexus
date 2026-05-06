@@ -1,35 +1,43 @@
 :root {
-  font-family: Inter, system-ui, -apple-system, sans-serif;
-  color: #0f172a;
-  background: #f8fafc;
+  font-family: Inter, Segoe UI, sans-serif;
+  color: #f6f6f7;
+  background: #111214;
 }
-
 * { box-sizing: border-box; }
-body { margin: 0; }
-.container { max-width: 1280px; margin: 0 auto; padding: 24px; }
-header h1 { margin-bottom: 8px; }
-.panel {
-  background: white;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  margin: 16px 0;
-  padding: 16px;
-}
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.card { background: #f1f5f9; border-radius: 8px; padding: 12px; display:flex; flex-direction:column; gap:8px; }
-.card span { font-size: 1.2rem; font-weight: 700; }
-.button-row { display:flex; flex-wrap:wrap; gap:8px; }
-button {
-  border: none;
-  border-radius: 8px;
-  padding: 10px 14px;
-  background: #0f766e;
-  color: #fff;
-  cursor: pointer;
-}
-button:disabled { opacity: 0.6; cursor: not-allowed; }
-.error { color: #b91c1c; }
-.table-wrap { overflow-x:auto; }
-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-th, td { border-bottom: 1px solid #e2e8f0; padding: 8px; text-align: left; vertical-align: top; }
-th { background: #f8fafc; }
+body { margin: 0; background: radial-gradient(circle at top right, #2a2a2f, #111214 45%); }
+.app-shell { max-width: 1400px; margin: 0 auto; padding: 24px; display: grid; gap: 16px; }
+.hero h1 { margin: 0; font-size: clamp(1.9rem, 3vw, 2.8rem); }
+.hero p { color: #b6b7bf; margin: 8px 0 0; }
+.panel, .kpi-card, .feature, .supplier, .module, .subpanel { background:#191b1f; border:1px solid #2b2f36; border-radius: 14px; }
+.panel { padding: 18px; }
+h2,h3,h4 { margin: 0 0 12px; display:flex; gap:8px; align-items:center; }
+.kpi-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
+.kpi-card { padding:12px; display:grid; gap:6px; transition: all .2s ease; }
+.kpi-card:hover, .feature:hover, .supplier:hover, .module:hover { border-color:#8f7842; transform: translateY(-2px); }
+.kpi-card span { color:#a9adb6; font-size:.82rem; }
+.kpi-card strong { font-size:1.2rem; color:#f9e9b4; }
+.two-col { display:grid; grid-template-columns: 1.3fr 1fr; gap:14px; }
+.upload-zone { border:1px dashed #746138; border-radius:12px; padding:18px; text-align:center; color:#c0a76d; display:grid; gap:8px; margin-bottom:10px; }
+.upload-zone input { color:#b8b9c0; }
+.actions { display:flex; gap:10px; }
+button { border:1px solid #8f7842; background: linear-gradient(180deg,#9a8148,#776335); color:#121212; padding:10px 14px; border-radius:10px; font-weight:700; cursor:pointer; display:inline-flex; gap:8px; align-items:center; }
+button.ghost { background: transparent; color:#d8c28f; }
+button:disabled { opacity:.5; cursor:not-allowed; }
+.error { color:#ff9d9d; display:flex; gap:6px; align-items:center; }
+.subpanel ul { margin:0; padding-left:18px; color:#cbced6; display:grid; gap:8px; }
+.feature-grid, .cards-3 { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
+.feature, .supplier, .module { padding:14px; transition: all .2s ease; }
+.feature span { color:#f2f2f5; font-weight:600; display:block; }
+.feature small { color:#9ea3af; }
+.tag-row { display:flex; flex-wrap:wrap; gap:8px; }
+.badge { font-size:.78rem; padding:6px 10px; border-radius:99px; background:#3e3119; border:1px solid #8f7842; color:#f5df9d; }
+.badge.neutral { background:#20242b; border-color:#394250; color:#c4cad5; }
+.toolbar { display:flex; justify-content:space-between; color:#a3a9b4; margin-bottom:10px; }
+.table-wrap { overflow:auto; border:1px solid #2a2f38; border-radius:10px; }
+table { width:100%; border-collapse: collapse; }
+th,td { padding:10px; border-bottom:1px solid #272c35; text-align:left; }
+th { background:#181a1e; color:#d9c48e; font-size:.8rem; text-transform:uppercase; letter-spacing:.04em; }
+td input { width:100%; background:#0f1013; border:1px solid #383f4a; color:#e9ebf0; border-radius:8px; padding:7px; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } .app-shell { padding:16px; } }
