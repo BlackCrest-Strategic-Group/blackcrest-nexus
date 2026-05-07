@@ -1,0 +1,74 @@
+[
+  {
+    "supplierName": "Delmarva Precision Systems",
+    "region": "Delaware",
+    "city": "Wilmington",
+    "industry": "Precision Machining",
+    "riskScore": 28,
+    "leadTimeDays": 18,
+    "capabilities": ["CNC Machining", "Aerospace Components"]
+  },
+  {
+    "supplierName": "Liberty Industrial Fabrication",
+    "region": "Philadelphia",
+    "city": "Philadelphia",
+    "industry": "Industrial Fabrication",
+    "riskScore": 41,
+    "leadTimeDays": 24,
+    "capabilities": ["Metal Fabrication", "Welding"]
+  },
+  {
+    "supplierName": "Harbor Defense Manufacturing",
+    "region": "Baltimore",
+    "city": "Baltimore",
+    "industry": "Defense Manufacturing",
+    "riskScore": 22,
+    "leadTimeDays": 20,
+    "capabilities": ["Cable Assembly", "Electronics"]
+  },
+  {
+    "supplierName": "Robins Aerospace Support",
+    "region": "Warner Robins",
+    "city": "Warner Robins",
+    "industry": "Aerospace Support",
+    "riskScore": 33,
+    "leadTimeDays": 16,
+    "capabilities": ["MRO", "Aircraft Components"]
+  },
+  {
+    "supplierName": "Macon Industrial Supply",
+    "region": "Central Georgia",
+    "city": "Macon",
+    "industry": "Industrial Supply",
+    "riskScore": 37,
+    "leadTimeDays": 21,
+    "capabilities": ["Industrial Distribution", "Packaging"]
+  },
+  {
+    "supplierName": "Orlando Advanced Manufacturing",
+    "region": "Central Florida",
+    "city": "Orlando",
+    "industry": "Advanced Manufacturing",
+    "riskScore": 19,
+    "leadTimeDays": 14,
+    "capabilities": ["Electronics", "Simulation Systems"]
+  },
+  {
+    "supplierName": "Lakeland Precision Plastics",
+    "region": "Central Florida",
+    "city": "Lakeland",
+    "industry": "Plastics Manufacturing",
+    "riskScore": 26,
+    "leadTimeDays": 17,
+    "capabilities": ["Injection Molding", "Packaging"]
+  },
+  {
+    "supplierName": "Middle Georgia Fabricators",
+    "region": "Central Georgia",
+    "city": "Warner Robins",
+    "industry": "Fabrication",
+    "riskScore": 35,
+    "leadTimeDays": 19,
+    "capabilities": ["Steel Fabrication", "Rapid Prototyping"]
+  }
+]
