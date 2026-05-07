@@ -1,0 +1,4 @@
+import React,{useMemo,useState} from 'react';import {opportunities} from '../data/opportunities';
+const color=s=>s<40?'var(--bc-danger)':s<70?'var(--bc-warning)':'var(--bc-success)';
+export default function(){const [naics,setNaics]=useState('');const rows=useMemo(()=>opportunities.filter(o=>!naics||o.naics===naics),[naics]);
+return <div><h2>Intelligence</h2><select onChange={e=>setNaics(e.target.value)}><option value=''>All NAICS</option>{[...new Set(opportunities.map(o=>o.naics))].map(n=><option key={n}>{n}</option>)}</select><div>{rows.map(o=>{const s=Math.floor((o.value/1000000+o.id*7)%100);return <div key={o.id} className='panel' style={{padding:10,marginTop:8}}><b>{o.title}</b> {o.solicitation} | ${o.value.toLocaleString()} | {o.deadline}<div>Score: <span style={{color:color(s)}}>{s}</span> | {s>65?'Bid':'No-Bid'} | Win Prob {Math.min(95,s+5)}%</div></div>})}</div></div>}

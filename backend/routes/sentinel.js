@@ -1,4 +1,4 @@
 import {Router} from 'express'; const r=Router();
-r.get('/',(req,res)=>res.json({module:'funding',ok:true,data:[]}));
+r.get('/',(req,res)=>res.json({module:'sentinel',ok:true,data:[]}));
 r.post('/',(req,res)=>res.json({ok:true,source:req.body}));
 export default r;

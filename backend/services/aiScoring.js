@@ -1,0 +1,2 @@
+import OpenAI from 'openai'; const client=new OpenAI({apiKey:process.env.OPENAI_API_KEY}); const cache=new Map();
+export async function scoreOpportunity(key,context){ if(cache.has(key)) return cache.get(key); const prompt=`Score 0-100 and return JSON with score,recommendation,winFactors,riskFactors. ${context}`; const resp=await client.responses.create({model:'gpt-4o-mini',input:prompt}); const out={raw:resp.output_text}; cache.set(key,out); return out; }

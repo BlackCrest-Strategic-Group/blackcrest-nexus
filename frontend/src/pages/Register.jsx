@@ -1,0 +1,2 @@
+import React from 'react';import {Link} from 'react-router-dom';
+export default ()=> <div style={{maxWidth:420,margin:'10vh auto'}} className='panel'><div style={{padding:20}}><h2 style={{color:'var(--bc-gold)'}}>Register</h2><input className='input' placeholder='Name'/><input className='input' placeholder='Email' style={{marginTop:8}}/><input className='input' type='password' placeholder='Password' style={{marginTop:8}}/><button className='btn' style={{marginTop:12,width:'100%'}}>Create account</button><Link to='/login'>Back to login</Link></div></div>
