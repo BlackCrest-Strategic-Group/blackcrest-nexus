@@ -1,0 +1,16 @@
+:root {
+  --bc-black: #080800;
+  --bc-black-soft: #111108;
+  --bc-gold: #d4a843;
+  --bc-gold-soft: #f2db9b;
+  --bc-text: #f5f5e8;
+  --bc-muted: #9f9f8f;
+  --bc-danger: #dc2626;
+  --bc-warning: #f59e0b;
+  --bc-success: #22c55e;
+}
+* { box-sizing: border-box; }
+body { margin:0; font-family: Inter, system-ui; background: var(--bc-black); color: var(--bc-text); }
+.panel { background: var(--bc-black-soft); border: 1px solid #2a2a16; border-radius: 12px; }
+.btn { background: var(--bc-gold); color: var(--bc-black); border: none; padding: 10px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+.input, select { width:100%; background:#14140a; color:var(--bc-text); border:1px solid #3a3a20; border-radius:8px; padding:10px; }

@@ -25,6 +25,14 @@
     "openai": "^4.104.0",
     "pdf-parse": "^1.1.1",
     "prisma": "^5.22.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "mongoose": "^8.14.1",
+    "stripe": "^18.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "helmet": "^8.1.0",
+    "express-rate-limit": "^7.5.0",
+    "compression": "^1.8.1",
+    "swagger-ui-express": "^5.0.1"
   }
 }

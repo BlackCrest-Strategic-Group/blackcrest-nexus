@@ -1,0 +1,2 @@
+import React from 'react';import {BarChart,Bar,XAxis,YAxis,Tooltip,LineChart,Line} from 'recharts'; const d=[{n:'Q1',v:30,w:20},{n:'Q2',v:80,w:40},{n:'Q3',v:50,w:35}];
+export default ()=> <div><h2>Analytics</h2><BarChart width={500} height={240} data={d}><XAxis dataKey='n'/><YAxis/><Tooltip/><Bar dataKey='v' fill='#d4a843'/></BarChart><LineChart width={500} height={240} data={d}><XAxis dataKey='n'/><YAxis/><Tooltip/><Line dataKey='w' stroke='#d4a843'/></LineChart></div>

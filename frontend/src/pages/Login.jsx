@@ -1,0 +1,3 @@
+import React,{useState} from 'react';import {useNavigate,Link} from 'react-router-dom';import {useAuth} from '../context/AuthContext';
+export default function Login(){const [email,setEmail]=useState('');const nav=useNavigate();const {login}=useAuth();
+return <div style={{maxWidth:420,margin:'10vh auto'}} className='panel'><div style={{padding:20}}><h2 style={{color:'var(--bc-gold)'}}>Login</h2><input className='input' placeholder='email' value={email} onChange={e=>setEmail(e.target.value)}/><input className='input' type='password' placeholder='password' style={{marginTop:8}}/><button className='btn' style={{marginTop:12,width:'100%'}} onClick={()=>{login({email,role:'analyst'});nav('/intelligence');}}>Sign in</button><Link to='/register'>Register</Link></div></div>}
