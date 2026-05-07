@@ -10,8 +10,8 @@
     "install-all": "npm install && npm install --prefix client && npm install --prefix server",
     "dev": "npm run dev --prefix server",
     "build": "npm run build --prefix client && npm run prisma:generate --prefix server",
-    "build:frontend": "npm run build",
-    "start": "npm run start --prefix server",
+    "build:frontend": "cd client && npm install && npm run build",
+    "start": "node server/server.js",
     "check:syntax": "node --check server/server.js",
     "validate": "npm run check:syntax && npm run build"
   },
