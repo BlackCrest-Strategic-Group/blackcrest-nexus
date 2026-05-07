@@ -88,78 +88,98 @@ app.post('/api/upload', upload.array('files', 20), (req, res) => {
   res.json({ ok: true, files });
 });
 
-async function extractTextFromFile(filePath, mimeType) {
-  if (mimeType.includes('pdf')) {
-    const buffer = await fs.readFile(filePath);
-    const parsed = await pdf(buffer);
-    return parsed.text;
+app.get('/', async (_req, res) => {
+  try {
+    await fs.access(path.join(frontendDist, 'index.html'));
+    return res.sendFile(path.join(frontendDist, 'index.html'));
+  } catch (_error) {
+    return res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>BlackCrest Nexus</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+          body {
+            margin: 0;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+          }
+          .hero {
+            max-width: 1200px;
+            margin: auto;
+            padding: 100px 24px;
+          }
+          h1 {
+            font-size: 64px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+          }
+          p {
+            color: #aaa;
+            font-size: 22px;
+            line-height: 1.6;
+            max-width: 800px;
+          }
+          .btn {
+            display: inline-block;
+            margin-top: 40px;
+            background: #fbbf24;
+            color: black;
+            padding: 18px 32px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: bold;
+          }
+          .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+            gap: 24px;
+            margin-top: 80px;
+          }
+          .card {
+            border: 1px solid #27272a;
+            background: #111;
+            padding: 24px;
+            border-radius: 20px;
+          }
+          .card h3 {
+            color: #fbbf24;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="hero">
+          <div style="color:#fbbf24;font-weight:bold;margin-bottom:20px;">PROCUREMENT INTELLIGENCE OPERATING SYSTEM</div>
+          <h1>Stop running procurement through spreadsheets.</h1>
+          <p>
+            BlackCrest Nexus delivers supplier intelligence, proposal analysis, sourcing visibility, operational alerts, and executive procurement command capabilities in one unified platform.
+          </p>
+
+          <a class="btn" href="/health">Platform Online</a>
+
+          <div class="cards">
+            <div class="card">
+              <h3>Supplier Intelligence</h3>
+              <p>Track supplier volatility, delays, and operational risk before production gets hit.</p>
+            </div>
+
+            <div class="card">
+              <h3>Proposal Analysis</h3>
+              <p>Upload RFQs, PDFs, spreadsheets, and sourcing packages for AI-assisted analysis.</p>
+            </div>
+
+            <div class="card">
+              <h3>Executive Visibility</h3>
+              <p>Surface procurement bottlenecks, sourcing delays, and operational blind spots instantly.</p>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
   }
-
-  if (
-    mimeType.includes('spreadsheet') ||
-    mimeType.includes('excel') ||
-    filePath.endsWith('.xlsx')
-  ) {
-    const workbook = XLSX.readFile(filePath);
-    return workbook.SheetNames.map((name) =>
-      XLSX.utils.sheet_to_csv(workbook.Sheets[name])
-    ).join('\n');
-  }
-
-  if (mimeType.includes('word') || filePath.endsWith('.docx')) {
-    const result = await mammoth.extractRawText({ path: filePath });
-    return result.value;
-  }
-
-  return await fs.readFile(filePath, 'utf8');
-}
-
-async function runAnalysisPrompt(documents) {
-  if (!openai) {
-    return {
-      summary: 'OpenAI API key not configured.',
-      supplierComparison: [],
-      risks: ['AI analysis unavailable until OPENAI_API_KEY is configured.'],
-      recommendation: 'Configure OpenAI integration.',
-    };
-  }
-
-  const joined = documents
-    .map((doc) => `FILE: ${doc.fileName}\n${doc.content.slice(0, 8000)}`)
-    .join('\n\n');
-
-  const response = await openai.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
-    messages: [
-      {
-        role: 'user',
-        content: `Analyze procurement files and return JSON summary:\n\n${joined}`,
-      },
-    ],
-    response_format: { type: 'json_object' },
-    temperature: 0.2,
-  });
-
-  return JSON.parse(response.choices[0].message.content);
-}
-
-app.get('/api/nexus/overview', async (_req, res) => {
-  if (!prisma) {
-    return res.json({
-      suppliers: [],
-      purchaseOrders: [],
-      alerts: [],
-      warning: 'Prisma unavailable',
-    });
-  }
-
-  const [suppliers, purchaseOrders, alerts] = await Promise.all([
-    prisma.supplier.findMany().catch(() => []),
-    prisma.purchaseOrder.findMany({ include: { supplier: true } }).catch(() => []),
-    prisma.operationalAlert.findMany({ orderBy: { createdAt: 'desc' } }).catch(() => []),
-  ]);
-
-  res.json({ suppliers, purchaseOrders, alerts });
 });
 
 app.get('*', async (req, res, next) => {
@@ -171,7 +191,7 @@ app.get('*', async (req, res, next) => {
     await fs.access(path.join(frontendDist, 'index.html'));
     res.sendFile(path.join(frontendDist, 'index.html'));
   } catch (_error) {
-    res.status(404).send('Frontend build not found.');
+    res.redirect('/');
   }
 });
 
