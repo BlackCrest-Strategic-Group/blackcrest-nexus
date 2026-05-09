@@ -76,10 +76,126 @@ const DEMO_CSV = `supplier,item,category,poNumber,quantity,unitCost,sellPrice,or
 
 function LiveUploadPanel({ onAnalysis }) { const [csv, setCsv] = useState(DEMO_CSV); const [uploading, setUploading] = useState(false); async function analyze() { setUploading(true); try { const response = await api.post('/api/procurement-live/analyze-upload', { csv }); onAnalysis(response.data.analysis); } finally { setUploading(false); } } return <article className="card" style={{ marginBottom: 16 }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}><div><h3 style={{ marginBottom: 4 }}>Live Procurement Intelligence Upload</h3><p className="muted" style={{ margin: 0 }}>Upload or run sample data to blend real-time signals into Truth Serum Analytics.</p></div><button className="btn primary" type="button" onClick={analyze} disabled={uploading}>{uploading ? 'Analyzing…' : 'Run Live Analysis'}</button></div><label><span className="metric-label">Paste CSV / Sample Data</span><textarea className="input" rows={5} value={csv} onChange={(e) => setCsv(e.target.value)} /></label></article>; }
 
+
+
+const WAR_ROOM_METRICS = [
+  {
+    id: 'totalSpend',
+    label: 'Total Spend',
+    value: '$2.9M',
+    source: 'SOURCE: ERP + AP Ledger (Apr 2026)',
+    columns: ['Supplier', 'Category', 'Invoice #', 'Reason', 'Amount'],
+    rows: [
+      ['Atlas Machining', 'Direct Materials', 'INV-48112', 'Program build release', '$1.12M'],
+      ['Helios Circuits', 'Electronics', 'INV-77831', 'Controller board replenishment', '$860K'],
+      ['Nova Polymers', 'MRO', 'INV-55209', 'Plant maintenance kits', '$540K'],
+      ['BlueLine Logistics', 'Logistics', 'INV-19300', 'Expedite freight surcharge', '$380K'],
+    ],
+  },
+  {
+    id: 'marginLeakage',
+    label: 'Margin Leakage',
+    value: '$434K',
+    source: 'SOURCE: AP Exception Monitor + Contract Guardrails',
+    columns: ['Supplier', 'Category', 'Invoice #', 'Reason', 'Amount'],
+    rows: [
+      ['Helios Circuits', 'Electronics', 'INV-77831', 'Overbilling', '$156K'],
+      ['BlueLine Logistics', 'Logistics', 'INV-19300', 'Duplicate invoice', '$98K'],
+      ['Rapid Facility Works', 'MRO', 'INV-44018', 'Maverick spend', '$112K'],
+      ['Atlas Machining', 'Direct Materials', 'INV-48177', 'Overbilling', '$68K'],
+    ],
+  },
+  {
+    id: 'riskReduction',
+    label: 'Risk Reduction',
+    value: '31%',
+    source: 'SOURCE: Supplier Risk Radar + QA Audit Trail',
+    columns: ['Supplier', 'Category', 'Invoice #', 'Reason', 'Amount'],
+    rows: [
+      ['Northline Metals', 'Direct Materials', 'INV-47220', 'High → Low after alternate source qualification', 'N/A'],
+      ['Sierra Components', 'Electronics', 'INV-73410', 'High → Low after OTD recovery + PPAP closure', 'N/A'],
+      ['Atlas Freight', 'Logistics', 'INV-19043', 'High → Low after route stabilization and SLA controls', 'N/A'],
+    ],
+  },
+  {
+    id: 'activeSuppliers',
+    label: 'Active Suppliers',
+    value: '40',
+    source: 'SOURCE: Supplier Master + Truth Serum Scoring',
+    columns: ['Supplier', 'Category', 'Invoice #', 'Reason', 'Amount'],
+    rows: [
+      ['Nova Circuits', 'Electronics', 'INV-73140', 'Risk: Low · Truth Serum 91', 'N/A'],
+      ['Atlas Machining', 'Direct Materials', 'INV-48112', 'Risk: Medium · Truth Serum 82', 'N/A'],
+      ['BlueLine Logistics', 'Logistics', 'INV-19300', 'Risk: Medium · Truth Serum 78', 'N/A'],
+      ['Rapid Facility Works', 'MRO', 'INV-44018', 'Risk: High · Truth Serum 61', 'N/A'],
+    ],
+  },
+  {
+    id: 'openPos',
+    label: 'Open POs',
+    value: '29',
+    source: 'SOURCE: PO Control Tower',
+    columns: ['Supplier', 'Category', 'Invoice #', 'Reason', 'Amount'],
+    rows: [
+      ['Atlas Machining', 'Direct Materials', 'PO-90217', 'Status: Approved / Pending shipment', '$402K'],
+      ['Helios Circuits', 'Electronics', 'PO-90402', 'Status: Partial receipt', '$318K'],
+      ['BlueLine Logistics', 'Logistics', 'PO-90141', 'Status: Delayed at terminal', '$89K'],
+      ['Rapid Facility Works', 'MRO', 'PO-90355', 'Status: Awaiting compliance release', '$61K'],
+    ],
+  },
+  {
+    id: 'complianceScore',
+    label: 'Compliance Score',
+    value: '89%',
+    source: 'SOURCE: Sentinel Compliance Controls',
+    columns: ['Supplier', 'Category', 'Invoice #', 'Reason', 'Amount'],
+    rows: [
+      ['Atlas Machining', 'Direct Materials', 'INV-48112', 'Compliant: Contract pricing + approvals', 'N/A'],
+      ['Nova Circuits', 'Electronics', 'INV-73140', 'Compliant: Doc pack complete', 'N/A'],
+      ['BlueLine Logistics', 'Logistics', 'INV-19300', 'Flagged: Accessorial charge mismatch', 'N/A'],
+      ['Rapid Facility Works', 'MRO', 'INV-44018', 'Flagged: Off-contract maverick spend', 'N/A'],
+    ],
+  },
+];
+
+function WarRoomMetricCard({ metric, expanded, onToggle }) {
+  return (
+    <article className="card" style={{ background: '#0f172a', borderColor: '#334155' }}>
+      <button type="button" onClick={onToggle} style={{ width: '100%', textAlign: 'left', background: 'transparent', border: 0, color: 'inherit', padding: 0, cursor: 'pointer' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <p className="metric-label">{metric.label}</p>
+            <h3>{metric.value}</h3>
+          </div>
+          <span aria-hidden="true" style={{ color: '#94a3b8', fontSize: 18 }}>{expanded ? '▲' : '▼'}</span>
+        </div>
+      </button>
+      {expanded && (
+        <div style={{ marginTop: 12, borderTop: '1px solid #334155', paddingTop: 12 }}>
+          <p style={{ margin: '0 0 10px 0', fontSize: 11, letterSpacing: '0.08em', color: '#22d3ee', fontWeight: 700 }}>{metric.source}</p>
+          <div style={{ overflowX: 'auto' }}>
+            <table>
+              <thead>
+                <tr>{metric.columns.map((col) => <th key={`${metric.id}-${col}`}>{col}</th>)}</tr>
+              </thead>
+              <tbody>
+                {metric.rows.map((row, idx) => (
+                  <tr key={`${metric.id}-${idx}`}>{row.map((cell, cidx) => <td key={`${metric.id}-${idx}-${cidx}`}>{cell}</td>)}</tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </article>
+  );
+}
+
 export default function IntelligencePage() {
   const [roleGroup, setRoleGroup] = useState('executive');
   const [overview, setOverview] = useState(null);
   const [liveAnalysis, setLiveAnalysis] = useState(null);
+  const [expandedMetricId, setExpandedMetricId] = useState(null);
 
   useEffect(() => { (async () => { try { const { data } = await api.get('/api/sentinel/overview', { params: { roleGroup } }); setOverview(data); } catch { setOverview(null); } })(); }, [roleGroup]);
 
@@ -92,6 +208,20 @@ export default function IntelligencePage() {
       <SeoHead title="Truth Serum Analytics | BlackCrest Nexus" description="Advanced procurement analytics dashboard with enterprise visual intelligence and AI recommendations." canonicalPath="/intelligence" />
       <div className="page-header"><h1>Truth Serum Analytics Module</h1><p>Advanced enterprise procurement analytics with AI-style insights, seeded with realistic operational data.</p></div>
       <LiveUploadPanel onAnalysis={setLiveAnalysis} />
+
+      <section className="card" style={{ marginBottom: 16, background: '#020617', borderColor: '#334155' }}>
+        <h3 style={{ marginBottom: 12 }}>War Room Dashboard</h3>
+        <div className="grid three" style={{ gap: 12 }}>
+          {WAR_ROOM_METRICS.map((metric) => (
+            <WarRoomMetricCard
+              key={metric.id}
+              metric={metric}
+              expanded={expandedMetricId === metric.id}
+              onToggle={() => setExpandedMetricId((current) => (current === metric.id ? null : metric.id))}
+            />
+          ))}
+        </div>
+      </section>
 
       <div className="grid four">
         <article className="card"><p className="metric-label">Key Risks</p><h3>{seeded.executiveSummary.keyRisks}</h3></article>
