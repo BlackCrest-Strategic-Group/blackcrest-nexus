@@ -21,6 +21,7 @@ import procurementMvpRoutes from './routes/procurementMvpRoutes.js';
 import marketplaceRoutes from './routes/marketplaceRoutes.js';
 import demoSaasRoutes from './routes/demoSaasRoutes.js';
 import proposalRoutes from './routes/proposalRoutes.js';
+import quickbooksRoutes from './routes/quickbooksRoutes.js';
 import { cleanRoomCompliance } from '../middleware/cleanRoomCompliance.js';
 import { auditTrail } from './middleware/auditTrail.js';
 import { requestContext } from './middleware/requestContext.js';
@@ -69,5 +70,6 @@ app.use('/api/mvp', procurementMvpRoutes);
 app.use('/api/marketplace', marketplaceRoutes);
 app.use('/api', demoSaasRoutes);
 app.use('/api', proposalRoutes);
+app.use('/api/erp', quickbooksRoutes);
 
 export default app;
