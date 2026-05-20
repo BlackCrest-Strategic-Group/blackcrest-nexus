@@ -8,7 +8,7 @@ const TOKEN_URL = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
 
 async function refreshTokenIfNeeded(config) {
   if (config.tokenExpiresAt > new Date(Date.now() + 5 * 60 * 1000)) {
-    return config;
+    return;
   }
   const credentials = Buffer.from(
     `${process.env.QB_CLIENT_ID}:${process.env.QB_CLIENT_SECRET}`
@@ -31,17 +31,23 @@ async function refreshTokenIfNeeded(config) {
   if (data.refresh_token) config.refreshToken = data.refresh_token;
   config.tokenExpiresAt = new Date(Date.now() + data.expires_in * 1000);
   await config.save();
-  return config;
 }
 
+// Assumes token is already fresh — call refreshTokenIfNeeded before using in parallel.
 async function qbQuery(config, query) {
-  const c = await refreshTokenIfNeeded(config);
-  const url = `${QB_BASE}/${c.realmId}/query?query=${encodeURIComponent(query)}&minorversion=65`;
+  const url = `${QB_BASE}/${config.realmId}/query?query=${encodeURIComponent(query)}&minorversion=65`;
   const resp = await fetch(url, {
-    headers: { Authorization: `Bearer ${c.accessToken}`, Accept: 'application/json' },
+    headers: { Authorization: `Bearer ${config.accessToken}`, Accept: 'application/json' },
   });
   if (!resp.ok) throw new Error(`QB API failed: ${resp.status}`);
   return resp.json();
+}
+
+async function loadConfig(userId) {
+  const config = await QuickBooksConfig.findOne({ userId });
+  if (!config) throw new Error('QB realm ID not found. Please reconnect QuickBooks.');
+  await refreshTokenIfNeeded(config);
+  return config;
 }
 
 function normalizeVendor(v) {
@@ -71,23 +77,25 @@ function normalizeBill(b) {
   };
 }
 
-export async function syncQBData(userId) {
-  const config = await QuickBooksConfig.findOne({ userId });
-  if (!config) throw new Error('QB realm ID not found. Please reconnect QuickBooks.');
-
-  const [vendorData, billData] = await Promise.all([
-    qbQuery(config, 'SELECT * FROM Vendor MAXRESULTS 1000'),
-    qbQuery(config, 'SELECT * FROM Bill MAXRESULTS 1000'),
-  ]);
-
-  const vendors = (vendorData.QueryResponse?.Vendor || []).map(normalizeVendor);
-  const bills = (billData.QueryResponse?.Bill || []).map(normalizeBill);
-
+export async function syncVendors(userId) {
+  const config = await loadConfig(userId);
+  const data = await qbQuery(config, 'SELECT * FROM Vendor MAXRESULTS 1000');
+  const vendors = (data.QueryResponse?.Vendor || []).map(normalizeVendor);
   return {
     success: true,
     vendorCount: vendors.length,
-    billCount: bills.length,
     vendors: vendors.slice(0, 10),
+    syncedAt: new Date().toISOString(),
+  };
+}
+
+export async function syncBills(userId) {
+  const config = await loadConfig(userId);
+  const data = await qbQuery(config, 'SELECT * FROM Bill MAXRESULTS 1000');
+  const bills = (data.QueryResponse?.Bill || []).map(normalizeBill);
+  return {
+    success: true,
+    billCount: bills.length,
     bills: bills.slice(0, 10),
     syncedAt: new Date().toISOString(),
   };

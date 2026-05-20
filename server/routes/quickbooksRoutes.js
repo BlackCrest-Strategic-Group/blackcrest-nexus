@@ -1,7 +1,7 @@
-import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { Router } from 'express';
 import QuickBooksConfig from '../models/QuickBooksConfig.js';
-import { syncQBData } from '../services/quickbooksConnector.js';
+import { syncVendors, syncBills } from '../services/quickbooksConnector.js';
 import { authRequired } from '../middleware/auth.js';
 
 const router = Router();
@@ -10,26 +10,19 @@ const QB_AUTH_URL = 'https://appcenter.intuit.com/connect/oauth2';
 const QB_TOKEN_URL = 'https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer';
 const QB_SCOPES = 'com.intuit.quickbooks.accounting';
 
-// Short-lived in-memory store for CSRF state nonces (keyed by random hex string)
-const stateStore = new Map();
-
-function pruneExpiredState() {
-  const now = Date.now();
-  for (const [key, val] of stateStore) {
-    if (val.expires < now) stateStore.delete(key);
-  }
+function jwtSecret() {
+  return process.env.JWT_SECRET || 'dev-secret';
 }
 
 // GET /api/erp/quickbooks/connect
 router.get('/quickbooks/connect', authRequired, (req, res) => {
-  pruneExpiredState();
-
   if (!process.env.QB_CLIENT_ID || !process.env.QB_REDIRECT_URI) {
     return res.status(503).json({ error: 'QuickBooks integration is not configured.' });
   }
 
-  const state = crypto.randomBytes(16).toString('hex');
-  stateStore.set(state, { userId: req.user.userId, expires: Date.now() + 10 * 60 * 1000 });
+  // Embed userId in a signed, short-lived JWT used as the OAuth state parameter.
+  // Stateless: survives restarts and multi-instance deployments.
+  const state = jwt.sign({ userId: req.user.userId }, jwtSecret(), { expiresIn: '10m' });
 
   const params = new URLSearchParams({
     client_id: process.env.QB_CLIENT_ID,
@@ -52,14 +45,14 @@ router.get('/quickbooks/callback', async (req, res) => {
     return res.redirect(`${clientUrl}/settings?qb_error=${encodeURIComponent(String(error))}`);
   }
 
-  const stateEntry = stateStore.get(String(state));
-  if (!stateEntry || stateEntry.expires < Date.now()) {
+  let userId;
+  try {
+    const decoded = jwt.verify(String(state), jwtSecret());
+    userId = decoded.userId;
+  } catch {
     console.error('[QB OAUTH] invalid or expired state');
     return res.redirect(`${clientUrl}/settings?qb_error=invalid_state`);
   }
-  stateStore.delete(String(state));
-
-  const { userId } = stateEntry;
 
   if (!realmId) {
     console.error('[QB OAUTH] missing realmId from callback');
@@ -113,10 +106,10 @@ router.get('/quickbooks/callback', async (req, res) => {
   }
 });
 
-// GET /api/erp/mt/sync-suppliers  — fetch QB vendors and return them
+// GET /api/erp/mt/sync-suppliers  — fetch QB vendors only
 router.get('/mt/sync-suppliers', authRequired, async (req, res) => {
   try {
-    const result = await syncQBData(req.user.userId);
+    const result = await syncVendors(req.user.userId);
     return res.json(result);
   } catch (err) {
     console.error('[QB SYNC] sync-suppliers:', err.message);
@@ -125,16 +118,11 @@ router.get('/mt/sync-suppliers', authRequired, async (req, res) => {
   }
 });
 
-// GET /api/erp/mt/sync-bom  — fetch QB bills and return them
+// GET /api/erp/mt/sync-bom  — fetch QB bills only
 router.get('/mt/sync-bom', authRequired, async (req, res) => {
   try {
-    const result = await syncQBData(req.user.userId);
-    return res.json({
-      success: result.success,
-      billCount: result.billCount,
-      bills: result.bills,
-      syncedAt: result.syncedAt,
-    });
+    const result = await syncBills(req.user.userId);
+    return res.json(result);
   } catch (err) {
     console.error('[QB SYNC] sync-bom:', err.message);
     const status = err.message.includes('realm ID not found') ? 400 : 500;
