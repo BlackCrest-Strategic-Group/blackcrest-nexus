@@ -28,14 +28,14 @@ jobs:
       - name: Clean Dependency State
         run: |
           rm -rf node_modules
-          rm -rf client/node_modules
+          rm -rf frontend/node_modules
           rm -rf server/node_modules
 
       - name: Install Root Dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Install Client Dependencies
-        run: npm install --prefix client --legacy-peer-deps
+      - name: Install Frontend Dependencies
+        run: npm install --prefix frontend --legacy-peer-deps
 
       - name: Install Server Dependencies
         run: npm install --prefix server --legacy-peer-deps
@@ -50,11 +50,11 @@ jobs:
         run: node --check server/server.js
 
       - name: Frontend Production Build
-        run: npm run build --prefix client
+        run: npm run build --prefix frontend
 
       - name: Validate Frontend Dist
         run: |
-          if [ ! -f client/dist/index.html ]; then
+          if [ ! -f frontend/dist/index.html ]; then
             echo "Frontend build failed. dist/index.html missing"
             exit 1
           fi
