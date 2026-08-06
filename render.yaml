@@ -3,6 +3,7 @@ services:
     name: blackcrest-nexus
     env: node
     plan: starter
-    buildCommand: npm install && npm run build:frontend
+    buildCommand: npm install && npm install --prefix frontend && npm run build:frontend
     startCommand: npm start
+    healthCheckPath: /api/health
     autoDeploy: true
