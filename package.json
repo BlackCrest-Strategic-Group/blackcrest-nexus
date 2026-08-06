@@ -7,10 +7,10 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "install-all": "npm install && npm install --prefix client && npm install --prefix server",
+    "install-all": "npm install && npm install --prefix frontend && npm install --prefix server",
     "dev": "npm run dev --prefix server",
     "build": "npm run build --prefix client && npm run prisma:generate --prefix server",
-    "build:frontend": "cd client && npm install && npm run build",
+    "build:frontend": "npm run build --prefix frontend",
     "start": "node server/server.js",
     "check:syntax": "node --check server/server.js",
     "validate": "npm run check:syntax && npm run build"
