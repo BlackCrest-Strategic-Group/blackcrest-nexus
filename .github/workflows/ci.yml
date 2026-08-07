@@ -17,52 +17,29 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: "20"
+          node-version: "22"
           cache: npm
 
-      - name: Clean Dependency State
-        run: |
-          rm -rf node_modules
-          rm -rf frontend/node_modules
-          rm -rf server/node_modules
-
       - name: Install Root Dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Install Frontend Dependencies
-        run: npm install --prefix frontend --legacy-peer-deps
+        run: npm ci --prefix frontend --legacy-peer-deps
 
       - name: Install Server Dependencies
-        run: npm install --prefix server --legacy-peer-deps
+        run: npm ci --prefix server --legacy-peer-deps
 
-      - name: Validate Prisma Schema
-        run: npx prisma validate --schema=server/prisma/schema.prisma
-
-      - name: Generate Prisma Client
-        run: npx prisma generate --schema=server/prisma/schema.prisma
-
-      - name: Backend Syntax Validation
-        run: node --check server/server.js
-
-      - name: Frontend Production Build
-        run: npm run build --prefix frontend
+      - name: Validate Production Build
+        run: npm run validate
 
       - name: Validate Frontend Dist
         run: |
           if [ ! -f frontend/dist/index.html ]; then
             echo "Frontend build failed. dist/index.html missing"
             exit 1
-          fi
-
-      - name: Migration Script Syntax Check
-        run: |
-          if [ -f server/scripts/migrateTenantScoping.js ]; then
-            node --check server/scripts/migrateTenantScoping.js
-          else
-            echo "Migration script not present. Skipping."
           fi
