@@ -29,10 +29,10 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Install Frontend Dependencies
-        run: npm ci --prefix frontend --legacy-peer-deps
+        run: npm install --prefix frontend --legacy-peer-deps
 
       - name: Install Server Dependencies
-        run: npm ci --prefix server --legacy-peer-deps
+        run: npm install --prefix server --legacy-peer-deps
 
       - name: Validate Production Build
         run: npm run validate
